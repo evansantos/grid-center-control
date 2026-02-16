@@ -5,6 +5,7 @@ import type {
   Project, Artifact, ArtifactType, ArtifactStatus,
   Worktree, Task, TaskStatus, ReviewType, Event, Phase,
 } from './types.js';
+import { DEFAULT_MODEL_CONFIG } from './types.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS projects (
@@ -233,6 +234,37 @@ export class GridDB {
   setTaskAgent(id: string, sessionKey: string): void {
     this.db.prepare('UPDATE tasks SET agent_session = ? WHERE id = ?')
       .run(sessionKey, id);
+  }
+
+  createTaskBatch(projectId: string, tasks: { task_number: number; title: string; description: string; artifact_id?: string; worktree_id?: string }[]): Task[] {
+    const insert = this.db.prepare(`
+      INSERT INTO tasks (id, project_id, artifact_id, worktree_id, task_number, title, description, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+    `);
+    const ids: string[] = [];
+    const txn = this.db.transaction(() => {
+      for (const t of tasks) {
+        const id = uuid();
+        insert.run(id, projectId, t.artifact_id ?? null, t.worktree_id ?? null, t.task_number, t.title, t.description);
+        ids.push(id);
+      }
+    });
+    txn();
+    return ids.map(id => this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Task);
+  }
+
+  getTaskBatch(projectId: string, from: number, to: number): Task[] {
+    return this.db.prepare(
+      'SELECT * FROM tasks WHERE project_id = ? AND task_number >= ? AND task_number <= ? ORDER BY task_number'
+    ).all(projectId, from, to) as Task[];
+  }
+
+  getModelForPhase(projectId: string, phase: string): string {
+    const project = this.getProject(projectId);
+    if (project?.model_config && project.model_config[phase]) {
+      return project.model_config[phase];
+    }
+    return DEFAULT_MODEL_CONFIG[phase as Phase];
   }
 
   // --- Events ---

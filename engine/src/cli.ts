@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { GridDB } from './db.js';
 import { StateMachine } from './state.js';
 import { WorktreeManager } from './worktree.js';
+import { parsePlan } from './parser.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -51,6 +52,13 @@ project.command('set-model <id>')
     config[opts.phase] = opts.model;
     db.setModelConfig(id, config);
     output({ id, model_config: config });
+  });
+
+project.command('model <id>')
+  .requiredOption('--phase <phase>', 'Phase to query')
+  .action((id, opts) => {
+    const model = db.getModelForPhase(id, opts.phase);
+    output({ id, phase: opts.phase, model });
   });
 
 // --- Artifact commands ---
@@ -169,6 +177,28 @@ task.command('review <projectId> <taskNumber>')
 
     db.createEvent({ project_id: projectId, event_type: 'review', details: JSON.stringify({ task: taskNumber, type: opts.type, result: opts.result }) });
     output(db.getTask(t.id));
+  });
+
+task.command('parse <projectId>')
+  .requiredOption('--file <path>', 'Plan markdown file')
+  .option('--artifact <id>', 'Link tasks to artifact')
+  .option('--worktree <id>', 'Link tasks to worktree')
+  .action((projectId, opts) => {
+    const content = fs.readFileSync(opts.file, 'utf-8');
+    const parsed = parsePlan(content);
+    const tasks = db.createTaskBatch(projectId, parsed.map(t => ({
+      ...t,
+      artifact_id: opts.artifact,
+      worktree_id: opts.worktree,
+    })));
+    output({ tasks_created: tasks.length, tasks: tasks.map(t => ({ number: t.task_number, title: t.title })) });
+  });
+
+task.command('batch <projectId>')
+  .requiredOption('--from <n>', 'Start task number')
+  .requiredOption('--to <n>', 'End task number')
+  .action((projectId, opts) => {
+    output(db.getTaskBatch(projectId, parseInt(opts.from), parseInt(opts.to)));
   });
 
 // --- Advance ---
