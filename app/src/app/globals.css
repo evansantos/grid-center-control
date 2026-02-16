@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --grid-bg: #0a0a0f;
+  --grid-surface: #12121a;
+  --grid-border: #1e1e2e;
+  --grid-accent: #ff4444;
+  --grid-text: #e0e0e0;
+  --grid-text-dim: #888;
+}
+
+body {
+  background: var(--grid-bg);
+  color: var(--grid-text);
+  font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+}

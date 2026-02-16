@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseGridCallback, formatButtons } from '../callbacks.js';
+import { parseGridCallback, formatButtons, orchButtons } from '../callbacks.js';
 
 describe('Grid callbacks', () => {
   it('parses approve callback', () => {
@@ -47,5 +47,27 @@ describe('Grid callbacks', () => {
     expect(buttons[0]).toHaveLength(3);
     expect(buttons[0][0].text).toBe('▶️ Continue');
     expect(buttons[0][1].text).toBe('⏸ Pause');
+  });
+
+  it('parses batch callback with extra data', () => {
+    const result = parseGridCallback('grid:batch:proj-123:1,2,3');
+    expect(result).toEqual({ action: 'batch', id: 'proj-123', extra: '1,2,3' });
+  });
+
+  it('parses advance callback', () => {
+    const result = parseGridCallback('grid:advance:proj-123');
+    expect(result).toEqual({ action: 'advance', id: 'proj-123', extra: undefined });
+  });
+
+  it('formats orchestrator launch buttons', () => {
+    const buttons = orchButtons('proj-123', 'launch', [4, 5, 6]);
+    expect(buttons[0]).toHaveLength(2);
+    expect(buttons[0][0].callback_data).toBe('grid:batch:proj-123:4,5,6');
+  });
+
+  it('formats orchestrator advance buttons', () => {
+    const buttons = orchButtons('proj-123', 'advance');
+    expect(buttons[0][0].text).toContain('Advance');
+    expect(buttons[0][0].callback_data).toBe('grid:advance:proj-123');
   });
 });

@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { GridDB } from './db.js';
 import { StateMachine } from './state.js';
 import { WorktreeManager } from './worktree.js';
+import { Orchestrator } from './orchestrator.js';
 import { parsePlan } from './parser.js';
 import fs from 'fs';
 import path from 'path';
@@ -12,6 +13,7 @@ const dbPath = process.env.GRID_DB ?? DEFAULT_DB;
 
 const db = new GridDB(dbPath);
 const sm = new StateMachine(db);
+const orch = new Orchestrator(db);
 
 const program = new Command();
 program.name('grid').version('0.1.0');
@@ -213,6 +215,44 @@ program.command('log <projectId>')
   .option('--limit <n>', 'Limit results', '20')
   .action((projectId, opts) => {
     output(db.listEvents(projectId, parseInt(opts.limit)));
+  });
+
+// --- Orchestrator commands ---
+const orchestrate = program.command('orch');
+
+orchestrate.command('status <projectId>').action((projectId) => {
+  output(orch.status(projectId));
+});
+
+orchestrate.command('progress <projectId>').action((projectId) => {
+  console.log(orch.progressMessage(projectId));
+});
+
+orchestrate.command('complete <projectId> <taskNumber>')
+  .option('--result <result>', 'pass or fail', 'pass')
+  .option('--feedback <text>', 'Completion feedback')
+  .action((projectId, taskNumber, opts) => {
+    const task = orch.completeTask(projectId, parseInt(taskNumber), opts.result, opts.feedback);
+    output(task);
+  });
+
+orchestrate.command('start-batch <projectId>')
+  .requiredOption('--tasks <numbers>', 'Comma-separated task numbers')
+  .action((projectId, opts) => {
+    const nums = opts.tasks.split(',').map(Number);
+    orch.startBatch(projectId, nums);
+    output({ started: nums });
+  });
+
+orchestrate.command('next <projectId>')
+  .option('--size <n>', 'Batch size', '3')
+  .action((projectId, opts) => {
+    const batch = orch.getNextBatch(projectId, parseInt(opts.size));
+    if (!batch) {
+      output({ message: 'No tasks ready to spawn (either all done or tasks in progress)' });
+    } else {
+      output(batch);
+    }
   });
 
 program.parse();
