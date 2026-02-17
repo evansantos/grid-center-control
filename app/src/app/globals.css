@@ -10,6 +10,15 @@
   --grid-text-dim: #888;
 }
 
+[data-theme="light"] {
+  --grid-bg: #f5f5f7;
+  --grid-surface: #ffffff;
+  --grid-border: #e0e0e0;
+  --grid-accent: #ff4444;
+  --grid-text: #1a1a1a;
+  --grid-text-dim: #666;
+}
+
 body {
   background: var(--grid-bg);
   color: var(--grid-text);

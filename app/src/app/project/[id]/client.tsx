@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { ArtifactCard } from '@/components/artifact-card';
+import { QuickActions } from '@/components/quick-actions';
 import type { Artifact, Task, Worktree } from '@/lib/types';
 
 interface Props {
@@ -121,6 +122,11 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
           </div>
         </section>
       )}
+
+      {/* Quick Actions */}
+      <section>
+        <QuickActions />
+      </section>
     </div>
   );
 }
