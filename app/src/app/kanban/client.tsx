@@ -31,6 +31,24 @@ const PRIORITY_COLORS: Record<string, string> = {
   low: '#6b7280',
 };
 
+const AGENT_COLORS: Record<string, string> = {
+  GRID: '#3b82f6',
+  ATLAS: '#8b5cf6',
+  DEV: '#10b981',
+  PIXEL: '#f59e0b',
+  BUG: '#ef4444',
+  SENTINEL: '#6366f1',
+};
+
+function getAgentInfo(agent: string): { name: string; color: string; initial: string } | null {
+  if (!agent) return null;
+  const upper = agent.toUpperCase();
+  for (const [key, color] of Object.entries(AGENT_COLORS)) {
+    if (upper.includes(key)) return { name: key, color, initial: key[0] };
+  }
+  return { name: agent, color: 'var(--grid-text-muted)', initial: agent[0]?.toUpperCase() ?? '?' };
+}
+
 export function KanbanBoard() {
   const [columns, setColumns] = useState<Columns>({ pending: [], in_progress: [], review: [], done: [] });
   const [loading, setLoading] = useState(true);
@@ -172,6 +190,30 @@ export function KanbanBoard() {
                     {task.title}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {(() => {
+                      const info = getAgentInfo(task.agent);
+                      return info ? (
+                        <span
+                          title={info.name}
+                          style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: '50%',
+                            background: info.color,
+                            color: '#fff',
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            fontFamily: 'var(--font-mono, monospace)',
+                          }}
+                        >
+                          {info.initial}
+                        </span>
+                      ) : null;
+                    })()}
                     <span
                       style={{
                         fontSize: '0.65rem',
