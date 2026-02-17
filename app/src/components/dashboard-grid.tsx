@@ -21,12 +21,14 @@ const PRESETS: Record<PresetName, WidgetConfig[]> = {
     { id: 'quick-stats', title: 'Quick Stats', position: { x: 1, y: 2, w: 6, h: 1 } },
     { id: 'recent-activity', title: 'Recent Activity', position: { x: 7, y: 2, w: 6, h: 1 } },
     { id: 'recommendations', title: 'Recommendations', position: { x: 1, y: 3, w: 12, h: 1 } },
+    { id: 'task-distribution', title: 'Task Distribution', position: { x: 1, y: 4, w: 12, h: 1 } },
   ],
   Wide: [
     { id: 'projects', title: 'Projects', position: { x: 1, y: 1, w: 6, h: 1 } },
     { id: 'quick-stats', title: 'Quick Stats', position: { x: 7, y: 1, w: 3, h: 1 } },
     { id: 'recent-activity', title: 'Recent Activity', position: { x: 10, y: 1, w: 3, h: 1 } },
     { id: 'recommendations', title: 'Recommendations', position: { x: 1, y: 2, w: 12, h: 1 } },
+    { id: 'task-distribution', title: 'Task Distribution', position: { x: 1, y: 3, w: 12, h: 1 } },
   ],
 };
 

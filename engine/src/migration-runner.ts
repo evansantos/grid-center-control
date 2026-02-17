@@ -1,6 +1,7 @@
 import type { Database as DatabaseType } from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const MIGRATIONS_TABLE = `
 CREATE TABLE IF NOT EXISTS _migrations (
@@ -15,7 +16,10 @@ CREATE TABLE IF NOT EXISTS _migrations (
  * Safe to call multiple times (idempotent).
  */
 export function runMigrations(db: DatabaseType, migrationsDir?: string): void {
-  const dir = migrationsDir ?? path.join(import.meta.dirname, '..', 'migrations');
+  const thisDir = typeof import.meta.dirname === 'string'
+    ? import.meta.dirname
+    : path.dirname(fileURLToPath(import.meta.url));
+  const dir = migrationsDir ?? path.join(thisDir, '..', 'migrations');
 
   // Ensure tracking table exists
   db.exec(MIGRATIONS_TABLE);
