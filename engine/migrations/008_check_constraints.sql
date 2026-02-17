@@ -7,7 +7,7 @@ CREATE TRIGGER IF NOT EXISTS check_task_status
 BEFORE INSERT ON tasks
 BEGIN
   SELECT CASE
-    WHEN NEW.status NOT IN ('pending', 'in_progress', 'review', 'done', 'failed')
+    WHEN NEW.status NOT IN ('pending', 'in_progress', 'review', 'done', 'failed', 'approved')
     THEN RAISE(ABORT, 'Invalid task status')
   END;
 END;
@@ -16,7 +16,7 @@ CREATE TRIGGER IF NOT EXISTS check_task_status_update
 BEFORE UPDATE OF status ON tasks
 BEGIN
   SELECT CASE
-    WHEN NEW.status NOT IN ('pending', 'in_progress', 'review', 'done', 'failed')
+    WHEN NEW.status NOT IN ('pending', 'in_progress', 'review', 'done', 'failed', 'approved')
     THEN RAISE(ABORT, 'Invalid task status')
   END;
 END;
