@@ -32,7 +32,7 @@ async function getRecentEvents(): Promise<Event[]> {
   
   try {
     const stmt = db.prepare(`
-      SELECT id, created_at as timestamp, type, data
+      SELECT id, created_at as timestamp, event_type as type, details as data
       FROM events 
       WHERE created_at > ?
       ORDER BY created_at DESC
@@ -73,52 +73,8 @@ async function getRecentEvents(): Promise<Event[]> {
     });
   } catch (error) {
     console.error('Error fetching events:', error);
-    // Return mock data if database is not available
-    return generateMockEvents();
+    return [];
   }
-}
-
-function generateMockEvents(): Event[] {
-  const events: Event[] = [];
-  const now = new Date();
-  
-  // Generate some mock events for the last 2 hours
-  for (let i = 0; i < 120; i++) {
-    const timestamp = new Date(now.getTime() - i * 60 * 1000); // Every minute
-    
-    events.push({
-      id: `mock_${i}`,
-      timestamp: timestamp.toISOString(),
-      type: 'cost',
-      metric: 'cost',
-      value: Math.random() * 100 + 50 + (i < 30 ? Math.random() * 200 : 0), // Spike in recent data
-      metadata: { source: 'mock' }
-    });
-
-    if (i % 3 === 0) {
-      events.push({
-        id: `mock_error_${i}`,
-        timestamp: timestamp.toISOString(),
-        type: 'error',
-        metric: 'errors',
-        value: Math.random() * 10 + (i < 20 ? Math.random() * 50 : 0), // Error spike
-        metadata: { source: 'mock' }
-      });
-    }
-
-    if (i % 2 === 0) {
-      events.push({
-        id: `mock_usage_${i}`,
-        timestamp: timestamp.toISOString(),
-        type: 'usage',
-        metric: 'usage',
-        value: Math.random() * 1000 + 100 + (i < 15 ? Math.random() * 2000 : 0), // Usage spike
-        metadata: { source: 'mock' }
-      });
-    }
-  }
-  
-  return events;
 }
 
 export async function GET(request: NextRequest) {
