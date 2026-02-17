@@ -4,6 +4,7 @@ import { ProjectsWidget } from '@/components/widgets/projects-widget';
 import { QuickStatsWidget } from '@/components/widgets/quick-stats-widget';
 import { RecentActivityWidget } from '@/components/widgets/recent-activity-widget';
 import { SmartRecommendations } from '@/components/smart-recommendations';
+import { FleetStatusWidget } from '@/components/widgets/fleet-status-widget';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,7 @@ export default function Home() {
         'quick-stats': <QuickStatsWidget projectCount={projects.length} />,
         'recent-activity': <RecentActivityWidget />,
         'recommendations': <SmartRecommendations />,
+        'fleet-status': <FleetStatusWidget />,
       }}
     </DashboardGrid>
     </>
