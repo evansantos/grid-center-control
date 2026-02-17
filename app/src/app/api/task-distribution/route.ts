@@ -31,7 +31,7 @@ export async function GET() {
       }
       const status = row.status.toLowerCase().replace(/\s+/g, '_') as keyof DistributionEntry;
       if (status in agentMap[agent] && status !== 'agent' && status !== 'total') {
-        (agentMap[agent] as Record<string, number>)[status] = row.cnt;
+        (agentMap[agent] as unknown as Record<string, number>)[status] = row.cnt;
       }
       agentMap[agent].total += row.cnt;
     }

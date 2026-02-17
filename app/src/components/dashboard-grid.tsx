@@ -38,6 +38,7 @@ const MOBILE_LAYOUT: WidgetConfig[] = [
   { id: 'quick-stats', title: 'Quick Stats', position: { x: 1, y: 2, w: 12, h: 1 } },
   { id: 'recommendations', title: 'Recommendations', position: { x: 1, y: 3, w: 12, h: 1 } },
   { id: 'recent-activity', title: 'Recent Activity', position: { x: 1, y: 4, w: 12, h: 1 } },
+  { id: 'task-distribution', title: 'Task Distribution', position: { x: 1, y: 5, w: 12, h: 1 } },
 ];
 
 const STORAGE_KEY = 'grid-dashboard-layout';
