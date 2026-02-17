@@ -1,29 +1,108 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const snapshots = [
-  { id: 's1', date: '2026-02-17T08:00:00Z', type: 'daily', costs: 42.10, activity: 187, errors: 3, performance: 97.2 },
-  { id: 's2', date: '2026-02-16T08:00:00Z', type: 'daily', costs: 38.50, activity: 214, errors: 1, performance: 98.1 },
-  { id: 's3', date: '2026-02-15T08:00:00Z', type: 'weekly', costs: 275.30, activity: 1420, errors: 12, performance: 96.8 },
-  { id: 's4', date: '2026-02-14T08:00:00Z', type: 'daily', costs: 35.20, activity: 165, errors: 5, performance: 95.4 },
-  { id: 's5', date: '2026-02-10T08:00:00Z', type: 'daily', costs: 41.80, activity: 198, errors: 2, performance: 97.9 },
-  { id: 's6', date: '2026-02-08T08:00:00Z', type: 'weekly', costs: 290.60, activity: 1385, errors: 9, performance: 97.1 },
+interface SnapshotSchedule {
+  id: string;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  targetDashboard: string;
+  notificationsEnabled: boolean;
+  createdAt: string;
+  nextRunAt: string;
+}
+
+interface Snapshot {
+  id: string;
+  scheduleId: string;
+  createdAt: string;
+  status: 'completed' | 'failed' | 'pending';
+  dashboard: string;
+  metrics: {
+    totalEvents: number;
+    tasksCompleted: number;
+    activeAgents: number;
+    errorRate: number;
+    avgResponseTime: number;
+  };
+}
+
+function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString();
+}
+
+const schedules: SnapshotSchedule[] = [
+  {
+    id: 'sch-1',
+    frequency: 'daily',
+    targetDashboard: 'Main Overview',
+    notificationsEnabled: true,
+    createdAt: daysAgo(30),
+    nextRunAt: new Date(Date.now() + 3600000).toISOString(),
+  },
+  {
+    id: 'sch-2',
+    frequency: 'weekly',
+    targetDashboard: 'Agent Performance',
+    notificationsEnabled: false,
+    createdAt: daysAgo(14),
+    nextRunAt: new Date(Date.now() + 86400000 * 3).toISOString(),
+  },
 ];
 
-let config = { enabled: true, frequency: 'daily', time: '08:00', includes: { costs: true, activity: true, errors: true, performance: true } };
+const snapshots: Snapshot[] = Array.from({ length: 14 }, (_, i) => ({
+  id: `snap-${i + 1}`,
+  scheduleId: i % 3 === 0 ? 'sch-2' : 'sch-1',
+  createdAt: daysAgo(i),
+  status: i === 5 ? 'failed' : 'completed',
+  dashboard: i % 3 === 0 ? 'Agent Performance' : 'Main Overview',
+  metrics: {
+    totalEvents: 1200 + Math.floor(Math.sin(i * 0.5) * 300) + i * 20,
+    tasksCompleted: 45 + Math.floor(Math.cos(i * 0.3) * 15) + i * 2,
+    activeAgents: 3 + (i % 3),
+    errorRate: Math.max(0, 2.5 + Math.sin(i * 0.7) * 2),
+    avgResponseTime: 120 + Math.floor(Math.sin(i * 0.4) * 40),
+  },
+}));
 
 export async function GET() {
-  return NextResponse.json({ snapshots, config });
+  return NextResponse.json({ schedules, snapshots });
 }
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const newSnapshot = { id: `s${Date.now()}`, date: new Date().toISOString(), type: config.frequency, ...body };
-  snapshots.unshift(newSnapshot);
-  return NextResponse.json(newSnapshot, { status: 201 });
-}
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const { action } = body;
 
-export async function PUT(req: NextRequest) {
-  const body = await req.json();
-  config = { ...config, ...body };
-  return NextResponse.json(config);
+  if (action === 'create-schedule') {
+    const newSchedule: SnapshotSchedule = {
+      id: `sch-${Date.now()}`,
+      frequency: body.frequency || 'daily',
+      targetDashboard: body.targetDashboard || 'Main Overview',
+      notificationsEnabled: body.notificationsEnabled ?? true,
+      createdAt: new Date().toISOString(),
+      nextRunAt: new Date(Date.now() + 86400000).toISOString(),
+    };
+    schedules.push(newSchedule);
+    return NextResponse.json(newSchedule, { status: 201 });
+  }
+
+  if (action === 'generate-now') {
+    const newSnapshot: Snapshot = {
+      id: `snap-${Date.now()}`,
+      scheduleId: 'manual',
+      createdAt: new Date().toISOString(),
+      status: 'completed',
+      dashboard: body.dashboard || 'Main Overview',
+      metrics: {
+        totalEvents: 1350 + Math.floor(Math.random() * 200),
+        tasksCompleted: 52 + Math.floor(Math.random() * 20),
+        activeAgents: 3 + Math.floor(Math.random() * 3),
+        errorRate: Math.round((1.5 + Math.random() * 3) * 10) / 10,
+        avgResponseTime: 100 + Math.floor(Math.random() * 80),
+      },
+    };
+    snapshots.unshift(newSnapshot);
+    return NextResponse.json(newSnapshot, { status: 201 });
+  }
+
+  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }

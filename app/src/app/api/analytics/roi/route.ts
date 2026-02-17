@@ -1,60 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const HOURLY_RATE = 75;
-
-interface ManualEntry {
+export interface ROIEntry {
   id: string;
-  agent: string;
   description: string;
-  timeSavedMin: number;
-  date: string;
-}
-
-interface AgentROI {
-  agent: string;
-  cost: number;
-  tasksCompleted: number;
-  timeSavedHrs: number;
+  hoursSaved: number;
   hourlyRate: number;
-  valueGenerated: number;
+  estimatedValue: number;
+  aiCost: number;
+  createdAt: string;
 }
 
-const agentData: AgentROI[] = [
-  { agent: 'Po (Orchestrator)', cost: 42.30, tasksCompleted: 156, timeSavedHrs: 18.5, hourlyRate: HOURLY_RATE, valueGenerated: 1387.50 },
-  { agent: 'Coder', cost: 38.10, tasksCompleted: 89, timeSavedHrs: 32.0, hourlyRate: HOURLY_RATE, valueGenerated: 2400.00 },
-  { agent: 'Researcher', cost: 21.40, tasksCompleted: 45, timeSavedHrs: 12.0, hourlyRate: HOURLY_RATE, valueGenerated: 900.00 },
-  { agent: 'Reviewer', cost: 8.90, tasksCompleted: 67, timeSavedHrs: 8.5, hourlyRate: HOURLY_RATE, valueGenerated: 637.50 },
-  { agent: 'Deployer', cost: 6.22, tasksCompleted: 23, timeSavedHrs: 5.0, hourlyRate: HOURLY_RATE, valueGenerated: 375.00 },
-];
-
-const manualEntries: ManualEntry[] = [
-  { id: '1', agent: 'Coder', description: 'Refactored auth module', timeSavedMin: 120, date: '2026-02-17' },
-  { id: '2', agent: 'Researcher', description: 'API comparison report', timeSavedMin: 90, date: '2026-02-16' },
-];
+const entries: ROIEntry[] = [];
 
 export async function GET() {
-  const totalCost = agentData.reduce((s, a) => s + a.cost, 0);
-  const totalTimeSaved = agentData.reduce((s, a) => s + a.timeSavedHrs, 0);
-  const totalValue = agentData.reduce((s, a) => s + a.valueGenerated, 0);
-  const roiMultiplier = totalCost > 0 ? totalValue / totalCost : 0;
-
-  return NextResponse.json({
-    summary: { totalCost, totalTimeSaved, totalValue, netValue: totalValue - totalCost, roiMultiplier },
-    agents: agentData,
-    manualEntries,
-  });
+  return NextResponse.json({ entries });
 }
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { agent, description, timeSavedMin, date } = body;
-  const entry: ManualEntry = {
-    id: String(Date.now()),
-    agent,
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const { description, hoursSaved, hourlyRate = 75, aiCost = 0 } = body;
+
+  if (!description || hoursSaved == null) {
+    return NextResponse.json({ error: 'description and hoursSaved required' }, { status: 400 });
+  }
+
+  const entry: ROIEntry = {
+    id: crypto.randomUUID(),
     description,
-    timeSavedMin,
-    date: date || new Date().toISOString().split('T')[0],
+    hoursSaved: Number(hoursSaved),
+    hourlyRate: Number(hourlyRate),
+    estimatedValue: Number(hoursSaved) * Number(hourlyRate),
+    aiCost: Number(aiCost),
+    createdAt: new Date().toISOString(),
   };
-  manualEntries.push(entry);
-  return NextResponse.json({ entry }, { status: 201 });
+
+  entries.push(entry);
+  return NextResponse.json(entry, { status: 201 });
+}
+
+export async function DELETE(req: NextRequest) {
+  const id = req.nextUrl.searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+  const idx = entries.findIndex(e => e.id === id);
+  if (idx === -1) return NextResponse.json({ error: 'not found' }, { status: 404 });
+
+  entries.splice(idx, 1);
+  return NextResponse.json({ ok: true });
 }
