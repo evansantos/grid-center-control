@@ -1,95 +1,116 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react';
 
-const STORAGE_KEY = 'grid-onboarding-seen'
+const STORAGE_KEY = 'grid-onboarding-seen';
 
-const steps = [
-  { title: 'Welcome to Grid Dashboard', description: 'Your command center for managing AI agents. Let\'s take a quick tour of the key features.' },
-  { title: 'The Living Office', description: 'Watch your agents at work in real-time. Each card shows an agent\'s current status, activity, and health.' },
-  { title: 'Click Any Agent for Details', description: 'Dive deeper into any agent\'s performance, logs, and configuration by clicking their card.' },
-  { title: 'Use ⌘K for Quick Search', description: 'Press ⌘K (or Ctrl+K) anytime to quickly find agents, commands, and settings.' },
-  { title: 'Check Analytics for Insights', description: 'Visit the Analytics tab to see trends, performance metrics, and system-wide statistics.' },
-]
-
-export function resetOnboarding() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(STORAGE_KEY)
-  }
+interface TourStep {
+  title: string;
+  description: string;
+  selector?: string;
+  position: 'top' | 'bottom' | 'center';
 }
 
-export function ResetOnboardingButton() {
-  return (
-    <button
-      onClick={() => { resetOnboarding(); window.location.reload() }}
-      className="px-3 py-1.5 text-sm rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
-    >
-      Replay Onboarding Tour
-    </button>
-  )
-}
+const STEPS: TourStep[] = [
+  { title: '🏢 This is the Office', description: 'Visit /office to see your agents working in real-time.', selector: 'a[href="/office"]', position: 'bottom' },
+  { title: '👤 Click an Agent', description: 'In the living office, click any agent to see their details and status.', position: 'center' },
+  { title: '⌨️ Use ⌘K', description: 'Press ⌘K (or Ctrl+K) anytime to open the command palette for quick navigation.', position: 'center' },
+  { title: '🩺 Check Health', description: 'Visit the health page to monitor system status and agent health.', selector: 'a[href="/reports"]', position: 'bottom' },
+  { title: '⚙️ Customize Layout', description: 'Head to Settings to customize escalation rules and preferences.', selector: 'a[href="/settings/escalation"]', position: 'bottom' },
+];
 
 export function OnboardingTour() {
-  const [visible, setVisible] = useState(false)
-  const [step, setStep] = useState(0)
+  const [visible, setVisible] = useState(false);
+  const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem(STORAGE_KEY)) {
-      setVisible(true)
-    }
-  }, [])
+    try {
+      if (localStorage.getItem(STORAGE_KEY) !== 'true') {
+        setVisible(true);
+      }
+    } catch {}
+  }, []);
 
-  const finish = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, 'true')
-    setVisible(false)
-    setStep(0)
-  }, [])
+  const dismiss = useCallback(() => {
+    setVisible(false);
+    try { localStorage.setItem(STORAGE_KEY, 'true'); } catch {}
+  }, []);
 
-  if (!visible) return null
+  const next = () => {
+    if (step < STEPS.length - 1) setStep(step + 1);
+    else dismiss();
+  };
 
-  const current = steps[step]
-  const isLast = step === steps.length - 1
+  if (!visible) return null;
+
+  const current = STEPS[step];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
-        {/* Step counter */}
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs text-zinc-500 font-medium">{step + 1} of {steps.length}</span>
-          <button onClick={finish} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
-            Skip
-          </button>
+    <>
+      {/* Overlay */}
+      <div style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+        zIndex: 9998,
+      }} onClick={dismiss} />
+
+      {/* Tooltip */}
+      <div style={{
+        position: 'fixed',
+        zIndex: 9999,
+        ...(current.position === 'center'
+          ? { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+          : { top: 60, left: '50%', transform: 'translateX(-50%)' }),
+        background: 'var(--grid-surface, #1a1a2e)',
+        border: '1px solid var(--grid-border, #333)',
+        borderRadius: 12,
+        padding: '20px 24px',
+        maxWidth: 360,
+        width: '90vw',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+      }}>
+        <div style={{ fontSize: 11, color: 'var(--grid-text-dim, #888)', marginBottom: 4 }}>
+          Step {step + 1} of {STEPS.length}
         </div>
-
-        {/* Progress bar */}
-        <div className="w-full h-1 bg-zinc-800 rounded-full mb-5">
-          <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-300"
-            style={{ width: `${((step + 1) / steps.length) * 100}%` }}
-          />
+        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--grid-text, #fff)' }}>
+          {current.title}
         </div>
-
-        {/* Content */}
-        <h2 className="text-lg font-semibold text-zinc-100 mb-2">{current.title}</h2>
-        <p className="text-sm text-zinc-400 leading-relaxed mb-6">{current.description}</p>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setStep(s => s - 1)}
-            disabled={step === 0}
-            className="px-4 py-2 text-sm rounded-md text-zinc-400 hover:text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Back
+        <div style={{ fontSize: 13, color: 'var(--grid-text-dim, #aaa)', lineHeight: 1.5, marginBottom: 16 }}>
+          {current.description}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button onClick={dismiss} style={{
+            background: 'none', border: 'none', color: 'var(--grid-text-dim, #888)',
+            cursor: 'pointer', fontSize: 12, fontFamily: 'inherit',
+          }}>
+            Skip tour
           </button>
-          <button
-            onClick={isLast ? finish : () => setStep(s => s + 1)}
-            className="px-5 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-500 transition-colors"
-          >
-            {isLast ? 'Get Started' : 'Next'}
+          <button onClick={next} style={{
+            background: 'var(--grid-accent, #e74c3c)', color: '#fff', border: 'none',
+            borderRadius: 6, padding: '6px 16px', cursor: 'pointer', fontSize: 13,
+            fontWeight: 600, fontFamily: 'inherit',
+          }}>
+            {step < STEPS.length - 1 ? 'Next' : 'Done'}
           </button>
         </div>
       </div>
-    </div>
-  )
+    </>
+  );
+}
+
+/** Call this to reset the tour flag and trigger a re-show */
+export function replayOnboardingTour() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  window.dispatchEvent(new Event('grid-replay-tour'));
+}
+
+export function OnboardingTourWithReplay() {
+  const [key, setKey] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setKey(k => k + 1);
+    window.addEventListener('grid-replay-tour', handler);
+    return () => window.removeEventListener('grid-replay-tour', handler);
+  }, []);
+
+  return <OnboardingTour key={key} />;
 }

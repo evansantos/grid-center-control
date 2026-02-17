@@ -1,69 +1,81 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-
-interface AgentStats {
-  tasks: number
-  errors: number
-  avgResponse: number
-  isTopActive: boolean
-}
-
-interface AchievementBadgesProps {
-  agentId: string
-  stats: AgentStats
+interface ActivityData {
+  status?: 'active' | 'recent' | 'idle';
+  messageCount?: number;
+  task?: string;
 }
 
 interface Badge {
-  id: string
-  emoji: string
-  name: string
-  description: string
-  check: (stats: AgentStats) => boolean
-  color: string
+  emoji: string;
+  label: string;
+  description: string;
 }
 
-const badges: Badge[] = [
-  { id: 'century', emoji: '💯', name: 'Century', description: 'Completed 100+ tasks', check: s => s.tasks >= 100, color: 'bg-amber-500/20 border-amber-500/50 text-amber-400' },
-  { id: 'flawless', emoji: '💎', name: 'Flawless', description: 'Zero errors recorded', check: s => s.errors === 0, color: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' },
-  { id: 'mvp', emoji: '👑', name: 'MVP', description: 'Most active agent', check: s => s.isTopActive, color: 'bg-purple-500/20 border-purple-500/50 text-purple-400' },
-  { id: 'speed', emoji: '⚡', name: 'Speed Demon', description: 'Fastest avg response time', check: s => s.avgResponse < 200, color: 'bg-blue-500/20 border-blue-500/50 text-blue-400' },
-]
+function computeBadges(agentId: string, activity: ActivityData): Badge[] {
+  const badges: Badge[] = [];
+  const mc = activity.messageCount ?? 0;
 
-export function AchievementBadges({ agentId, stats }: AchievementBadgesProps) {
-  const [tooltip, setTooltip] = useState<string | null>(null)
+  if (mc >= 100) {
+    badges.push({ emoji: '🏆', label: '100 Tasks', description: 'Completed 100+ tasks' });
+  }
+  if (mc >= 50) {
+    badges.push({ emoji: '⚡', label: 'Most Active', description: 'Over 50 messages today' });
+  }
+  if (activity.status === 'active') {
+    badges.push({ emoji: '🔥', label: 'On Fire', description: 'Currently on an active streak' });
+  }
+  if (activity.status === 'idle' && mc === 0) {
+    badges.push({ emoji: '✅', label: 'Zero Errors', description: 'Clean record — no errors reported' });
+  }
+
+  return badges;
+}
+
+export function AchievementBadges({ agentId, activity }: { agentId: string; activity: ActivityData }) {
+  const badges = computeBadges(agentId, activity);
+  if (badges.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2">
-      {badges.map(badge => {
-        const unlocked = badge.check(stats)
-        return (
-          <div
-            key={`${agentId}-${badge.id}`}
-            className="relative"
-            onMouseEnter={() => setTooltip(badge.id)}
-            onMouseLeave={() => setTooltip(null)}
-          >
-            <div
-              className={`w-9 h-9 rounded-full border flex items-center justify-center text-sm transition-all ${
-                unlocked
-                  ? `${badge.color} shadow-sm`
-                  : 'bg-zinc-800/50 border-zinc-700 text-zinc-600 grayscale'
-              }`}
-            >
-              {badge.emoji}
-            </div>
-            {tooltip === badge.id && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 rounded-md text-xs text-zinc-300 whitespace-nowrap z-10 shadow-lg">
-                <span className="font-medium">{badge.name}</span>
-                <span className="text-zinc-500"> — {badge.description}</span>
-                {!unlocked && <span className="text-zinc-600"> (locked)</span>}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-zinc-700" />
-              </div>
-            )}
-          </div>
-        )
-      })}
+    <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 1 }}>
+      {badges.map((b) => (
+        <span
+          key={b.label}
+          style={{
+            fontSize: 7,
+            cursor: 'default',
+            position: 'relative',
+          }}
+          title={`${b.label}: ${b.description}`}
+          className="achievement-badge"
+        >
+          {b.emoji}
+        </span>
+      ))}
+      <style>{`
+        .achievement-badge { position: relative; }
+        .achievement-badge::after {
+          content: attr(title);
+          position: absolute;
+          bottom: 110%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #1f2937;
+          color: #e5e7eb;
+          padding: 2px 5px;
+          border-radius: 3px;
+          font-size: 7px;
+          font-family: monospace;
+          white-space: nowrap;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.15s;
+          z-index: 100;
+        }
+        .achievement-badge:hover::after {
+          opacity: 1;
+        }
+      `}</style>
     </div>
-  )
+  );
 }

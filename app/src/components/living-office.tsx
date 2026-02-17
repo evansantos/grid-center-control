@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ConversationPanel } from './conversation-panel';
-import { MiniMap } from './mini-map';
 import { VisitorIndicator } from './visitor-indicator';
+import { playSpawn } from '../lib/sound-effects';
+import { AchievementBadges } from './achievement-badges';
 import { useSprintData } from '@/hooks/use-sprint-data';
+import { useOfficeTheme } from '@/hooks/use-office-theme';
 
 /* ── Types ── */
 interface ActivityItem {
@@ -291,10 +293,11 @@ function DeskUnit({
 
 /* ── Character + Desk combined, with walking ── */
 function AgentUnit({
-  agent, status, animDelay, selected, onClick,
+  agent, status, animDelay, selected, onClick, activityData,
 }: {
   agent: AgentCfg; status: 'active' | 'recent' | 'idle';
   animDelay: number; selected: boolean; onClick: () => void;
+  activityData?: { status?: 'active' | 'recent' | 'idle'; messageCount?: number; task?: string };
 }) {
   const { deskPos, idleRoutine, id } = agent;
   const routineId = `walk-${id}`;
@@ -411,6 +414,9 @@ function AgentUnit({
         }}>
           {agent.emoji} {agent.name}
         </div>
+
+        {/* Achievement badges */}
+        <AchievementBadges agentId={agent.id} activity={activityData ?? { status, messageCount: 0 }} />
       </button>
 
       {/* Desk furniture (stays at desk position always) */}
@@ -974,6 +980,7 @@ function MetricsBar({ activity }: { activity: Record<string, ActivityItem> }) {
    ██  MAIN COMPONENT
    ══════════════════════════════════════════ */
 export function LivingOffice() {
+  const { theme } = useOfficeTheme();
   const [activity, setActivity] = useState<Record<string, ActivityItem>>({});
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [scale, setScale] = useState<number>(1);
@@ -1073,6 +1080,7 @@ export function LivingOffice() {
           setSpawnAnimations(prev => [...prev, {
             id: animId, parentId: data.parentAgent, childId: data.agent, reverse: false, startTime: Date.now()
           }]);
+          playSpawn();
           setTimeout(() => setSpawnAnimations(prev => prev.filter(a => a.id !== animId)), 10000);
         }
       } catch (err) {
@@ -1209,9 +1217,9 @@ export function LivingOffice() {
             position: 'relative',
             width: FLOOR_W,
             height: FLOOR_H,
-            background: 'repeating-conic-gradient(#12121a 0% 25%, #0e0e14 0% 50%) 0 0 / 28px 28px',
+            background: theme.floorBg,
             borderRadius: 12,
-            border: '2px solid #1a1a2e',
+            border: `2px solid ${theme.floorBorder}`,
             overflow: 'hidden',
             transform: `perspective(1000px) rotateX(2deg) scale(${scale})`,
             transformOrigin: 'top left',
@@ -1292,6 +1300,7 @@ export function LivingOffice() {
             animDelay={i * 2.5}
             selected={selectedAgent === agent.id}
             onClick={() => handleSelect(agent.id)}
+            activityData={activity[agent.id]}
           />
         ))}
 
@@ -1368,15 +1377,6 @@ export function LivingOffice() {
 
           {/* Visitor indicator */}
           <VisitorIndicator />
-
-          {/* Mini-map */}
-          <MiniMap
-            agents={AGENTS}
-            floorW={FLOOR_W}
-            floorH={FLOOR_H}
-            getStatus={getStatus}
-            onAgentClick={handleSelect}
-          />
 
           {/* Clock in corner */}
           <div style={{
