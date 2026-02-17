@@ -28,14 +28,12 @@ const STATUS_COLORS: Record<string, string> = {
   failed: '#ef4444',
 };
 
-const COLUMN_ORDER = ['pending', 'in_progress', 'review', 'done', 'approved', 'failed'] as const;
+const COLUMN_ORDER = ['pending', 'in_progress', 'review', 'done'] as const;
 const COLUMN_LABELS: Record<string, string> = {
   pending: 'Pending',
   in_progress: 'In Progress',
   review: 'Review',
   done: 'Done',
-  approved: 'Approved',
-  failed: 'Failed',
 };
 
 function parseAgentFromTitle(title: string): string | null {
@@ -50,10 +48,13 @@ function groupTasksByStatus(tasks: Task[]): Record<string, Task[]> {
   });
   
   tasks.forEach(task => {
-    if (grouped[task.status]) {
-      grouped[task.status].push(task);
+    // Map approved → done, failed → in_progress (shown with badge)
+    const mappedStatus = task.status === 'approved' ? 'done' 
+      : task.status === 'failed' ? 'in_progress' 
+      : task.status;
+    if (grouped[mappedStatus]) {
+      grouped[mappedStatus].push(task);
     } else {
-      // Fallback for unknown status
       grouped.pending.push(task);
     }
   });
@@ -170,7 +171,7 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
       {tasks.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 text-blue-400">⚡ Tasks</h2>
-          <div className="grid grid-cols-6 gap-4 min-h-[400px]">
+          <div className="grid grid-cols-4 gap-4 min-h-[400px]">
             {COLUMN_ORDER.map(status => (
               <div
                 key={status}
@@ -231,6 +232,9 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
                             {task.title}
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
+                            {task.status === 'failed' && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-red-600/30 text-red-400 font-bold">FAILED</span>
+                            )}
                             {task.spec_review && (
                               <span className={`text-xs px-1 py-0.5 rounded ${task.spec_review.startsWith('PASS') ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'}`}>
                                 spec:{task.spec_review.startsWith('PASS') ? '✓' : '✗'}
