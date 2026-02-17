@@ -41,13 +41,14 @@ const STATUS_ICONS: Record<string, string> = {
   done: '✓',
 };
 
-const PHASE_STEPS = ['design', 'planning', 'development', 'review', 'complete'];
+const PHASE_STEPS = ['brainstorm', 'design', 'plan', 'execute', 'review', 'done'];
 const PHASE_LABELS: Record<string, string> = {
+  brainstorm: 'BRAINSTORM',
   design: 'DESIGN',
-  planning: 'PLANNING',
-  development: 'DEV',
+  plan: 'PLANNING',
+  execute: 'DEV',
   review: 'REVIEW',
-  complete: 'COMPLETE',
+  done: 'COMPLETE',
 };
 
 const COLUMN_ORDER = ['pending', 'in_progress', 'review', 'done'] as const;
