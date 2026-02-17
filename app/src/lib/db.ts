@@ -11,6 +11,12 @@ export function getDB(): Database.Database {
     db = new Database(DB_PATH, { readonly: false });
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
+
+    // Check foreign key integrity on startup
+    const fkViolations = db.pragma('foreign_key_check');
+    if (Array.isArray(fkViolations) && fkViolations.length > 0) {
+      console.warn(`[db] foreign_key_check found ${fkViolations.length} violation(s):`, fkViolations);
+    }
   }
   return db;
 }
