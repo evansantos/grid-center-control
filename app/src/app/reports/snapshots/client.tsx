@@ -27,15 +27,15 @@ interface Snapshot {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    completed: 'color: #22c55e; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3)',
-    failed: 'color: #ef4444; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3)',
-    pending: 'color: #eab308; background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3)',
+  const colors: Record<string, { color: string; background: string; border: string }> = {
+    completed: { color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)' },
+    failed: { color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' },
+    pending: { color: '#eab308', background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)' },
   };
   return (
     <span
       className="font-mono text-xs px-2 py-0.5 rounded"
-      style={{ cssText: colors[status] || '' }}
+      style={colors[status] || {}}
     >
       {status}
     </span>

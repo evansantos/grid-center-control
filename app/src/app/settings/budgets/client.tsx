@@ -15,9 +15,9 @@ interface Budget {
 }
 
 const emptyForm = {
-  scope: 'global' as const,
+  scope: 'global' as 'global' | 'agent',
   agentName: '',
-  period: 'daily' as const,
+  period: 'daily' as 'daily' | 'weekly',
   amount: 0,
   alertThreshold: 80,
   autoPause: false,
@@ -61,9 +61,10 @@ export default function BudgetsClient() {
 
   const handleEdit = (b: Budget) => {
     setForm({
-      scope: b.scope,
+      ...form,
+      scope: b.scope as 'global' | 'agent',
       agentName: b.agentName || '',
-      period: b.period,
+      period: b.period as 'daily' | 'weekly',
       amount: b.amount,
       alertThreshold: b.alertThreshold,
       autoPause: b.autoPause,
