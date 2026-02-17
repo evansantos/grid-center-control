@@ -1,68 +1,48 @@
 import { NextResponse } from 'next/server';
-import { readFile, readdir, stat, access } from 'fs/promises';
-import { constants } from 'fs';
-import path from 'path';
-import os from 'os';
+import { getDB } from '@/lib/db';
 
-interface Task {
+interface KanbanTask {
   id: string;
   title: string;
-  agent: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
   status: string;
+  taskNumber: number;
+  description: string;
+  agentSession: string | null;
+  projectId: string;
 }
 
-const AGENTS_DIR = path.join(os.homedir(), '.openclaw', 'agents');
-const TASK_FILE = 'tasks.json';
-
-type Columns = Record<string, Task[]>;
+type Columns = Record<string, KanbanTask[]>;
 
 export async function GET() {
   const columns: Columns = { pending: [], in_progress: [], review: [], done: [] };
 
   try {
-    try { await access(AGENTS_DIR, constants.R_OK); } catch { /* agents dir not accessible */ return NextResponse.json({ columns }); }
+    const db = getDB();
+    const rows = db.prepare(
+      `SELECT id, project_id, task_number, title, description, status, agent_session, started_at, completed_at FROM tasks ORDER BY task_number`
+    ).all() as Array<{
+      id: string; project_id: string; task_number: number; title: string;
+      description: string; status: string; agent_session: string | null;
+      started_at: string | null; completed_at: string | null;
+    }>;
 
-    const dirs = await readdir(AGENTS_DIR);
-    for (const agent of dirs) {
-      const agentDir = path.join(AGENTS_DIR, agent);
-      try {
-        const s = await stat(agentDir);
-        if (!s.isDirectory()) continue;
-      } catch (err) {
-        console.error(`[kanban] stat failed for ${agent}`, err);
-        continue;
-      }
+    for (const row of rows) {
+      let col = row.status.toLowerCase().replace(/\s+/g, '_');
+      if (col === 'approved') col = 'done';
+      if (!columns[col]) columns[col] = [];
 
-      // Look for tasks.json in workspace
-      const taskPaths = [
-        path.join(agentDir, 'workspace', TASK_FILE),
-        path.join(agentDir, 'workspace', 'project', TASK_FILE),
-      ];
-
-      for (const tp of taskPaths) {
-        try {
-          await access(tp, constants.R_OK);
-          const raw = JSON.parse(await readFile(tp, 'utf-8'));
-          const tasks: Task[] = Array.isArray(raw) ? raw : raw.tasks ?? [];
-          for (const task of tasks) {
-            const status = (task.status || 'pending').replace(/\s+/g, '_').toLowerCase();
-            if (!columns[status]) columns[status] = [];
-            columns[status].push({
-              id: task.id || `${agent}-${Math.random().toString(36).slice(2, 8)}`,
-              title: task.title || 'Untitled',
-              agent: task.agent || agent,
-              priority: task.priority || 'medium',
-              status,
-            });
-          }
-        } catch (error) { /* failed to parse kanban data */
-          // File doesn't exist for this agent — expected
-        }
-      }
+      columns[col].push({
+        id: row.id,
+        title: row.title,
+        status: row.status,
+        taskNumber: row.task_number,
+        description: row.description,
+        agentSession: row.agent_session,
+        projectId: row.project_id,
+      });
     }
   } catch (err) {
-    console.error('[kanban] Failed to read tasks', err);
+    console.error('[kanban] Failed to read tasks from DB', err);
   }
 
   return NextResponse.json({ columns });
