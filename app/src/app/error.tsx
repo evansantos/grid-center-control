@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
+import { handleError } from '@/lib/error-handler';
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const { message, details } = handleError(error, 'root');
+
   useEffect(() => { console.error(error); }, [error]);
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
