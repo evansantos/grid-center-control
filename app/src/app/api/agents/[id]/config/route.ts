@@ -11,11 +11,11 @@ function getAgentWorkspacePath(agentName: string): string {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ name: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { name } = await params;
-    const workspacePath = getAgentWorkspacePath(name);
+    const { id } = await params;
+    const workspacePath = getAgentWorkspacePath(id);
     
     const files: Record<string, string> = {};
     
@@ -35,7 +35,7 @@ export async function GET(
     
     return NextResponse.json({ files });
   } catch (error) {
-    console.error('Error in GET /api/agents/[name]/config:', error);
+    console.error('Error in GET /api/agents/[id]/config:', error);
     return NextResponse.json(
       { error: 'Failed to read agent configuration files' },
       { status: 500 }
@@ -45,10 +45,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ name: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { name } = await params;
+    const { id } = await params;
     const { file, content } = await request.json();
     
     if (!ALLOWED_FILES.includes(file)) {
@@ -58,14 +58,14 @@ export async function POST(
       );
     }
     
-    const workspacePath = getAgentWorkspacePath(name);
+    const workspacePath = getAgentWorkspacePath(id);
     const filePath = join(workspacePath, file);
     
     writeFileSync(filePath, content, 'utf-8');
     
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in POST /api/agents/[name]/config:', error);
+    console.error('Error in POST /api/agents/[id]/config:', error);
     return NextResponse.json(
       { error: 'Failed to save agent configuration file' },
       { status: 500 }
