@@ -111,7 +111,7 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
         <div className="space-y-1" style={{ minWidth: `${Math.max(600, entries.length * 40 * zoom)}px` }}>
           {entries.map((entry, idx) => {
             const colors = TYPE_COLORS[entry.type] || TYPE_COLORS.assistant;
-            const widthPct = Math.max(2, (entry.durationMs / maxDuration) * 100 * zoom);
+            const widthPct = Math.max(2, (entry.durationMs / totalMs) * 100 * zoom);
             const isHovered = hoveredIdx === idx;
 
             return (
