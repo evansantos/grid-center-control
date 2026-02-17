@@ -4,9 +4,9 @@ import { readFile, writeFile, access } from 'fs/promises';
 import { constants } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
+import { MAX_AGENT_ID_LENGTH } from '@/lib/constants';
 
 const ALLOWED_FILES = ['SOUL.md', 'TOOLS.md', 'HEARTBEAT.md'];
-const MAX_AGENT_ID_LENGTH = 64;
 const MAX_CONTENT_LENGTH = 100000; // 100KB max for config files
 
 function getAgentWorkspacePath(agentName: string): string {

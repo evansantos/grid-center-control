@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile, readdir, stat, access } from 'fs/promises';
 import { constants } from 'fs';
 import { join } from 'path';
-import os from 'os';
-
-const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
+import { OPENCLAW_DIR } from '@/lib/constants';
 
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
 

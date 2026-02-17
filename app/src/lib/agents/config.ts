@@ -1,8 +1,6 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import os from 'os';
-
-const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
+import { OPENCLAW_DIR } from '@/lib/constants';
 const CONFIG_PATH = join(OPENCLAW_DIR, 'openclaw.json');
 
 export interface AgentConfig {

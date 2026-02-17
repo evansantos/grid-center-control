@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile, readdir, stat, access } from 'fs/promises';
 import { constants } from 'fs';
 import path from 'path';
-import os from 'os';
 import { summarizeCosts, type TokenUsage } from '@/lib/cost-calculator';
-
-const AGENTS_DIR = path.join(os.homedir(), '.openclaw', 'agents');
+import { AGENTS_DIR } from '@/lib/constants';
 
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
 

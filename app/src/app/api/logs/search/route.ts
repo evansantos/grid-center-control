@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import os from 'os';
 import path from 'path';
 import { readFile, readdir, stat, access } from 'fs/promises';
 import { constants } from 'fs';
+import { AGENTS_DIR } from '@/lib/constants';
 
 interface SearchResult {
   sessionKey: string;
@@ -12,8 +12,6 @@ interface SearchResult {
   content: string;
   matchHighlight: string;
 }
-
-const AGENTS_DIR = path.join(os.homedir(), '.openclaw', 'agents');
 
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { return false; } }
 

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { apiError } from '@/lib/api-error';
-import { readFile, access } from 'fs/promises';
+import { readFile, readdir, access } from 'fs/promises';
 import { constants } from 'fs';
 import path from 'path';
-import os from 'os';
+import { AGENTS_DIR } from '@/lib/constants';
 
 interface TimelineEntry {
   type: 'user' | 'assistant' | 'tool_call' | 'tool_result' | 'thinking';
@@ -13,10 +13,19 @@ interface TimelineEntry {
   detail: string;
 }
 
-const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
 let cache: { key: string; data: unknown; ts: number } | null = null;
 
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { return false; } }
+
+async function resolveSessionFile(sessionKey: string): Promise<string | null> {
+  const agents = await readdir(AGENTS_DIR).catch(() => []);
+  for (const agent of agents) {
+    const sessionsDir = path.join(AGENTS_DIR, agent, 'sessions');
+    const candidate = path.join(sessionsDir, `${sessionKey}.jsonl`);
+    if (await exists(candidate)) return candidate;
+  }
+  return null;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -30,8 +39,8 @@ export async function GET(request: Request) {
     return NextResponse.json(cache.data);
   }
 
-  const filePath = path.join(SESSIONS_DIR, `${sessionKey}.jsonl`);
-  if (!(await exists(filePath))) {
+  const filePath = await resolveSessionFile(sessionKey);
+  if (!filePath) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 });
   }
 

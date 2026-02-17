@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFile, readdir, stat, access } from 'fs/promises';
 import { constants } from 'fs';
 import { join } from 'path';
-import os from 'os';
-
-const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
-const MAX_AGENT_ID_LENGTH = 64;
+import { OPENCLAW_DIR, MAX_AGENT_ID_LENGTH } from '@/lib/constants';
 
 interface Message {
   role: string;
