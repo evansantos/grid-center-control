@@ -31,6 +31,24 @@ const PRIORITY_COLORS: Record<string, string> = {
   low: '#6b7280',
 };
 
+const AGENT_COLORS: Record<string, string> = {
+  GRID: '#3b82f6',
+  ATLAS: '#8b5cf6',
+  DEV: '#10b981',
+  PIXEL: '#f59e0b',
+  BUG: '#ef4444',
+  SENTINEL: '#6366f1',
+};
+
+function getAgentInfo(agent: string): { name: string; color: string; initial: string } | null {
+  if (!agent) return null;
+  const upper = agent.toUpperCase();
+  for (const [key, color] of Object.entries(AGENT_COLORS)) {
+    if (upper.includes(key)) return { name: key, color, initial: key[0] };
+  }
+  return { name: agent, color: 'var(--grid-text-muted)', initial: agent[0]?.toUpperCase() ?? '?' };
+}
+
 export function KanbanBoard() {
   const [columns, setColumns] = useState<Columns>({ pending: [], in_progress: [], review: [], done: [] });
   const [loading, setLoading] = useState(true);
@@ -87,111 +105,71 @@ export function KanbanBoard() {
     }
   }, []);
 
-  if (loading) return <div style={{ padding: '2rem', color: 'var(--grid-text-dim)' }}>Loading board…</div>;
+  if (loading) return <div className="p-8 text-[color:var(--grid-text-dim)]">Loading board…</div>;
 
   return (
-    <div style={{ padding: '1.5rem 2rem' }}>
-      <h1
-        style={{
-          fontFamily: 'var(--font-mono, monospace)',
-          fontSize: '1.25rem',
-          fontWeight: 700,
-          color: 'var(--grid-accent)',
-          marginBottom: '1.25rem',
-          letterSpacing: '0.05em',
-        }}
-      >
+    <div className="px-8 py-6">
+      <h1 className="font-mono text-xl font-bold text-[color:var(--grid-accent)] mb-5 tracking-wider">
         ▥ KANBAN
       </h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', minHeight: 400 }}>
+      <div className="grid grid-cols-4 gap-4 min-h-[400px]">
         {COLUMN_META.map(col => (
           <div
             key={col.key}
             onDragOver={e => handleDragOver(e, col.key)}
             onDragLeave={handleDragLeave}
             onDrop={e => handleDrop(e, col.key)}
+            className="rounded-[10px] p-3 transition-[border-color,background] duration-150"
             style={{
               background: dragOver === col.key ? 'var(--grid-surface-hover)' : 'var(--grid-bg)',
-              border: `1px solid ${dragOver === col.key ? col.accent : 'var(--grid-border)'}`,
-              borderRadius: 10,
-              padding: '0.75rem',
-              transition: 'border-color 0.15s, background 0.15s',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: dragOver === col.key ? col.accent : 'var(--grid-border)',
             }}
           >
             <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                marginBottom: '0.75rem',
-                fontFamily: 'var(--font-mono, monospace)',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: col.accent,
-              }}
+              className="flex items-center gap-2 mb-3 font-mono text-xs font-semibold uppercase tracking-widest"
+              style={{ color: col.accent }}
             >
               <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: col.accent,
-                  display: 'inline-block',
-                }}
+                className="inline-block w-2 h-2 rounded-full"
+                style={{ background: col.accent }}
               />
               {col.label}
-              <span style={{ marginLeft: 'auto', opacity: 0.5 }}>{columns[col.key].length}</span>
+              <span className="ml-auto opacity-50">{columns[col.key].length}</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minHeight: 60 }}>
+            <div className="flex flex-col gap-2 min-h-[60px]">
               {columns[col.key].map(task => (
                 <div
                   key={task.id}
                   draggable
                   onDragStart={e => handleDragStart(e, task)}
-                  style={{
-                    background: 'var(--grid-surface)',
-                    border: '1px solid var(--grid-border)',
-                    borderRadius: 8,
-                    padding: '0.625rem 0.75rem',
-                    cursor: 'grab',
-                    transition: 'box-shadow 0.15s',
-                  }}
+                  className="bg-[var(--grid-surface)] border border-[var(--grid-border)] rounded-lg px-3 py-2.5 cursor-grab transition-shadow duration-150"
                   onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 0 1px ${col.accent}`)}
                   onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
                 >
-                  <div
-                    style={{
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      color: 'var(--grid-text)',
-                      marginBottom: 4,
-                    }}
-                  >
+                  <div className="text-[0.8rem] font-semibold text-[color:var(--grid-text)] mb-1">
                     {task.title}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span
-                      style={{
-                        fontSize: '0.65rem',
-                        fontFamily: 'var(--font-mono, monospace)',
-                        color: 'var(--grid-text-muted)',
-                      }}
-                    >
+                  <div className="flex items-center gap-1.5">
+                    {(() => {
+                      const info = getAgentInfo(task.agent);
+                      return info ? (
+                        <span
+                          title={info.name}
+                          className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full text-white text-[0.6rem] font-bold shrink-0 font-mono"
+                          style={{ background: info.color }}
+                        >
+                          {info.initial}
+                        </span>
+                      ) : null;
+                    })()}
+                    <span className="text-[0.65rem] font-mono text-[color:var(--grid-text-muted)]">
                       {task.agent}
                     </span>
                     <span
-                      style={{
-                        fontSize: '0.6rem',
-                        fontWeight: 700,
-                        padding: '1px 6px',
-                        borderRadius: 4,
-                        background: PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.low,
-                        color: '#fff',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}
+                      className="text-[0.6rem] font-bold px-1.5 py-px rounded text-white uppercase tracking-wider"
+                      style={{ background: PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.low }}
                     >
                       {task.priority}
                     </span>
