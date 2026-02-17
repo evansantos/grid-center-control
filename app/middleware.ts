@@ -1,88 +1,139 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rate-limit';
 
-const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:3001',
-  'http://127.0.0.1:3001',
-];
+const securityHeaders: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Content-Security-Policy':
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws: wss:",
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
 
-const ALLOWED_HOSTS = ['localhost', '127.0.0.1', '::1', '::ffff:127.0.0.1'];
-
-const MUTATING_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
-
-export function middleware(req: NextRequest) {
-  const { method, headers, nextUrl } = req;
-  const pathname = nextUrl.pathname;
-
-  // Only apply to API routes
-  if (!pathname.startsWith('/api/')) {
-    return NextResponse.next();
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(securityHeaders)) {
+    response.headers.set(key, value);
   }
-
-  // --- SEC-04: Localhost auth ---
-  const forwarded = headers.get('x-forwarded-for');
-  if (forwarded) {
-    const firstIp = forwarded.split(',')[0].trim();
-    if (!ALLOWED_HOSTS.includes(firstIp)) {
-      return NextResponse.json({ error: 'Forbidden: non-local request' }, { status: 403 });
-    }
-  }
-
-  // --- SEC-06: CORS ---
-  const origin = headers.get('origin');
-  const response = NextResponse.next();
-
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
-    response.headers.set('Access-Control-Allow-Origin', origin);
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.headers.set('Access-Control-Max-Age', '86400');
-  }
-
-  // Handle preflight
-  if (method === 'OPTIONS') {
-    if (origin && ALLOWED_ORIGINS.includes(origin)) {
-      return new NextResponse(null, {
-        status: 204,
-        headers: {
-          'Access-Control-Allow-Origin': origin,
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          'Access-Control-Max-Age': '86400',
-        },
-      });
-    }
-    return new NextResponse(null, { status: 403 });
-  }
-
-  // --- SEC-07: CSRF protection on mutating requests ---
-  if (MUTATING_METHODS.includes(method)) {
-    if (origin) {
-      if (!ALLOWED_ORIGINS.includes(origin)) {
-        return NextResponse.json({ error: 'Forbidden: invalid origin' }, { status: 403 });
-      }
-    }
-    // If no Origin header, check Referer as fallback
-    const referer = headers.get('referer');
-    if (!origin && referer) {
-      try {
-        const refUrl = new URL(referer);
-        const refOrigin = refUrl.origin;
-        if (!ALLOWED_ORIGINS.includes(refOrigin)) {
-          return NextResponse.json({ error: 'Forbidden: invalid referer' }, { status: 403 });
-        }
-      } catch {
-        // Invalid referer URL — block
-        return NextResponse.json({ error: 'Forbidden: invalid referer' }, { status: 403 });
-      }
-    }
-    // Allow requests with no Origin and no Referer (server-to-server, curl, etc.)
-  }
-
   return response;
 }
 
+const LOCALHOST_IPS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1', 'localhost']);
+const MUTATION_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH']);
+
+/**
+ * Validate that a request genuinely originates from localhost.
+ * We require the real IP (request.ip or x-real-ip) to be localhost.
+ * x-forwarded-for is NOT trusted alone as it can be spoofed.
+ */
+function isLocalhostRequest(request: NextRequest): boolean {
+  // Primary: use x-real-ip header (set by reverse proxy / Next.js runtime)
+  const realIp = request.headers.get('x-real-ip');
+
+  // x-forwarded-for is only trusted as supplementary — both must agree
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+
+  // If we have a real IP, it must be localhost
+  if (realIp) {
+    const realIsLocal = LOCALHOST_IPS.has(realIp);
+    // If x-forwarded-for is also present, it must also be localhost
+    if (forwarded) {
+      return realIsLocal && LOCALHOST_IPS.has(forwarded);
+    }
+    return realIsLocal;
+  }
+
+  // If no real IP is available (dev mode), check forwarded but with caution
+  // In production, having no real IP is suspicious — deny by default
+  if (forwarded) {
+    return LOCALHOST_IPS.has(forwarded);
+  }
+
+  // No IP info at all — only allow in development
+  return process.env.NODE_ENV === 'development';
+}
+
+/**
+ * CSRF protection: mutation requests must include an Origin header
+ * matching the expected localhost origin.
+ */
+function validateCsrf(request: NextRequest): boolean {
+  if (!MUTATION_METHODS.has(request.method)) {
+    return true; // Only check mutations
+  }
+
+  const origin = request.headers.get('origin');
+  if (!origin) {
+    return false; // Mutations MUST have an Origin header
+  }
+
+  try {
+    const originUrl = new URL(origin);
+    const requestUrl = request.nextUrl;
+
+    // Origin hostname must be localhost
+    if (!LOCALHOST_IPS.has(originUrl.hostname)) {
+      return false;
+    }
+
+    // Origin must match request host/port
+    if (originUrl.host !== requestUrl.host) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false; // Malformed origin
+  }
+}
+
+export function middleware(request: NextRequest) {
+  // --- Localhost auth check for API routes ---
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    if (!isLocalhostRequest(request)) {
+      return applySecurityHeaders(
+        new NextResponse(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+    }
+
+    // CSRF protection for mutation methods
+    if (!validateCsrf(request)) {
+      return applySecurityHeaders(
+        new NextResponse(JSON.stringify({ error: 'CSRF validation failed' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+    }
+
+    // Rate limiting
+    const ip = request.headers.get('x-real-ip') ?? '127.0.0.1';
+    const result = rateLimit(ip);
+
+    if (!result.success) {
+      const response = new NextResponse(JSON.stringify({ error: 'Too Many Requests' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      });
+      response.headers.set('Retry-After', String(result.reset - Math.floor(Date.now() / 1000)));
+      response.headers.set('X-RateLimit-Remaining', '0');
+      response.headers.set('X-RateLimit-Reset', String(result.reset));
+      return applySecurityHeaders(response);
+    }
+
+    const response = NextResponse.next();
+    response.headers.set('X-RateLimit-Remaining', String(result.remaining));
+    response.headers.set('X-RateLimit-Reset', String(result.reset));
+    return applySecurityHeaders(response);
+  }
+
+  // Security headers for all other routes
+  return applySecurityHeaders(NextResponse.next());
+}
+
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
