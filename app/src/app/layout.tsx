@@ -6,6 +6,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { NotificationProvider } from '@/components/notification-provider';
 import { NotificationCenter } from '@/components/notification-center';
 import { GlobalSearch } from '@/components/global-search';
+import { OnboardingTourWithReplay } from '@/components/onboarding-tour';
 import { useIsMobile } from '@/lib/useMediaQuery';
 import { useState } from 'react';
 
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </main>
             <GlobalSearch />
+            <OnboardingTourWithReplay />
           </NotificationProvider>
         </ThemeProvider>
       </body>
