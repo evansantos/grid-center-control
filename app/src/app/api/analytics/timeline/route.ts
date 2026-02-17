@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-error';
 import { readFile, access } from 'fs/promises';
 import { constants } from 'fs';
 import path from 'path';
@@ -95,7 +96,7 @@ export async function GET(request: Request) {
 
     cache = { key: sessionKey, data: result, ts: now };
     return NextResponse.json(result);
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return apiError(e);
   }
 }
