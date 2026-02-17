@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SnapshotActionSchema, validateBody } from '@/lib/validators';
 
 interface SnapshotSchedule {
   id: string;
@@ -69,7 +70,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  const raw = await request.json();
+  const validated = validateBody(SnapshotActionSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+  const body = validated.data;
   const { action } = body;
 
   if (action === 'create-schedule') {

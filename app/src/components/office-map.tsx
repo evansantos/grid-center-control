@@ -122,12 +122,12 @@ export function OfficeMap({ onSelectAgent, selectedAgent }: OfficeMapProps) {
     <div className="relative select-none">
       <svg viewBox="0 0 740 420" className="w-full h-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {/* Background */}
-        <rect x="0" y="0" width="740" height="420" rx="12" fill="#0a0a0a" stroke="#27272a" strokeWidth="1" />
+        <rect x="0" y="0" width="740" height="420" rx="12" fill="var(--grid-map-bg)" stroke="var(--grid-border-subtle)" strokeWidth="1" />
 
         {/* Floor grid pattern */}
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#18181b" strokeWidth="0.5" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--grid-map-grid)" strokeWidth="0.5" />
           </pattern>
           {/* Glow filter for active agents */}
           <filter id="glow-green">
@@ -150,9 +150,9 @@ export function OfficeMap({ onSelectAgent, selectedAgent }: OfficeMapProps) {
           <g key={zone.id}>
             <rect
               x={zone.x} y={zone.y} width={zone.w} height={zone.h}
-              rx="8" fill="none" stroke="#27272a" strokeWidth="1" strokeDasharray="4 4"
+              rx="8" fill="none" stroke="var(--grid-border-subtle)" strokeWidth="1" strokeDasharray="4 4"
             />
-            <text x={zone.x + 8} y={zone.y + 16} fontSize="9" fill="#3f3f46" fontFamily="monospace" fontWeight="bold">
+            <text x={zone.x + 8} y={zone.y + 16} fontSize="9" fill="var(--grid-text-faint)" fontFamily="monospace" fontWeight="bold">
               {zone.label}
             </text>
           </g>
@@ -164,7 +164,7 @@ export function OfficeMap({ onSelectAgent, selectedAgent }: OfficeMapProps) {
             key={`link-${i}`}
             x1={link.from.x} y1={link.from.y}
             x2={link.to.x} y2={link.to.y}
-            stroke={link.intensity > 0.5 ? '#22c55e' : '#eab308'}
+            stroke={link.intensity > 0.5 ? 'var(--grid-success)' : 'var(--grid-yellow)'}
             strokeWidth={link.intensity > 0.5 ? 1.5 : 0.8}
             strokeOpacity={link.intensity > 0.5 ? 0.5 : 0.2}
             strokeDasharray={link.intensity > 0.5 ? 'none' : '4 4'}
@@ -177,13 +177,13 @@ export function OfficeMap({ onSelectAgent, selectedAgent }: OfficeMapProps) {
 
         {/* Subagent pulse connections (from center to active agents) */}
         {subagents.length > 0 && (
-          <circle cx="370" cy="30" r="4" fill="#dc2626" opacity="0.6">
+          <circle cx="370" cy="30" r="4" fill="var(--grid-danger)" opacity="0.6">
             <animate attributeName="r" values="3;6;3" dur="1.5s" repeatCount="indefinite" />
             <animate attributeName="opacity" values="0.6;0.3;0.6" dur="1.5s" repeatCount="indefinite" />
           </circle>
         )}
         {subagents.length > 0 && (
-          <text x="370" y="18" fontSize="8" fill="#dc2626" textAnchor="middle" fontFamily="monospace" opacity="0.7">
+          <text x="370" y="18" fontSize="8" fill="var(--grid-danger)" textAnchor="middle" fontFamily="monospace" opacity="0.7">
             MCP ● {subagents.length} spawned
           </text>
         )}
@@ -196,7 +196,7 @@ export function OfficeMap({ onSelectAgent, selectedAgent }: OfficeMapProps) {
           const isActive = status === 'active';
           const isRecent = status === 'recent';
 
-          const ringColor = isActive ? '#22c55e' : isRecent ? '#eab308' : '#27272a';
+          const ringColor = isActive ? 'var(--grid-success)' : isRecent ? 'var(--grid-yellow)' : 'var(--grid-border-subtle)';
           const glowFilter = isActive ? 'url(#glow-green)' : isRecent ? 'url(#glow-yellow)' : undefined;
 
           return (
@@ -211,8 +211,8 @@ export function OfficeMap({ onSelectAgent, selectedAgent }: OfficeMapProps) {
               <rect
                 x={desk.x - 35} y={desk.y - 25} width="70" height="50"
                 rx="6"
-                fill={isSelected ? '#1c1917' : '#0f0f0f'}
-                stroke={isSelected ? '#dc2626' : ringColor}
+                fill={isSelected ? 'var(--grid-map-desk-selected)' : 'var(--grid-map-desk)'}
+                stroke={isSelected ? 'var(--grid-danger)' : ringColor}
                 strokeWidth={isSelected ? 2 : 1}
                 filter={glowFilter}
               />
@@ -223,35 +223,35 @@ export function OfficeMap({ onSelectAgent, selectedAgent }: OfficeMapProps) {
               </text>
 
               {/* Name */}
-              <text x={desk.x} y={desk.y + 18} fontSize="8" fill="#a1a1aa" textAnchor="middle" fontFamily="monospace" fontWeight="bold">
+              <text x={desk.x} y={desk.y + 18} fontSize="8" fill="var(--grid-text-label)" textAnchor="middle" fontFamily="monospace" fontWeight="bold">
                 {desk.name}
               </text>
 
               {/* Status indicator */}
               {isActive && (
                 <g>
-                  <circle cx={desk.x + 28} cy={desk.y - 18} r="4" fill="#22c55e">
+                  <circle cx={desk.x + 28} cy={desk.y - 18} r="4" fill="var(--grid-success)">
                     <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
                   </circle>
                   {/* Typing dots */}
-                  <circle cx={desk.x + 20} cy={desk.y - 30} r="1.5" fill="#22c55e" opacity="0.7">
+                  <circle cx={desk.x + 20} cy={desk.y - 30} r="1.5" fill="var(--grid-success)" opacity="0.7">
                     <animate attributeName="opacity" values="0.3;1;0.3" dur="0.8s" repeatCount="indefinite" />
                   </circle>
-                  <circle cx={desk.x + 25} cy={desk.y - 30} r="1.5" fill="#22c55e" opacity="0.7">
+                  <circle cx={desk.x + 25} cy={desk.y - 30} r="1.5" fill="var(--grid-success)" opacity="0.7">
                     <animate attributeName="opacity" values="0.3;1;0.3" dur="0.8s" begin="0.2s" repeatCount="indefinite" />
                   </circle>
-                  <circle cx={desk.x + 30} cy={desk.y - 30} r="1.5" fill="#22c55e" opacity="0.7">
+                  <circle cx={desk.x + 30} cy={desk.y - 30} r="1.5" fill="var(--grid-success)" opacity="0.7">
                     <animate attributeName="opacity" values="0.3;1;0.3" dur="0.8s" begin="0.4s" repeatCount="indefinite" />
                   </circle>
                 </g>
               )}
               {isRecent && (
-                <circle cx={desk.x + 28} cy={desk.y - 18} r="3" fill="#eab308" />
+                <circle cx={desk.x + 28} cy={desk.y - 18} r="3" fill="var(--grid-yellow)" />
               )}
 
               {/* Time ago badge */}
               {act && (
-                <text x={desk.x} y={desk.y - 30} fontSize="7" fill="#52525b" textAnchor="middle" fontFamily="monospace">
+                <text x={desk.x} y={desk.y - 30} fontSize="7" fill="var(--grid-text-secondary)" textAnchor="middle" fontFamily="monospace">
                   {timeAgo(act.timestamp)} · {act.messageCount}msg
                 </text>
               )}
@@ -261,12 +261,12 @@ export function OfficeMap({ onSelectAgent, selectedAgent }: OfficeMapProps) {
 
         {/* Legend */}
         <g transform="translate(600, 390)">
-          <circle cx="0" cy="0" r="3" fill="#22c55e" />
-          <text x="8" y="3" fontSize="8" fill="#52525b" fontFamily="monospace">Active</text>
-          <circle cx="50" cy="0" r="3" fill="#eab308" />
-          <text x="58" y="3" fontSize="8" fill="#52525b" fontFamily="monospace">Recent</text>
-          <circle cx="108" cy="0" r="3" fill="#27272a" />
-          <text x="116" y="3" fontSize="8" fill="#52525b" fontFamily="monospace">Idle</text>
+          <circle cx="0" cy="0" r="3" fill="var(--grid-success)" />
+          <text x="8" y="3" fontSize="8" fill="var(--grid-text-secondary)" fontFamily="monospace">Active</text>
+          <circle cx="50" cy="0" r="3" fill="var(--grid-yellow)" />
+          <text x="58" y="3" fontSize="8" fill="var(--grid-text-secondary)" fontFamily="monospace">Recent</text>
+          <circle cx="108" cy="0" r="3" fill="var(--grid-border-subtle)" />
+          <text x="116" y="3" fontSize="8" fill="var(--grid-text-secondary)" fontFamily="monospace">Idle</text>
         </g>
       </svg>
     </div>

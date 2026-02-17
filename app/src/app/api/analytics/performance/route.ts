@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import { readFile, readdir, access } from 'fs/promises';
+import { constants } from 'fs';
 import path from 'path';
+import os from 'os';
 
 export interface AgentScorecard {
   agentId: string;
@@ -12,7 +14,7 @@ export interface AgentScorecard {
   errorCount: number;
   errorRate: number;
   lastActive: string;
-  trend: number[]; // last 7 data points (sessions per period)
+  trend: number[];
   health: 'healthy' | 'watch' | 'issues';
 }
 
@@ -22,17 +24,19 @@ const AGENT_EMOJIS: Record<string, string> = {
   sage: '🧙', main: '👤', unknown: '❓',
 };
 
-const SESSIONS_DIR = path.join(process.env.HOME || '~', '.openclaw', 'sessions');
+const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
 let cache: { data: AgentScorecard[]; ts: number } | null = null;
 
-function readFirstAndLastLines(filePath: string, firstN: number, lastN: number): string[] {
-  const content = fs.readFileSync(filePath, 'utf-8');
+async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { return false; } }
+
+async function readFirstAndLastLines(filePath: string, firstN: number, lastN: number): Promise<string[]> {
+  const content = await readFile(filePath, 'utf-8');
   const lines = content.trim().split('\n').filter(Boolean);
   if (lines.length <= firstN + lastN) return lines;
   return [...lines.slice(0, firstN), ...lines.slice(-lastN)];
 }
 
-function computeScorecards(): AgentScorecard[] {
+async function computeScorecards(): Promise<AgentScorecard[]> {
   const agentMap = new Map<string, {
     sessions: number; tokensIn: number; tokensOut: number;
     totalDuration: number; errors: number; lastActive: string;
@@ -40,15 +44,16 @@ function computeScorecards(): AgentScorecard[] {
   }>();
 
   try {
-    if (!fs.existsSync(SESSIONS_DIR)) return [];
-    const files = fs.readdirSync(SESSIONS_DIR).filter(f => f.endsWith('.jsonl'));
+    if (!(await exists(SESSIONS_DIR))) return [];
+    const allFiles = await readdir(SESSIONS_DIR);
+    const files = allFiles.filter(f => f.endsWith('.jsonl'));
 
     for (const file of files) {
       try {
         const sessionKey = file.replace('.jsonl', '');
         const parts = sessionKey.split(':');
         const agentId = parts[1] || 'unknown';
-        const lines = readFirstAndLastLines(path.join(SESSIONS_DIR, file), 5, 20);
+        const lines = await readFirstAndLastLines(path.join(SESSIONS_DIR, file), 5, 20);
         if (lines.length === 0) continue;
 
         if (!agentMap.has(agentId)) {
@@ -75,7 +80,7 @@ function computeScorecards(): AgentScorecard[] {
               tIn += parsed.usage.input_tokens || parsed.usage.prompt_tokens || 0;
               tOut += parsed.usage.output_tokens || parsed.usage.completion_tokens || 0;
             }
-          } catch {}
+          } catch (err) { console.error(err); }
         }
 
         entry.tokensIn += tIn;
@@ -88,14 +93,13 @@ function computeScorecards(): AgentScorecard[] {
 
         const day = (firstTs || new Date().toISOString()).slice(0, 10);
         entry.dailyCounts.set(day, (entry.dailyCounts.get(day) || 0) + 1);
-      } catch {}
+      } catch (err) { console.error(err); }
     }
-  } catch {}
+  } catch (err) { console.error(err); }
 
   const results: AgentScorecard[] = [];
   for (const [agentId, data] of agentMap) {
     const errorRate = data.sessions > 0 ? (data.errors / data.sessions) * 100 : 0;
-    // Build trend from last 7 days
     const trend: number[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
@@ -127,7 +131,7 @@ export async function GET() {
   if (cache && now - cache.ts < 60_000) {
     return NextResponse.json(cache.data);
   }
-  const data = computeScorecards();
+  const data = await computeScorecards();
   cache = { data, ts: now };
   return NextResponse.json(data);
 }

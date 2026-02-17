@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ArtifactActionSchema, validateBody } from '@/lib/validators';
 import { updateArtifactStatus, createEvent, getArtifact } from '@/lib/queries';
 import { sendNotification } from '@/lib/notify';
 
@@ -9,8 +10,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
   }
 
-  const body = await req.json();
-  const { action, projectId, feedback } = body;
+  const raw = await req.json();
+  const validated = validateBody(ArtifactActionSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+  const { action, projectId, feedback } = validated.data;
 
   if (action === 'approve') {
     updateArtifactStatus(id, 'approved');

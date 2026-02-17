@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ROICreateSchema, validateBody } from '@/lib/validators';
 
 export interface ROIEntry {
   id: string;
@@ -17,12 +18,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { description, hoursSaved, hourlyRate = 75, aiCost = 0 } = body;
-
-  if (!description || hoursSaved == null) {
-    return NextResponse.json({ error: 'description and hoursSaved required' }, { status: 400 });
+  const raw = await req.json();
+  const validated = validateBody(ROICreateSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
   }
+  const { description, hoursSaved, hourlyRate = 75, aiCost = 0 } = validated.data;
 
   const entry: ROIEntry = {
     id: crypto.randomUUID(),

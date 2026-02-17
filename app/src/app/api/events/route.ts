@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
         if (closed) return;
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-        } catch {
+        } catch (error) {
+          /* Stream closed — client disconnected */
           closed = true;
         }
       };
@@ -75,7 +76,8 @@ export async function GET(req: NextRequest) {
               projects: listProjects(),
             });
           }
-        } catch {
+        } catch (error) {
+          console.error('[events] SSE poll error', error);
           closed = true;
           clearInterval(interval);
         }
@@ -85,7 +87,7 @@ export async function GET(req: NextRequest) {
       req.signal.addEventListener('abort', () => {
         closed = true;
         clearInterval(interval);
-        try { controller.close(); } catch {}
+        try { controller.close(); } catch (error) { /* controller already closed */ }
       });
     },
   });

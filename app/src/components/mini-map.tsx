@@ -101,7 +101,7 @@ export default function MiniMap({ statuses = {}, onAgentClick }: MiniMapProps) {
                   cy={cy}
                   r={isHovered ? 6 : 4}
                   fill={a.color}
-                  stroke={isHovered ? '#fff' : 'transparent'}
+                  stroke={isHovered ? 'var(--grid-text)' : 'transparent'}
                   strokeWidth={1.5}
                   className="cursor-pointer transition-all duration-150"
                   onMouseEnter={() => setHovered(a.id)}

@@ -70,7 +70,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           if (prev && prev !== newStatus) {
             const agent = agentsList.find(a => a.id === id);
             const msg = newStatus === 'active' ? 'started working' : 'went idle';
-            const color = newStatus === 'active' ? '#22c55e' : '#64748b';
+            const color = newStatus === 'active' ? 'var(--grid-success)' : 'var(--grid-text-secondary)';
             addToast({ emoji: agent?.emoji ?? '🤖', name: agent?.name ?? id, message: msg, color });
           }
           prevStatusRef.current.set(id, newStatus);
@@ -111,12 +111,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 16px',
-                  backgroundColor: '#0a0a0f',
+                  backgroundColor: 'var(--grid-bg)',
                   borderLeft: `3px solid ${toast.color}`,
-                  border: '1px solid #27272a',
+                  border: '1px solid var(--grid-border-subtle)',
                   borderRadius: 8,
                   fontFamily: 'monospace', fontSize: 12,
-                  color: '#d1d5db',
+                  color: 'var(--grid-text)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
                   animation: fading
                     ? 'toastFadeOut 0.3s ease-in forwards'
@@ -128,7 +128,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 <div>
                   <span style={{ fontWeight: 'bold', color: toast.color }}>{toast.name}</span>
                   {' '}
-                  <span style={{ color: '#94a3b8' }}>{toast.message}</span>
+                  <span style={{ color: 'var(--grid-text-label)' }}>{toast.message}</span>
                 </div>
               </div>
             );

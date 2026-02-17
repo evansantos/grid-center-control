@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { AgentMessageSchema, validateBody } from '@/lib/validators';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 
@@ -10,12 +11,12 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await req.json();
-    const { message } = body;
-
-    if (!message || typeof message !== 'string') {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+    const raw = await req.json();
+    const validated = validateBody(AgentMessageSchema, raw);
+    if (!validated.success) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
     }
+    const { message } = validated.data;
 
     if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
       return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });

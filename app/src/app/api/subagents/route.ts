@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import { readFile, readdir, access } from 'fs/promises';
+import { constants } from 'fs';
 import path from 'path';
+import os from 'os';
 
 export interface SubagentInfo {
   sessionKey: string;
@@ -13,17 +15,18 @@ export interface SubagentInfo {
   children: SubagentInfo[];
 }
 
-const SESSIONS_DIR = path.join(process.env.HOME || '~', '.openclaw', 'sessions');
+const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
 
-function parseSessionFiles(): SubagentInfo[] {
+async function parseSessionFiles(): Promise<SubagentInfo[]> {
   const agents: SubagentInfo[] = [];
   try {
-    if (!fs.existsSync(SESSIONS_DIR)) return agents;
-    const files = fs.readdirSync(SESSIONS_DIR).filter(f => f.endsWith('.jsonl'));
+    try { await access(SESSIONS_DIR, constants.R_OK); } catch { /* sessions dir not accessible */ return agents; }
+    const allFiles = await readdir(SESSIONS_DIR);
+    const files = allFiles.filter(f => f.endsWith('.jsonl'));
 
     for (const file of files) {
       try {
-        const content = fs.readFileSync(path.join(SESSIONS_DIR, file), 'utf-8');
+        const content = await readFile(path.join(SESSIONS_DIR, file), 'utf-8');
         const lines = content.trim().split('\n').filter(Boolean);
         if (lines.length === 0) continue;
 
@@ -35,13 +38,11 @@ function parseSessionFiles(): SubagentInfo[] {
         const parts = sessionKey.split(':');
         const agentId = parts[1] || 'unknown';
 
-        // Extract parent from session key pattern: agent:<id>:subagent:<uuid>
         let parentSession: string | null = null;
         if (isSubagent && parts.length >= 2) {
           parentSession = `agent:${parts[1]}:main`;
         }
 
-        // Try to extract task from first user message
         let task = '';
         for (const line of lines) {
           try {
@@ -52,14 +53,13 @@ function parseSessionFiles(): SubagentInfo[] {
                 : JSON.stringify(parsed.content).slice(0, 200);
               break;
             }
-          } catch {}
+          } catch (err) { console.error(err); }
         }
 
         const startTime = firstLine.timestamp || firstLine.ts || new Date().toISOString();
         const endTime = lastLine.timestamp || lastLine.ts || new Date().toISOString();
         const runtime = Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000);
 
-        // Determine status from last message
         let status: SubagentInfo['status'] = 'unknown';
         if (lastLine.error) status = 'error';
         else if (lastLine.role === 'assistant' && runtime > 0) status = 'completed';
@@ -75,11 +75,10 @@ function parseSessionFiles(): SubagentInfo[] {
           startedAt: startTime,
           children: [],
         });
-      } catch {}
+      } catch (err) { console.error(err); }
     }
-  } catch {}
+  } catch (err) { console.error(err); }
 
-  // Build tree
   const map = new Map<string, SubagentInfo>();
   agents.forEach(a => map.set(a.sessionKey, a));
   const roots: SubagentInfo[] = [];
@@ -101,7 +100,7 @@ export async function GET() {
   if (cache && now - cache.ts < 30_000) {
     return NextResponse.json(cache.data);
   }
-  const tree = parseSessionFiles();
+  const tree = await parseSessionFiles();
   cache = { data: tree, ts: now };
   return NextResponse.json(tree);
 }

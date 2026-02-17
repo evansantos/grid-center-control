@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { AgentActionSchema, validateBody } from '@/lib/validators';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -7,8 +8,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
   }
 
-  const body = await request.json();
-  const { action, params: actionParams } = body as { action: string; params?: Record<string, string> };
+  const raw = await request.json();
+  const validated = validateBody(AgentActionSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+  const { action, params: actionParams } = validated.data;
 
   return NextResponse.json({
     success: true,

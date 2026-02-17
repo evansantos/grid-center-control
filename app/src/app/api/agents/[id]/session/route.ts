@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
-import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
+import { readFile, readdir, stat, access } from 'fs/promises';
+import { constants } from 'fs';
 import { join } from 'path';
+import os from 'os';
 
-const OPENCLAW_DIR = join(process.env.HOME ?? '', '.openclaw');
+const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
 
 interface Message {
   role: string;
@@ -34,43 +36,45 @@ export async function GET(
   const url = new URL(request.url);
   const requestedKey = url.searchParams.get('key') ?? '';
   const requestedFile = url.searchParams.get('file') ?? '';
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h ago
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
 
-  // MCP's agent id in the office map is 'mcp' but sessions live under 'main'
   const resolvedId = agentId === 'mcp' ? 'main' : agentId;
-
-  // Look for session files in the agent's sessions dir
   const sessionsDir = join(OPENCLAW_DIR, 'agents', resolvedId, 'sessions');
-  if (!existsSync(sessionsDir)) {
+
+  try { await access(sessionsDir, constants.R_OK); } catch { /* sessions dir not found */
+    /* sessions dir not found — expected for new agents */
     return NextResponse.json({ messages: [], agentId });
   }
 
-  const files = readdirSync(sessionsDir)
-    .filter(f => f.endsWith('.jsonl') && !f.includes('.deleted'))
-    .sort((a, b) => {
-      try {
-        return statSync(join(sessionsDir, b)).mtimeMs - statSync(join(sessionsDir, a)).mtimeMs;
-      } catch { return 0; }
-    }); // newest by modification time first
+  const allFiles = (await readdir(sessionsDir))
+    .filter(f => f.endsWith('.jsonl') && !f.includes('.deleted'));
 
-  // If a specific file is requested, try that first
+  // Get stats for sorting
+  const fileStats = await Promise.all(
+    allFiles.map(async f => {
+      try { const s = await stat(join(sessionsDir, f)); return { name: f, mtime: s.mtimeMs }; } catch (err) { console.error('[session] stat failed', err); return null; }
+    })
+  );
+  const files = fileStats
+    .filter((f): f is { name: string; mtime: number } => f !== null)
+    .sort((a, b) => b.mtime - a.mtime)
+    .map(f => f.name);
+
   const orderedFiles = requestedFile && files.includes(requestedFile)
     ? [requestedFile, ...files.filter(f => f !== requestedFile)]
     : files;
 
-  // Aggregate messages from ALL session files within 24h window
   const allMessages: Message[] = [];
   const sessionFiles: string[] = [];
 
   for (const file of orderedFiles) {
     try {
-      const content = readFileSync(join(sessionsDir, file), 'utf-8');
+      const content = await readFile(join(sessionsDir, file), 'utf-8');
       const lines = content.trim().split('\n').filter(l => l.trim());
 
-      // If a specific session key was requested, check if this file contains it
       if (requestedKey) {
         const hasKey = lines.some(l => {
-          try { const e = JSON.parse(l); return e.type === 'session' && e.id === requestedKey; } catch { return false; }
+          try { const e = JSON.parse(l); return e.type === 'session' && e.id === requestedKey; } catch { /* malformed JSON — skip */ return false; }
         });
         if (!hasKey) continue;
       }
@@ -99,13 +103,12 @@ export async function GET(
             timestamp: entry.timestamp ? new Date(entry.timestamp).toISOString() : undefined,
           });
           fileHasMessages = true;
-        } catch {}
+        } catch (err) { console.error('[session] line parse error', err); }
       }
       if (fileHasMessages) sessionFiles.push(file);
-    } catch {}
+    } catch (err) { console.error('[session] file read error', err); }
   }
 
-  // Sort all messages chronologically
   allMessages.sort((a, b) => {
     const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
     const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;

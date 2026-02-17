@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { AgentConfigSchema, validateBody } from '@/lib/validators';
+import { readFile, writeFile, access } from 'fs/promises';
+import { constants } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
 
@@ -28,13 +30,10 @@ export async function GET(
       const filePath = resolve(join(workspacePath, fileName));
       if (!filePath.startsWith(resolve(workspacePath))) continue;
       try {
-        if (existsSync(filePath)) {
-          files[fileName] = readFileSync(filePath, 'utf-8');
-        } else {
-          files[fileName] = '';
-        }
-      } catch (error) {
-        console.error(`Error reading ${fileName}:`, error);
+        await access(filePath, constants.R_OK);
+        files[fileName] = await readFile(filePath, 'utf-8');
+      } catch (error) { /* config read failed */
+        /* file not found — expected for new agents */
         files[fileName] = '';
       }
     }
@@ -60,7 +59,12 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
     }
 
-    const { file, content } = await request.json();
+    const raw = await request.json();
+    const validated = validateBody(AgentConfigSchema, raw);
+    if (!validated.success) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
+    const { file, content } = validated.data;
     
     if (!ALLOWED_FILES.includes(file)) {
       return NextResponse.json(
@@ -72,12 +76,11 @@ export async function POST(
     const workspacePath = getAgentWorkspacePath(id);
     const filePath = resolve(join(workspacePath, file));
     
-    // SEC-08: Verify resolved path stays within expected directory
     if (!filePath.startsWith(resolve(workspacePath))) {
       return NextResponse.json({ error: 'Path traversal detected' }, { status: 400 });
     }
     
-    writeFileSync(filePath, content, 'utf-8');
+    await writeFile(filePath, content, 'utf-8');
     
     return NextResponse.json({ success: true });
   } catch (error) {

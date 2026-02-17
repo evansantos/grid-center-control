@@ -27,24 +27,24 @@ interface Department {
 }
 
 const AGENTS: Record<string, AgentDef> = {
-  grid:     { id: 'grid',     name: 'GRID',     emoji: '⚡', role: 'Senior Engineer',   abbr: 'GR', color: '#8b5cf6', skills: ['FULL-STACK DEV', 'CODE REVIEW'] },
-  bug:      { id: 'bug',      name: 'BUG',      emoji: '🪲', role: 'QA Engineer',        abbr: 'BG', color: '#22c55e', skills: ['QA TESTING', 'CODE REVIEW'] },
-  sentinel: { id: 'sentinel', name: 'SENTINEL', emoji: '🛡️', role: 'Security Engineer',  abbr: 'SN', color: '#3b82f6', skills: ['SECURITY AUDIT', 'MONITORING'] },
-  po:       { id: 'po',       name: 'SPEC',     emoji: '📋', role: 'Product Owner',      abbr: 'SP', color: '#f97316', skills: ['PRODUCT STRATEGY', 'SPRINT PLANNING'] },
+  grid:     { id: 'grid',     name: 'GRID',     emoji: '⚡', role: 'Senior Engineer',   abbr: 'GR', color: 'var(--grid-purple)', skills: ['FULL-STACK DEV', 'CODE REVIEW'] },
+  bug:      { id: 'bug',      name: 'BUG',      emoji: '🪲', role: 'QA Engineer',        abbr: 'BG', color: 'var(--grid-success)', skills: ['QA TESTING', 'CODE REVIEW'] },
+  sentinel: { id: 'sentinel', name: 'SENTINEL', emoji: '🛡️', role: 'Security Engineer',  abbr: 'SN', color: 'var(--grid-info)', skills: ['SECURITY AUDIT', 'MONITORING'] },
+  po:       { id: 'po',       name: 'SPEC',     emoji: '📋', role: 'Product Owner',      abbr: 'SP', color: 'var(--grid-orange)', skills: ['PRODUCT STRATEGY', 'SPRINT PLANNING'] },
   atlas:    { id: 'atlas',    name: 'ATLAS',    emoji: '📊', role: 'Analytics Lead',     abbr: 'AT', color: '#06b6d4', skills: ['ANALYTICS', 'RESEARCH'] },
-  sage:     { id: 'sage',     name: 'SAGE',     emoji: '🧠', role: 'Senior Advisor',     abbr: 'SA', color: '#eab308', skills: ['CAREER STRATEGY', 'ADVISORY'] },
+  sage:     { id: 'sage',     name: 'SAGE',     emoji: '🧠', role: 'Senior Advisor',     abbr: 'SA', color: 'var(--grid-yellow)', skills: ['CAREER STRATEGY', 'ADVISORY'] },
   scribe:   { id: 'scribe',   name: 'SCRIBE',   emoji: '✍️', role: 'Content Writer',     abbr: 'SC', color: '#ec4899', skills: ['CONTENT CREATION', 'TECHNICAL WRITING'] },
   pixel:    { id: 'pixel',    name: 'PIXEL',    emoji: '🎨', role: 'Designer',           abbr: 'PX', color: '#f43f5e', skills: ['DESIGN CONCEPTS', 'UI/UX'] },
-  riff:     { id: 'riff',     name: 'RIFF',     emoji: '🎸', role: 'Music Tech',         abbr: 'RF', color: '#dc2626', skills: ['MUSIC TECH', 'AUDIO PROCESSING'] },
+  riff:     { id: 'riff',     name: 'RIFF',     emoji: '🎸', role: 'Music Tech',         abbr: 'RF', color: 'var(--grid-danger)', skills: ['MUSIC TECH', 'AUDIO PROCESSING'] },
   vault:    { id: 'vault',    name: 'VAULT',    emoji: '📚', role: 'Knowledge Base',     abbr: 'VT', color: '#10b981', skills: ['KNOWLEDGE BASE', 'DOCUMENTATION'] },
 };
 
 const DEPARTMENTS: Department[] = [
-  { name: 'ENGINEERING', emoji: '⚙️', color: '#8b5cf6', agents: [AGENTS.grid, AGENTS.bug, AGENTS.sentinel] },
-  { name: 'PRODUCT',     emoji: '📋', color: '#f97316', agents: [AGENTS.po] },
+  { name: 'ENGINEERING', emoji: '⚙️', color: 'var(--grid-purple)', agents: [AGENTS.grid, AGENTS.bug, AGENTS.sentinel] },
+  { name: 'PRODUCT',     emoji: '📋', color: 'var(--grid-orange)', agents: [AGENTS.po] },
   { name: 'RESEARCH',    emoji: '🔬', color: '#06b6d4', agents: [AGENTS.atlas, AGENTS.sage] },
   { name: 'CREATIVE',    emoji: '🎨', color: '#ec4899', agents: [AGENTS.scribe, AGENTS.pixel] },
-  { name: 'SPECIALIST',  emoji: '🎸', color: '#dc2626', agents: [AGENTS.riff] },
+  { name: 'SPECIALIST',  emoji: '🎸', color: 'var(--grid-danger)', agents: [AGENTS.riff] },
   { name: 'KNOWLEDGE',   emoji: '📚', color: '#10b981', agents: [AGENTS.vault] },
 ];
 
@@ -79,9 +79,9 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
 
   const statusDot = (agentId: string) => {
     const s = statusMap[agentId];
-    if (s === 'active') return { bg: '#22c55e', pulse: true };
-    if (s === 'recent') return { bg: '#eab308', pulse: false };
-    return { bg: '#3f3f46', pulse: false };
+    if (s === 'active') return { bg: 'var(--grid-success)', pulse: true };
+    if (s === 'recent') return { bg: 'var(--grid-yellow)', pulse: false };
+    return { bg: 'var(--grid-text-faint)', pulse: false };
   };
 
   return (
@@ -89,8 +89,8 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
       {/* CEO card */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}>
         <div style={{
-          background: '#111',
-          border: '1px solid #27272a',
+          background: 'var(--grid-surface)',
+          border: '1px solid var(--grid-border-subtle)',
           borderRadius: 12,
           padding: '16px 32px',
           textAlign: 'center',
@@ -102,22 +102,22 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 8px', fontSize: 18, fontWeight: 700, color: '#fff',
           }}>EC</div>
-          <div style={{ fontWeight: 700, fontSize: 14, color: '#e4e4e7' }}>Evan</div>
-          <div style={{ fontSize: 11, color: '#71717a', marginTop: 2 }}>CEO</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--grid-text)' }}>Evan</div>
+          <div style={{ fontSize: 11, color: 'var(--grid-text-secondary)', marginTop: 2 }}>CEO</div>
         </div>
       </div>
 
       {/* Vertical line CEO → MCP */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: 1, height: 32, background: '#27272a' }} />
+        <div style={{ width: 1, height: 32, background: 'var(--grid-border-subtle)' }} />
       </div>
 
       {/* MCP card */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}>
         <div style={{
-          background: '#111',
-          border: '1px solid #27272a',
-          borderTop: '2px solid #dc2626',
+          background: 'var(--grid-surface)',
+          border: '1px solid var(--grid-border-subtle)',
+          borderTop: '2px solid var(--grid-danger)',
           borderRadius: 12,
           padding: '16px 28px',
           textAlign: 'center',
@@ -127,8 +127,8 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
           <div style={{
             position: 'absolute', top: 10, right: 10,
             width: 8, height: 8, borderRadius: '50%',
-            background: '#22c55e',
-            boxShadow: '0 0 6px #22c55e',
+            background: 'var(--grid-success)',
+            boxShadow: '0 0 6px var(--grid-success)',
             animation: 'pulse-dot 1.5s infinite',
           }} />
           <div style={{
@@ -137,13 +137,13 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 8px', fontSize: 22,
           }}>🔴</div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#e4e4e7' }}>MCP</div>
-          <div style={{ fontSize: 11, color: '#a1a1aa', marginTop: 2 }}>Chief Strategy Officer</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--grid-text)' }}>MCP</div>
+          <div style={{ fontSize: 11, color: 'var(--grid-text-label)', marginTop: 2 }}>Chief Strategy Officer</div>
           <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
             {['STRATEGIC PLANNING', 'TASK ORCHESTRATION'].map(s => (
               <span key={s} style={{
                 fontSize: 9, padding: '2px 6px', borderRadius: 4,
-                background: 'rgba(220,38,38,0.15)', color: '#f87171',
+                background: 'rgba(220,38,38,0.15)', color: 'var(--grid-error)',
                 fontWeight: 600, letterSpacing: 0.3,
               }}>{s}</span>
             ))}
@@ -153,12 +153,12 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
 
       {/* Vertical line MCP → departments */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: 1, height: 32, background: '#27272a' }} />
+        <div style={{ width: 1, height: 32, background: 'var(--grid-border-subtle)' }} />
       </div>
 
       {/* Horizontal connector line */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}>
-        <div style={{ width: '80%', maxWidth: 700, height: 1, background: '#27272a' }} />
+        <div style={{ width: '80%', maxWidth: 700, height: 1, background: 'var(--grid-border-subtle)' }} />
       </div>
 
       {/* Vertical stubs from horizontal line to each department column */}
@@ -171,7 +171,7 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
       }}>
         {[0, 1, 2].map(i => (
           <div key={i} style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: 1, height: 24, background: '#27272a' }} />
+            <div style={{ width: 1, height: 24, background: 'var(--grid-border-subtle)' }} />
           </div>
         ))}
       </div>
@@ -186,8 +186,8 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
       }}>
         {DEPARTMENTS.map(dept => (
           <div key={dept.name} style={{
-            background: '#0f0f0f',
-            border: '1px solid #1e1e1e',
+            background: 'var(--grid-surface)',
+            border: '1px solid var(--grid-border)',
             borderTop: `2px solid ${dept.color}`,
             borderRadius: 10,
             padding: 12,
@@ -246,8 +246,8 @@ export function OrgChart({ onSelectAgent, selectedAgent }: OrgChartProps) {
                       }}>{agent.abbr}</div>
 
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 12, color: '#e4e4e7' }}>{agent.name}</div>
-                        <div style={{ fontSize: 10, color: '#71717a', marginTop: 1 }}>{agent.role}</div>
+                        <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--grid-text)' }}>{agent.name}</div>
+                        <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)', marginTop: 1 }}>{agent.role}</div>
                       </div>
                     </div>
 

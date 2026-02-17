@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import os from 'os';
 import path from 'path';
+import { readFile, readdir, stat, access } from 'fs/promises';
+import { constants } from 'fs';
 
 interface SearchResult {
   sessionKey: string;
@@ -11,8 +13,35 @@ interface SearchResult {
   matchHighlight: string;
 }
 
-const SESSIONS_DIR = path.join(process.env.HOME || '~', '.openclaw', 'sessions');
-let cache: { key: string; data: any; ts: number } | null = null;
+const AGENTS_DIR = path.join(os.homedir(), '.openclaw', 'agents');
+
+async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { return false; } }
+
+/* ── LRU Cache (max 20 entries, 30s TTL) ── */
+const LRU_MAX = 20;
+const LRU_TTL = 30_000;
+const lruCache = new Map<string, { data: any; ts: number }>();
+
+function lruGet(key: string): any | undefined {
+  const entry = lruCache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() - entry.ts > LRU_TTL) {
+    lruCache.delete(key);
+    return undefined;
+  }
+  lruCache.delete(key);
+  lruCache.set(key, entry);
+  return entry.data;
+}
+
+function lruSet(key: string, data: any): void {
+  if (lruCache.has(key)) lruCache.delete(key);
+  lruCache.set(key, { data, ts: Date.now() });
+  while (lruCache.size > LRU_MAX) {
+    const oldest = lruCache.keys().next().value!;
+    lruCache.delete(oldest);
+  }
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -26,73 +55,81 @@ export async function GET(request: Request) {
   }
 
   const cacheKey = `${q}:${agent}:${hours}:${limit}`;
-  const now = Date.now();
-  if (cache && cache.key === cacheKey && now - cache.ts < 10_000) {
-    return NextResponse.json(cache.data);
-  }
+  const cached = lruGet(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const startTime = performance.now();
+  const now = Date.now();
   const cutoff = now - hours * 3600_000;
   const queryLower = q.toLowerCase();
   const results: SearchResult[] = [];
 
   try {
-    if (!fs.existsSync(SESSIONS_DIR)) {
+    if (!(await exists(AGENTS_DIR))) {
       return NextResponse.json({ results: [], count: 0, searchTimeMs: 0 });
     }
 
-    const files = fs.readdirSync(SESSIONS_DIR).filter(f => f.endsWith('.jsonl'));
+    const agentDirs = await readdir(AGENTS_DIR);
 
-    for (const file of files) {
+    for (const agentId of agentDirs) {
       if (results.length >= limit) break;
-      const sessionKey = file.replace('.jsonl', '');
-      const parts = sessionKey.split(':');
-      const agentId = parts[1] || 'unknown';
-
       if (agent && agentId !== agent) continue;
 
+      const sessionsDir = path.join(AGENTS_DIR, agentId, 'sessions');
+      if (!(await exists(sessionsDir))) continue;
+
+      let files: string[];
       try {
-        const stat = fs.statSync(path.join(SESSIONS_DIR, file));
-        if (stat.mtimeMs < cutoff) continue;
+        files = (await readdir(sessionsDir)).filter(f => f.endsWith('.jsonl'));
+      } catch { continue; }
 
-        const content = fs.readFileSync(path.join(SESSIONS_DIR, file), 'utf-8');
-        const lines = content.trim().split('\n').filter(Boolean);
+      for (const file of files) {
+        if (results.length >= limit) break;
+        const filePath = path.join(sessionsDir, file);
+        const sessionKey = file.replace('.jsonl', '');
 
-        for (const line of lines) {
-          if (results.length >= limit) break;
-          try {
-            const parsed = JSON.parse(line);
-            const ts = parsed.timestamp || parsed.ts || '';
-            if (ts && new Date(ts).getTime() < cutoff) continue;
+        try {
+          const fileStat = await stat(filePath);
+          if (fileStat.mtimeMs < cutoff) continue;
 
-            const msgContent = typeof parsed.content === 'string'
-              ? parsed.content
-              : JSON.stringify(parsed.content || '');
+          const content = await readFile(filePath, 'utf-8');
+          const lines = content.trim().split('\n').filter(Boolean);
 
-            if (!msgContent.toLowerCase().includes(queryLower)) continue;
+          for (const line of lines) {
+            if (results.length >= limit) break;
+            try {
+              const parsed = JSON.parse(line);
+              const ts = parsed.timestamp || parsed.ts || '';
+              if (ts && new Date(ts).getTime() < cutoff) continue;
 
-            // Create highlight
-            const idx = msgContent.toLowerCase().indexOf(queryLower);
-            const start = Math.max(0, idx - 50);
-            const end = Math.min(msgContent.length, idx + q.length + 50);
-            const highlight = (start > 0 ? '...' : '') + msgContent.slice(start, end) + (end < msgContent.length ? '...' : '');
+              const msgContent = typeof parsed.content === 'string'
+                ? parsed.content
+                : JSON.stringify(parsed.content || '');
 
-            results.push({
-              sessionKey,
-              agentId,
-              timestamp: ts,
-              role: parsed.role || 'unknown',
-              content: msgContent.slice(0, 500),
-              matchHighlight: highlight,
-            });
-          } catch {}
-        }
-      } catch {}
+              if (!msgContent.toLowerCase().includes(queryLower)) continue;
+
+              const idx = msgContent.toLowerCase().indexOf(queryLower);
+              const start = Math.max(0, idx - 50);
+              const end = Math.min(msgContent.length, idx + q.length + 50);
+              const highlight = (start > 0 ? '...' : '') + msgContent.slice(start, end) + (end < msgContent.length ? '...' : '');
+
+              results.push({
+                sessionKey,
+                agentId,
+                timestamp: ts,
+                role: parsed.role || 'unknown',
+                content: msgContent.slice(0, 500),
+                matchHighlight: highlight,
+              });
+            } catch (err) { console.error(err); }
+          }
+        } catch (err) { console.error(err); }
+      }
     }
-  } catch {}
+  } catch (err) { console.error(err); }
 
   const searchTimeMs = Math.round(performance.now() - startTime);
   const data = { results, count: results.length, searchTimeMs };
-  cache = { key: cacheKey, data, ts: now };
+  lruSet(cacheKey, data);
   return NextResponse.json(data);
 }

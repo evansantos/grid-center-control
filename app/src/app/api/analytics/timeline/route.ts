@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import { readFile, access } from 'fs/promises';
+import { constants } from 'fs';
 import path from 'path';
+import os from 'os';
 
 interface TimelineEntry {
   type: 'user' | 'assistant' | 'tool_call' | 'tool_result' | 'thinking';
@@ -10,8 +12,10 @@ interface TimelineEntry {
   detail: string;
 }
 
-const SESSIONS_DIR = path.join(process.env.HOME || '~', '.openclaw', 'sessions');
+const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
 let cache: { key: string; data: any; ts: number } | null = null;
+
+async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { return false; } }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -26,12 +30,12 @@ export async function GET(request: Request) {
   }
 
   const filePath = path.join(SESSIONS_DIR, `${sessionKey}.jsonl`);
-  if (!fs.existsSync(filePath)) {
+  if (!(await exists(filePath))) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 });
   }
 
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const content = await readFile(filePath, 'utf-8');
     const lines = content.trim().split('\n').filter(Boolean);
     const entries: TimelineEntry[] = [];
     let prevTs = 0;
@@ -71,7 +75,7 @@ export async function GET(request: Request) {
         prevTs = ts;
 
         entries.push({ type, startMs, durationMs, label, detail });
-      } catch {}
+      } catch (err) { console.error(err); }
     }
 
     const totalMs = entries.length > 0 ? entries[entries.length - 1].startMs - entries[0].startMs : 0;

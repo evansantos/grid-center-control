@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SettingsBudgetCreateSchema, SettingsBudgetUpdateSchema, validateBody } from '@/lib/validators';
 
 export interface Budget {
   id: string;
@@ -41,7 +42,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const raw = await req.json();
+  const validated = validateBody(SettingsBudgetCreateSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+  const body = validated.data;
   const budget: Budget = {
     id: Date.now().toString(),
     scope: body.scope || 'global',
@@ -58,7 +64,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const body = await req.json();
+  const raw = await req.json();
+  const validated = validateBody(SettingsBudgetUpdateSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+  const body = validated.data;
   const idx = budgets.findIndex((b) => b.id === body.id);
   if (idx === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   budgets[idx] = { ...budgets[idx], ...body };

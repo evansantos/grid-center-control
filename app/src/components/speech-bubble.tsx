@@ -13,7 +13,7 @@ interface SpeechBubbleProps {
 
 export function SpeechBubble({
   text,
-  color = '#22c55e',
+  color = 'var(--grid-success)',
   position = 'top',
   visible = true,
   maxWidth = 160,
@@ -55,7 +55,7 @@ export function SpeechBubble({
       `}</style>
       <div
         style={{
-          backgroundColor: '#1a1a2e',
+          backgroundColor: 'var(--grid-surface)',
           border: `1px solid ${color}40`,
           borderRadius: 8,
           padding: '3px 8px',
@@ -68,7 +68,7 @@ export function SpeechBubble({
           style={{
             fontSize: 8,
             fontFamily: 'monospace',
-            color: '#e2e8f0',
+            color: 'var(--grid-text)',
             lineHeight: 1.3,
             display: 'block',
             wordBreak: 'break-word',

@@ -1,0 +1,5 @@
+-- SQLite doesn't support ALTER TABLE to add CASCADE.
+-- CASCADE is enforced via PRAGMA foreign_keys = ON + schema definition.
+-- For existing databases, tables would need to be recreated.
+-- The engine schema (db.ts) now includes ON DELETE CASCADE for new databases.
+-- Existing databases: run grid db:rebuild if needed.

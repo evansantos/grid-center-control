@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { WorkflowCreateSchema, WorkflowStepUpdateSchema, validateBody } from '@/lib/validators';
 
 /* ── Templates ── */
 const TEMPLATES = [
@@ -73,7 +74,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { templateId } = await req.json();
+  const raw = await req.json();
+  const validated = validateBody(WorkflowCreateSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+  const { templateId } = validated.data;
   const t = TEMPLATES.find((t) => t.id === templateId);
   if (!t) return NextResponse.json({ error: 'Template not found' }, { status: 404 });
 
@@ -91,7 +97,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const { instanceId, stepIndex, status } = await req.json();
+  const raw = await req.json();
+  const validated = validateBody(WorkflowStepUpdateSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+  const { instanceId, stepIndex, status } = validated.data;
   const inst = instances.find((i) => i.id === instanceId);
   if (!inst) return NextResponse.json({ error: 'Instance not found' }, { status: 404 });
 

@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
-import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
+import { readFile, readdir, stat, access } from 'fs/promises';
+import { constants } from 'fs';
 import { join } from 'path';
+import os from 'os';
 
-const OPENCLAW_DIR = join(process.env.HOME ?? '', '.openclaw');
+const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
 const CONFIG_PATH = join(OPENCLAW_DIR, 'openclaw.json');
-const SESSIONS_DIR = join(OPENCLAW_DIR, 'agents');
+
+async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
 
 interface AgentInfo {
   id: string;
@@ -23,98 +26,107 @@ interface SessionInfo {
   messageCount: number;
 }
 
-function getAgentRole(agentDir: string): string {
+async function getAgentRole(agentDir: string): Promise<string> {
   try {
-    const identity = readFileSync(join(agentDir, 'workspace', 'IDENTITY.md'), 'utf-8');
+    const identity = await readFile(join(agentDir, 'workspace', 'IDENTITY.md'), 'utf-8');
     const roleMatch = identity.match(/\*\*Role:\*\*\s*(.+)/);
     return roleMatch?.[1]?.trim() ?? '';
-  } catch {
+  } catch (error) {
+    /* expected — file may not exist */
     return '';
   }
 }
 
-function getSessionsForAgent(agentId: string): SessionInfo[] {
+async function getSessionsForAgent(agentId: string): Promise<SessionInfo[]> {
   const sessions: SessionInfo[] = [];
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  // Check main agent sessions dir and agent-specific sessions
-  const sessionDirs = [
-    join(OPENCLAW_DIR, 'agents', agentId, 'sessions'),
-  ];
+  const dir = join(OPENCLAW_DIR, 'agents', agentId, 'sessions');
 
-  for (const dir of sessionDirs) {
-    if (!existsSync(dir)) continue;
-    try {
-      const files = readdirSync(dir)
-        .filter(f => f.endsWith('.jsonl') && !f.includes('.deleted'))
-        .sort((a, b) => {
-          try { return statSync(join(dir, b)).mtimeMs - statSync(join(dir, a)).mtimeMs; } catch { return 0; }
-        });
-      for (const file of files) {
+  if (!(await exists(dir))) return sessions;
+
+  try {
+    const allFiles = await readdir(dir);
+    const jsonlFiles = allFiles.filter(f => f.endsWith('.jsonl') && !f.includes('.deleted'));
+
+    const fileStats = await Promise.all(
+      jsonlFiles.map(async f => {
         try {
-          const content = readFileSync(join(dir, file), 'utf-8');
-          const lines = content.trim().split('\n').filter(l => l.trim());
-          if (lines.length === 0) continue;
+          const s = await stat(join(dir, f));
+          return { name: f, mtime: s.mtimeMs };
+        } catch { /* stat failed */ return null; }
+      })
+    );
+    const files = fileStats.filter((f): f is { name: string; mtime: number } => f !== null)
+      .sort((a, b) => b.mtime - a.mtime);
 
-          // Check if this session belongs to this agent
-          let sessionKey = '';
-          let label = '';
-          let lastMessage = '';
-          let updatedAt = '';
-          let messageCount = 0;
+    for (const file of files) {
+      try {
+        const content = await readFile(join(dir, file.name), 'utf-8');
+        const lines = content.trim().split('\n').filter(l => l.trim());
+        if (lines.length === 0) continue;
 
-          for (const line of lines) {
-            try {
-              const entry = JSON.parse(line);
-              // Session metadata line
-              if (entry.type === 'session' && entry.id) {
-                sessionKey = entry.id;
-              }
-              if (entry.type === 'message' && entry.message) {
-                const ts = entry.timestamp ? new Date(entry.timestamp).getTime() : 0;
-                if (ts && ts < cutoff) continue;
-                const msg = entry.message;
-                const role = msg.role;
-                if (role === 'user' || role === 'assistant') {
-                  messageCount++;
-                  if (role === 'assistant') {
-                    const textContent = Array.isArray(msg.content) 
-                      ? msg.content.find((c: any) => c.type === 'text')?.text ?? ''
-                      : typeof msg.content === 'string' ? msg.content : '';
-                    if (textContent) lastMessage = textContent.slice(0, 200);
-                  }
+        let sessionKey = '';
+        let label = '';
+        let lastMessage = '';
+        let updatedAt = '';
+        let messageCount = 0;
+
+        for (const line of lines) {
+          try {
+            const entry = JSON.parse(line);
+            if (entry.type === 'session' && entry.id) {
+              sessionKey = entry.id;
+            }
+            if (entry.type === 'message' && entry.message) {
+              const ts = entry.timestamp ? new Date(entry.timestamp).getTime() : 0;
+              if (ts && ts < cutoff) continue;
+              const msg = entry.message;
+              const role = msg.role;
+              if (role === 'user' || role === 'assistant') {
+                messageCount++;
+                if (role === 'assistant') {
+                  const textContent = Array.isArray(msg.content) 
+                    ? msg.content.find((c: any) => c.type === 'text')?.text ?? ''
+                    : typeof msg.content === 'string' ? msg.content : '';
+                  if (textContent) lastMessage = textContent.slice(0, 200);
                 }
-                if (entry.timestamp) updatedAt = new Date(entry.timestamp).toISOString();
               }
-            } catch {}
-          }
+              if (entry.timestamp) updatedAt = new Date(entry.timestamp).toISOString();
+            }
+          } catch (err) { console.error(err); }
+        }
 
-          if (sessionKey) {
-            sessions.push({ sessionKey, label, lastMessage, updatedAt, messageCount });
-          }
-        } catch {}
-      }
-    } catch {}
-  }
+        if (sessionKey) {
+          sessions.push({ sessionKey, label, lastMessage, updatedAt, messageCount });
+        }
+      } catch (err) { console.error(err); }
+    }
+  } catch (err) { console.error(err); }
 
   return sessions.sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''));
 }
 
 export async function GET() {
   try {
-    const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf-8'));
+    let config: any;
+    try {
+      config = JSON.parse(await readFile(CONFIG_PATH, 'utf-8'));
+    } catch (error) { /* config may not exist */
+      config = { agents: { list: [] } };
+    }
     const agentList = config.agents?.list ?? [];
 
-    const agents: AgentInfo[] = agentList.map((agent: any) => {
+    const agents: AgentInfo[] = await Promise.all(agentList.map(async (agent: any) => {
       const agentDir = join(OPENCLAW_DIR, 'agents', agent.id);
       return {
         id: agent.id,
         name: agent.identity?.name ?? agent.name ?? agent.id,
         emoji: agent.identity?.emoji ?? '',
-        role: getAgentRole(agentDir) || (agent.id === 'main' ? 'Chief Strategy Officer' : ''),
+        role: (await getAgentRole(agentDir)) || (agent.id === 'main' ? 'Chief Strategy Officer' : ''),
         model: agent.model ?? config.agents?.defaults?.model?.primary ?? '',
-        activeSessions: getSessionsForAgent(agent.id),
+        activeSessions: await getSessionsForAgent(agent.id),
       };
-    });
+    }));
 
     return NextResponse.json({ agents });
   } catch (e: any) {

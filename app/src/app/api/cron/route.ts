@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { CronJobCreateSchema, CronJobUpdateSchema, CronJobDeleteSchema, validateBody } from '@/lib/validators';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { CronJob } from '@/lib/cron-utils';
+import os from 'os';
 
-const CRON_FILE = path.join(process.env.HOME!, '.openclaw', 'cron-jobs.json');
+const CRON_FILE = path.join(os.homedir(), '.openclaw', 'cron-jobs.json');
 
 async function ensureCronFile(): Promise<CronJob[]> {
   try {
@@ -35,15 +37,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, schedule, command, enabled = true } = body;
-
-    if (!name || !schedule || !command) {
-      return NextResponse.json(
-        { error: 'Name, schedule, and command are required' },
-        { status: 400 }
-      );
+    const raw = await request.json();
+    const validated = validateBody(CronJobCreateSchema, raw);
+    if (!validated.success) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
     }
+    const { name, schedule, command, enabled = true } = validated.data;
 
     const jobs = await ensureCronFile();
     const newJob: CronJob = {
@@ -66,12 +65,12 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { id, name, schedule, command, enabled } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    const rawPut = await request.json();
+    const validatedPut = validateBody(CronJobUpdateSchema, rawPut);
+    if (!validatedPut.success) {
+      return NextResponse.json({ error: validatedPut.error }, { status: 400 });
     }
+    const { id, name, schedule, command, enabled } = validatedPut.data;
 
     const jobs = await ensureCronFile();
     const jobIndex = jobs.findIndex(job => job.id === id);
@@ -99,12 +98,12 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { id } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    const rawDel = await request.json();
+    const validatedDel = validateBody(CronJobDeleteSchema, rawDel);
+    if (!validatedDel.success) {
+      return NextResponse.json({ error: validatedDel.error }, { status: 400 });
     }
+    const { id } = validatedDel.data;
 
     const jobs = await ensureCronFile();
     const jobIndex = jobs.findIndex(job => job.id === id);
