@@ -3,8 +3,7 @@ import { writeFile, readFile } from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { z } from 'zod';
-
-const HEARTBEAT_PATH = path.join(os.homedir(), '.openclaw', 'workspace', 'HEARTBEAT.md');
+import { getDB } from '@/lib/db';
 
 const RunTaskSchema = z.object({
   taskId: z.string().min(1),
@@ -22,26 +21,41 @@ export async function POST(req: NextRequest) {
 
     const { taskId, title, description } = parsed.data;
 
-    // Read existing HEARTBEAT.md
-    let existing = '';
-    try {
-      existing = await readFile(HEARTBEAT_PATH, 'utf-8');
-    } catch {
-      // File doesn't exist yet — that's fine
+    const db = getDB();
+    const now = new Date().toISOString();
+    const result = db.prepare('UPDATE tasks SET status = \'in_progress\', started_at = ? WHERE id = ?').run(now, taskId);
+
+    if (result.changes === 0) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    // Append task to HEARTBEAT.md for agent pickup
-    const taskEntry = `\n## Auto-Pickup Task: ${title}\n- **Task ID:** ${taskId}\n- **Description:** ${description || title}\n- **Priority:** Pick up this task immediately and report results when done.\n`;
+    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as Record<string, unknown>;
 
-    await writeFile(HEARTBEAT_PATH, existing + taskEntry, 'utf-8');
+    // Look up agent_session to determine HEARTBEAT.md path
+    const session = db.prepare('SELECT * FROM agent_sessions WHERE task_id = ?').get(taskId) as Record<string, unknown> | undefined;
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Task "${title}" queued for auto-pickup via HEARTBEAT.md`,
-      taskId,
+    if (session?.agent_name) {
+      const heartbeatPath = path.join(os.homedir(), '.openclaw', 'agents', session.agent_name as string, 'workspace', 'HEARTBEAT.md');
+
+      let existing = '';
+      try {
+        existing = await readFile(heartbeatPath, 'utf-8');
+      } catch {
+        // File doesn't exist yet
+      }
+
+      const taskEntry = `\n## Auto-Pickup Task: ${title}\n- **Task ID:** ${taskId}\n- **Description:** ${description || title}\n- **Priority:** Pick up this task immediately and report results when done.\n`;
+
+      await writeFile(heartbeatPath, existing + taskEntry, 'utf-8');
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Task "${title}" started and updated in grid.db`,
+      task,
     });
   } catch (err) {
-    console.error('[kanban/run] Failed to queue task:', err);
-    return NextResponse.json({ error: 'Failed to queue task' }, { status: 500 });
+    console.error('[kanban/run] Failed to run task:', err);
+    return NextResponse.json({ error: 'Failed to run task' }, { status: 500 });
   }
 }
