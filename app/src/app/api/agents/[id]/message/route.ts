@@ -38,7 +38,7 @@ export async function POST(
     const { stdout, stderr } = await execFileAsync(
       'openclaw',
       ['message', 'send', '--agent', id, '--text', message],
-      { timeout: 15000, env: SAFE_ENV }
+      { timeout: 15000, env: SAFE_ENV as NodeJS.ProcessEnv }
     );
 
     return NextResponse.json({

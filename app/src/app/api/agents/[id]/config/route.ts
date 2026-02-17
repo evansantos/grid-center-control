@@ -4,6 +4,8 @@ import { join, resolve } from 'path';
 import { homedir } from 'os';
 
 const ALLOWED_FILES = ['SOUL.md', 'TOOLS.md', 'HEARTBEAT.md'];
+const MAX_AGENT_ID_LENGTH = 64;
+const MAX_CONTENT_LENGTH = 100000; // 100KB max for config files
 
 function getAgentWorkspacePath(agentName: string): string {
   return join(homedir(), '.openclaw', 'agents', agentName, 'workspace');
@@ -16,7 +18,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+    if (!id || id.length > MAX_AGENT_ID_LENGTH || !/^[a-zA-Z0-9_-]+$/.test(id)) {
       return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
     }
 
@@ -56,7 +58,7 @@ export async function POST(
   try {
     const { id } = await params;
 
-    if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+    if (!id || id.length > MAX_AGENT_ID_LENGTH || !/^[a-zA-Z0-9_-]+$/.test(id)) {
       return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
     }
 
@@ -65,6 +67,13 @@ export async function POST(
     if (!ALLOWED_FILES.includes(file)) {
       return NextResponse.json(
         { error: `File ${file} is not allowed. Only ${ALLOWED_FILES.join(', ')} are supported.` },
+        { status: 400 }
+      );
+    }
+
+    if (typeof content !== 'string' || content.length > MAX_CONTENT_LENGTH) {
+      return NextResponse.json(
+        { error: `Content must be a string of max ${MAX_CONTENT_LENGTH} chars` },
         { status: 400 }
       );
     }

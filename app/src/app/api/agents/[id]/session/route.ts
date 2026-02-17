@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
 
 const OPENCLAW_DIR = join(process.env.HOME ?? '', '.openclaw');
+const MAX_AGENT_ID_LENGTH = 64;
 
 interface Message {
   role: string;
@@ -27,7 +28,7 @@ export async function GET(
 ) {
   const { id: agentId } = await params;
 
-  if (!agentId || !/^[a-zA-Z0-9_-]+$/.test(agentId)) {
+  if (!agentId || agentId.length > MAX_AGENT_ID_LENGTH || !/^[a-zA-Z0-9_-]+$/.test(agentId)) {
     return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
   }
 
@@ -35,6 +36,11 @@ export async function GET(
   const requestedKey = url.searchParams.get('key') ?? '';
   const requestedFile = url.searchParams.get('file') ?? '';
   const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h ago
+
+  // Validate query params to prevent path traversal
+  if (requestedFile && !/^[a-zA-Z0-9_.-]+$/.test(requestedFile)) {
+    return NextResponse.json({ error: 'Invalid file parameter' }, { status: 400 });
+  }
 
   // MCP's agent id in the office map is 'mcp' but sessions live under 'main'
   const resolvedId = agentId === 'mcp' ? 'main' : agentId;

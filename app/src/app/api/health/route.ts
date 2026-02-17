@@ -37,7 +37,7 @@ async function checkGatewayStatus(): Promise<HealthCheck> {
   try {
     const { stdout, stderr } = await execFileAsync('openclaw', ['gateway', 'status'], {
       timeout: 5000,
-      env: SAFE_ENV,
+      env: SAFE_ENV as NodeJS.ProcessEnv,
     });
     const latencyMs = Date.now() - start;
     const output = stdout.toLowerCase();
