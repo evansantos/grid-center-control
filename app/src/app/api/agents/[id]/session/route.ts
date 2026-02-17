@@ -5,6 +5,7 @@ import { join } from 'path';
 import os from 'os';
 
 const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
+const MAX_AGENT_ID_LENGTH = 64;
 
 interface Message {
   role: string;
