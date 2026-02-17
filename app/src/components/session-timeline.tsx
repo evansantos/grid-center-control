@@ -77,7 +77,7 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
   if (!data || data.entries.length === 0) return <div className="text-zinc-500 text-sm p-8 text-center">No timeline data</div>;
 
   const { entries, summary } = data;
-  const maxDuration = Math.max(...entries.map(e => e.durationMs), 1);
+  const totalMs = summary.totalMs || 1;
 
   return (
     <div className="space-y-6">
@@ -111,7 +111,7 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
         <div className="space-y-1" style={{ minWidth: `${Math.max(600, entries.length * 40 * zoom)}px` }}>
           {entries.map((entry, idx) => {
             const colors = TYPE_COLORS[entry.type] || TYPE_COLORS.assistant;
-            const widthPct = Math.max(2, (entry.durationMs / maxDuration) * 100 * zoom);
+            const widthPct = Math.max(2, (entry.durationMs / totalMs) * 100 * zoom);
             const isHovered = hoveredIdx === idx;
 
             return (

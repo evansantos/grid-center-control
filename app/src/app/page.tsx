@@ -5,6 +5,7 @@ import { QuickStatsWidget } from '@/components/widgets/quick-stats-widget';
 import { RecentActivityWidget } from '@/components/widgets/recent-activity-widget';
 import { FleetStatusWidget } from '@/components/widgets/fleet-status-widget';
 import { TaskDistributionWidget } from '@/components/widgets/task-distribution-widget';
+import { RecommendationsWidget } from '@/components/widgets/recommendations-widget';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,7 @@ export default function Home() {
         'recent-activity': <RecentActivityWidget />,
         'fleet-status': <FleetStatusWidget />,
         'task-distribution': <TaskDistributionWidget />,
+        'recommendations': <RecommendationsWidget />,
       }}
     </DashboardGrid>
   );
