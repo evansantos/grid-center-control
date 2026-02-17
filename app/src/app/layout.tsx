@@ -7,6 +7,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { NotificationProvider } from '@/components/notification-provider';
 import { NotificationCenter } from '@/components/notification-center';
 import { GlobalSearch } from '@/components/global-search';
+import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { useIsMobile } from '@/lib/useMediaQuery';
 import { useState } from 'react';
 
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             )}
 
+            <BreadcrumbNav />
             <main className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-4' : 'px-6 py-8'}`}>
               {children}
             </main>

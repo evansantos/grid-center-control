@@ -26,6 +26,7 @@ export default function Home() {
         'projects': <ProjectsWidget projects={projectRows} />,
         'quick-stats': <QuickStatsWidget projectCount={projects.length} />,
         'recent-activity': <RecentActivityWidget />,
+        'recommendations': <SmartRecommendations />,
       }}
     </DashboardGrid>
     </>
