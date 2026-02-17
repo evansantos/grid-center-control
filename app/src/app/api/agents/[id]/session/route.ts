@@ -17,8 +17,8 @@ function extractText(content: unknown): string {
   if (typeof content === 'string') return content;
   if (Array.isArray(content)) {
     return content
-      .filter((c: any) => c.type === 'text')
-      .map((c: any) => c.text)
+      .filter((c: { type: string; text?: string }) => c.type === 'text')
+      .map((c: { type: string; text?: string }) => c.text)
       .join('\n');
   }
   return '';

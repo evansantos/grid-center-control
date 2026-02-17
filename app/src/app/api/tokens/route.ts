@@ -10,7 +10,7 @@ const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
 
 // Module-level cache with 10s TTL
-const cache = new Map<string, { data: any; timestamp: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 10 * 1000;
 
 interface TokenUsage {

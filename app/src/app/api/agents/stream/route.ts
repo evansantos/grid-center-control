@@ -10,9 +10,10 @@ async function exists(p: string) { try { await access(p, constants.R_OK); return
 
 async function getAgentStatuses() {
   try {
-    let config: any;
+    interface RawConfig { agents?: { list?: Array<{ id: string }> } }
+    let config: RawConfig;
     try {
-      config = JSON.parse(await readFile(join(OPENCLAW_DIR, 'openclaw.json'), 'utf-8'));
+      config = JSON.parse(await readFile(join(OPENCLAW_DIR, 'openclaw.json'), 'utf-8')) as RawConfig;
     } catch (err) { console.error("[agents/stream] config read failed", err);
       config = { agents: { list: [] } };
     }

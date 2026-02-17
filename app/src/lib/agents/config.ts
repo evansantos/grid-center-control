@@ -22,9 +22,16 @@ export async function loadAgentConfigs(): Promise<AgentConfig[]> {
     return configCache.data;
   }
 
-  let config: any;
+  interface RawConfig {
+    agents?: {
+      list?: Array<{ id: string; name?: string; model?: string; identity?: { name?: string; emoji?: string } }>;
+      defaults?: { model?: { primary?: string } };
+    };
+  }
+
+  let config: RawConfig;
   try {
-    config = JSON.parse(await readFile(CONFIG_PATH, 'utf-8'));
+    config = JSON.parse(await readFile(CONFIG_PATH, 'utf-8')) as RawConfig;
   } catch {
     config = { agents: { list: [] } };
   }
@@ -32,7 +39,7 @@ export async function loadAgentConfigs(): Promise<AgentConfig[]> {
   const agentList = config.agents?.list ?? [];
   const defaultModel = config.agents?.defaults?.model?.primary ?? '';
 
-  const agents: AgentConfig[] = agentList.map((agent: any) => ({
+  const agents: AgentConfig[] = agentList.map((agent) => ({
     id: agent.id,
     name: agent.identity?.name ?? agent.name ?? agent.id,
     emoji: agent.identity?.emoji ?? '🔵',

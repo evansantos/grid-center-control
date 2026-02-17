@@ -557,7 +557,7 @@ function Whiteboard({ x, y, label }: { x: number; y: number; label?: string }) {
 
 function SprintBoard({ x, y }: { x: number; y: number }) {
   const { data, loading, error } = useSprintData();
-  const [hoveredTask, setHoveredTask] = useState<any>(null);
+  const [hoveredTask, setHoveredTask] = useState<{ id: string; task_number: number; title: string; description: string; status: string } | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
 
   // Fallback to static whiteboard look if data is loading/error
@@ -588,7 +588,7 @@ function SprintBoard({ x, y }: { x: number; y: number }) {
     }
   };
 
-  const handleTaskHover = (task: any, event: React.MouseEvent) => {
+  const handleTaskHover = (task: { id: string; task_number: number; title: string; description: string; status: string }, event: React.MouseEvent) => {
     setHoveredTask(task);
     setHoverPosition({ x: event.clientX, y: event.clientY });
   };

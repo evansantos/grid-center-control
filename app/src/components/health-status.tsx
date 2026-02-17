@@ -53,8 +53,8 @@ export function HealthStatus() {
       const data: HealthResponse = await response.json();
       setHealth(data);
       setLastRefresh(new Date());
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
       console.error('Failed to fetch health status:', err);
     } finally {
       setLoading(false);

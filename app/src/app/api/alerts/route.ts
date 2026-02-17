@@ -54,8 +54,8 @@ async function getRecentEvents(): Promise<Event[]> {
         metadata = JSON.parse(row.data || '{}');
         // Extract metric and value from metadata
         if (metadata && typeof metadata === 'object') {
-          const data = metadata as Record<string, any>;
-          metric = data.metric || row.type;
+          const data = metadata as Record<string, unknown>;
+          metric = (typeof data.metric === 'string' ? data.metric : '') || row.type;
           value = typeof data.value === 'number' ? data.value : undefined;
         }
       } catch (error) {

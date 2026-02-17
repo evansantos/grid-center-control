@@ -9,7 +9,7 @@ const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
 
 // Module-level cache with 15s TTL
-const cache = new Map<string, { data: any; timestamp: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 15 * 1000;
 
 interface ErrorEntry {
@@ -30,7 +30,19 @@ interface ErrorData {
   };
 }
 
-function detectErrorType(entry: any): { isError: boolean; type: string; message: string; severity: 'high' | 'medium' | 'low' } {
+interface LogEntry {
+  type?: string;
+  error?: unknown;
+  message?: {
+    tool_result?: { is_error?: boolean; content?: string };
+    content?: string | Array<{ type: string; text?: string }>;
+  } & Record<string, unknown>;
+  timestamp?: string;
+  stack?: string;
+  [key: string]: unknown;
+}
+
+function detectErrorType(entry: LogEntry): { isError: boolean; type: string; message: string; severity: 'high' | 'medium' | 'low' } {
   if (entry.message?.tool_result?.is_error === true) {
     return { isError: true, type: 'tool_error', message: entry.message.tool_result.content || 'Tool execution failed', severity: 'high' };
   }
@@ -39,7 +51,7 @@ function detectErrorType(entry: any): { isError: boolean; type: string; message:
   }
   if (entry.message?.content) {
     const content = Array.isArray(entry.message.content) 
-      ? entry.message.content.find((c: any) => c.type === 'text')?.text || ''
+      ? entry.message.content.find((c: { type: string; text?: string }) => c.type === 'text')?.text || ''
       : typeof entry.message.content === 'string' ? entry.message.content : '';
     const errorIndicators = [/error:/i, /exception:/i, /failed:/i, /cannot/i, /unable to/i, /permission denied/i, /not found/i, /timeout/i, /refused/i, /forbidden/i, /unauthorized/i, /invalid/i, /syntax error/i, /fatal:/i, /critical:/i];
     for (const indicator of errorIndicators) {
@@ -50,7 +62,7 @@ function detectErrorType(entry: any): { isError: boolean; type: string; message:
     }
   }
   if (entry.type === 'error' || (typeof entry === 'object' && 'stack' in entry)) {
-    return { isError: true, type: 'exception', message: entry.message || entry.toString(), severity: 'high' };
+    return { isError: true, type: 'exception', message: String(entry.message ?? entry), severity: 'high' };
   }
   return { isError: false, type: '', message: '', severity: 'low' };
 }
@@ -97,7 +109,7 @@ async function fetchErrors(agent?: string, type?: string, hours?: number): Promi
             if (errorCheck.isError) {
               if (type && errorCheck.type !== type) continue;
               const timestamp = entry.timestamp || new Date().toISOString();
-              result.errors.push({ agent: displayAgent, sessionId, timestamp, type: errorCheck.type as any, message: errorCheck.message, severity: errorCheck.severity });
+              result.errors.push({ agent: displayAgent, sessionId, timestamp, type: errorCheck.type as ErrorEntry['type'], message: errorCheck.message, severity: errorCheck.severity });
               result.summary.total++;
               result.summary.byAgent[displayAgent] = (result.summary.byAgent[displayAgent] || 0) + 1;
               result.summary.byType[errorCheck.type] = (result.summary.byType[errorCheck.type] || 0) + 1;
@@ -130,7 +142,7 @@ export async function GET(req: NextRequest) {
     const data = await fetchErrors(agent, type, hours);
     cache.set(cacheKey, { data, timestamp: now });
     return NextResponse.json(data);
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

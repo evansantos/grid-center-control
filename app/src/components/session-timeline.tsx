@@ -50,8 +50,8 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
       const result = await res.json();
       setData(result);
       setError(null);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }

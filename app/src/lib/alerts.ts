@@ -25,7 +25,7 @@ export interface Event {
   type: string;
   metric?: string;
   value?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const DEFAULT_ALERT_RULES: AlertRule[] = [

@@ -58,13 +58,13 @@ async function checkGatewayStatus(): Promise<HealthCheck> {
         latencyMs
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const latencyMs = Date.now() - start;
     return {
       name: 'Gateway',
       status: 'red',
       message: 'Failed to check gateway status',
-      details: error.message,
+      details: error instanceof Error ? error.message : String(error),
       latencyMs
     };
   }
@@ -145,13 +145,13 @@ async function checkAgentResponsiveness(): Promise<HealthCheck> {
         latencyMs
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const latencyMs = Date.now() - start;
     return {
       name: 'Agent Responsiveness',
       status: 'red',
       message: 'Failed to check agent responsiveness',
-      details: error.message,
+      details: error instanceof Error ? error.message : String(error),
       latencyMs
     };
   }
@@ -196,13 +196,13 @@ async function checkSystemResources(): Promise<HealthCheck> {
         latencyMs
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const latencyMs = Date.now() - start;
     return {
       name: 'System Resources',
       status: 'red',
       message: 'Failed to check system resources',
-      details: error.message,
+      details: error instanceof Error ? error.message : String(error),
       latencyMs
     };
   }
@@ -254,14 +254,14 @@ export async function GET() {
     cachedHealth = health;
     lastCheckTime = now;
     return NextResponse.json(health);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       {
         checks: [{
           name: 'Health Check System',
           status: 'red' as const,
           message: 'Health check system failed',
-          details: error.message
+          details: error instanceof Error ? error.message : String(error)
         }],
         overall: 'red' as const,
         timestamp: new Date().toISOString()

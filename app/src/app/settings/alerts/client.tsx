@@ -66,7 +66,7 @@ export default function AlertsClient() {
     }
   };
 
-  const handleRuleChange = (ruleId: string, field: keyof AlertRule, value: any) => {
+  const handleRuleChange = (ruleId: string, field: keyof AlertRule, value: AlertRule[keyof AlertRule]) => {
     setRules(prev => prev.map(rule => 
       rule.id === ruleId 
         ? { ...rule, [field]: value }

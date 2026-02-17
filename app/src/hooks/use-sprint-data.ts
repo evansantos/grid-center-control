@@ -37,8 +37,8 @@ export function useSprintData() {
       const newData = await response.json();
       setData(newData);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch sprint data');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch sprint data');
       // Keep the last successful response during refresh
       // Don't clear data on error to show stale data while refreshing
     } finally {

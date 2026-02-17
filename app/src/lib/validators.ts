@@ -161,5 +161,5 @@ export const ROICreateSchema = z.object({
 export function validateBody<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
   const result = schema.safeParse(data);
   if (result.success) return { success: true, data: result.data };
-  return { success: false, error: result.error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join('; ') };
+  return { success: false, error: result.error.issues.map((e: { path: PropertyKey[]; message: string }) => `${e.path.join('.')}: ${e.message}`).join('; ') };
 }

@@ -14,7 +14,7 @@ interface TimelineEntry {
 }
 
 const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
-let cache: { key: string; data: any; ts: number } | null = null;
+let cache: { key: string; data: unknown; ts: number } | null = null;
 
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { return false; } }
 

@@ -20,9 +20,9 @@ async function exists(p: string) { try { await access(p, constants.R_OK); return
 /* ── LRU Cache (max 20 entries, 30s TTL) ── */
 const LRU_MAX = 20;
 const LRU_TTL = 30_000;
-const lruCache = new Map<string, { data: any; ts: number }>();
+const lruCache = new Map<string, { data: unknown; ts: number }>();
 
-function lruGet(key: string): any | undefined {
+function lruGet(key: string): unknown | undefined {
   const entry = lruCache.get(key);
   if (!entry) return undefined;
   if (Date.now() - entry.ts > LRU_TTL) {
@@ -34,7 +34,7 @@ function lruGet(key: string): any | undefined {
   return entry.data;
 }
 
-function lruSet(key: string, data: any): void {
+function lruSet(key: string, data: unknown): void {
   if (lruCache.has(key)) lruCache.delete(key);
   lruCache.set(key, { data, ts: Date.now() });
   while (lruCache.size > LRU_MAX) {

@@ -2,7 +2,7 @@ import { getDB } from './db';
 import type { Project, Artifact, Task, Worktree, Event } from './types';
 
 export function listProjects(): Project[] {
-  const rows = getDB().prepare('SELECT * FROM projects ORDER BY updated_at DESC').all() as any[];
+  const rows = getDB().prepare('SELECT * FROM projects ORDER BY updated_at DESC').all() as Array<Project & { model_config: string | null }>;
   return rows.map((r) => ({
     ...r,
     model_config: r.model_config ? JSON.parse(r.model_config) : null,
@@ -10,7 +10,7 @@ export function listProjects(): Project[] {
 }
 
 export function getProject(id: string): Project | null {
-  const row = getDB().prepare('SELECT * FROM projects WHERE id = ?').get(id) as any;
+  const row = getDB().prepare('SELECT * FROM projects WHERE id = ?').get(id) as (Project & { model_config: string | null }) | undefined;
   if (!row) return null;
   return { ...row, model_config: row.model_config ? JSON.parse(row.model_config) : null };
 }

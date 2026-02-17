@@ -7,7 +7,7 @@ export interface Notification {
   timestamp: string;
   type: 'artifact_approved' | 'artifact_rejected' | 'task_action';
   projectId: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 export function sendNotification(notification: Notification): void {

@@ -10,7 +10,7 @@ const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
 
 // Module-level cache with 5s TTL
-const cache = new Map<string, { data: any; timestamp: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 5 * 1000;
 
 interface ActivityItem {
@@ -29,9 +29,10 @@ interface ActivityItem {
 
 async function getAgentMeta(): Promise<Record<string, { name: string; emoji: string }>> {
   try {
-    let config: any;
+    interface RawConfig { agents?: { list?: Array<{ id: string; identity?: { name?: string; emoji?: string } }> } }
+    let config: RawConfig;
     try {
-      config = JSON.parse(await readFile(join(OPENCLAW_DIR, 'openclaw.json'), 'utf-8'));
+      config = JSON.parse(await readFile(join(OPENCLAW_DIR, 'openclaw.json'), 'utf-8')) as RawConfig;
     } catch (error) { /* Config may not exist */
       config = { agents: { list: [] } };
     }
@@ -58,7 +59,7 @@ async function parseSessionFile(filePath: string, cutoff: number): Promise<{ ses
           const msg = entry.message;
           const role = msg.role;
           const textContent = Array.isArray(msg.content)
-            ? msg.content.find((c: any) => c.type === 'text')?.text ?? ''
+            ? msg.content.find((c: { type: string; text?: string }) => c.type === 'text')?.text ?? ''
             : typeof msg.content === 'string' ? msg.content : '';
           if (!textContent) continue;
           if (role === 'user' && !firstUserMsg) { firstUserMsg = textContent.slice(0, 300); if (entry.timestamp) firstTimestamp = entry.timestamp; }

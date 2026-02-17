@@ -65,7 +65,7 @@ export async function getSessionsForAgent(agentId: string, cutoffMs?: number): P
                 messageCount++;
                 if (role === 'assistant') {
                   const textContent = Array.isArray(msg.content)
-                    ? msg.content.find((c: any) => c.type === 'text')?.text ?? ''
+                    ? msg.content.find((c: { type: string; text?: string }) => c.type === 'text')?.text ?? ''
                     : typeof msg.content === 'string' ? msg.content : '';
                   if (textContent) lastMessage = textContent.slice(0, 200);
                 }

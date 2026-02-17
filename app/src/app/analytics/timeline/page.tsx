@@ -19,7 +19,8 @@ export default function TimelinePage() {
       .then(r => r.json())
       .then(data => {
         const flat: SessionOption[] = [];
-        const flatten = (items: any[]) => {
+        interface SessionNode { sessionKey: string; agentId: string; startedAt: string; children?: SessionNode[] }
+        const flatten = (items: SessionNode[]) => {
           for (const item of items) {
             flat.push({ key: item.sessionKey, agent: item.agentId, date: item.startedAt });
             if (item.children?.length) flatten(item.children);

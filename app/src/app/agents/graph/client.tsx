@@ -48,7 +48,7 @@ export default function AgentsGraphClient() {
         setGraphData(data);
         
         // Initialize nodes with random positions
-        const initialNodes = data.nodes.map((node: any) => ({
+        const initialNodes = data.nodes.map((node: { id: string; group: string }) => ({
           ...node,
           x: (Math.random() - 0.5) * 400,
           y: (Math.random() - 0.5) * 300,
