@@ -17,6 +17,12 @@ export function getDB(): Database.Database {
     if (Array.isArray(fkViolations) && fkViolations.length > 0) {
       console.warn(`[db] foreign_key_check found ${fkViolations.length} violation(s):`, fkViolations);
     }
+
+    // Ensure indexes exist
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_artifacts_project ON artifacts(project_id, type)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id, task_number)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_worktrees_project ON worktrees(project_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_events_project ON events(project_id, id)`);
   }
   return db;
 }
