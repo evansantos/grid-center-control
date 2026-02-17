@@ -25,30 +25,14 @@ const AGENT_NAMES: Record<string, string> = {
   sage: 'Sage', main: 'Main', po: 'PO',
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'var(--grid-text-muted)',
-  in_progress: 'var(--grid-accent)',
-  review: 'var(--grid-yellow)',
-  done: 'var(--grid-success)',
-  approved: 'var(--grid-success)',
-  failed: 'var(--grid-error)',
-};
-
-const STATUS_ICONS: Record<string, string> = {
-  pending: '◯',
-  in_progress: '▶',
-  review: '◎',
-  done: '✓',
-};
-
-const PHASE_STEPS = ['brainstorm', 'design', 'plan', 'execute', 'review', 'done'];
+const PHASE_STEPS = ['brainstorm', 'design', 'plan', 'execute', 'review', 'done'] as const;
 const PHASE_LABELS: Record<string, string> = {
-  brainstorm: 'BRAINSTORM',
-  design: 'DESIGN',
-  plan: 'PLANNING',
-  execute: 'DEV',
-  review: 'REVIEW',
-  done: 'COMPLETE',
+  brainstorm: 'Brainstorm',
+  design: 'Design',
+  plan: 'Plan',
+  execute: 'Execute',
+  review: 'Review',
+  done: 'Done',
 };
 
 const COLUMN_ORDER = ['pending', 'in_progress', 'review', 'done'] as const;
@@ -57,6 +41,13 @@ const COLUMN_LABELS: Record<string, string> = {
   in_progress: 'In Progress',
   review: 'Review',
   done: 'Done',
+};
+
+const COLUMN_ICONS: Record<string, string> = {
+  pending: '○',
+  in_progress: '◑',
+  review: '◉',
+  done: '●',
 };
 
 function parseAgentFromTitle(title: string): string | null {
@@ -74,76 +65,77 @@ function timeAgo(dateStr: string | null): string | null {
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ${mins % 60}m`;
+  if (hrs < 24) return `${hrs}h`;
   const days = Math.floor(hrs / 24);
   return `${days}d`;
 }
 
 function groupTasksByStatus(tasks: Task[]): Record<string, Task[]> {
   const grouped: Record<string, Task[]> = {};
-  COLUMN_ORDER.forEach(status => {
-    grouped[status] = [];
-  });
-  
+  COLUMN_ORDER.forEach(status => { grouped[status] = []; });
   tasks.forEach(task => {
-    const mappedStatus = task.status === 'approved' ? 'done' 
-      : task.status === 'failed' ? 'in_progress' 
+    const mapped = task.status === 'approved' ? 'done'
+      : task.status === 'failed' ? 'in_progress'
       : task.status;
-    if (grouped[mappedStatus]) {
-      grouped[mappedStatus].push(task);
-    } else {
-      grouped.pending.push(task);
-    }
+    if (grouped[mapped]) grouped[mapped].push(task);
+    else grouped.pending.push(task);
   });
-  
   return grouped;
 }
 
-/* ─── Phase Indicator ─────────────────────────────────────── */
+/* ─── Phase Stepper ───────────────────────────────────────── */
 function PhaseIndicator({ phase }: { phase: string }) {
-  const currentIdx = PHASE_STEPS.indexOf(phase);
+  const currentIdx = PHASE_STEPS.indexOf(phase as typeof PHASE_STEPS[number]);
+
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '2px',
-      padding: '12px 16px',
-      background: 'var(--grid-surface)',
-      border: '1px solid var(--grid-border)',
-      borderRadius: 'var(--grid-radius-lg)',
-    }}>
-      <span style={{ color: 'var(--grid-text-muted)', fontSize: 11, fontFamily: 'inherit', marginRight: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-        Phase
-      </span>
+    <div className="flex items-center gap-0">
       {PHASE_STEPS.map((step, i) => {
-        const isActive = i === currentIdx;
         const isDone = i < currentIdx;
-        const color = isActive ? 'var(--grid-accent)' : isDone ? 'var(--grid-success)' : 'var(--grid-text-muted)';
+        const isActive = i === currentIdx;
+        const isFuture = i > currentIdx;
+
         return (
-          <div key={step} style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{
-              padding: '4px 10px',
-              borderRadius: 'var(--grid-radius)',
-              fontSize: 10,
-              fontWeight: isActive ? 700 : 500,
-              fontFamily: 'inherit',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: color,
-              background: isActive ? 'var(--grid-accent-dim)' : 'transparent',
-              border: isActive ? '1px solid var(--grid-accent)' : '1px solid transparent',
-              boxShadow: isActive ? '0 0 12px var(--grid-accent-dim)' : 'none',
-              transition: 'all 0.2s ease',
-            }}>
-              {isDone ? '✓ ' : ''}{PHASE_LABELS[step] || step}
+          <div key={step} className="flex items-center">
+            {/* Step */}
+            <div className="flex flex-col items-center gap-1.5">
+              {/* Circle */}
+              <div
+                className={`
+                  flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all duration-300
+                  ${isDone ? 'bg-[var(--grid-success)]/15 text-[var(--grid-success)] ring-1 ring-[var(--grid-success)]/30' : ''}
+                  ${isActive ? 'bg-[var(--grid-accent)]/15 text-[var(--grid-accent)] ring-2 ring-[var(--grid-accent)]/40' : ''}
+                  ${isFuture ? 'bg-[var(--grid-surface-hover)] text-[var(--grid-text-muted)] ring-1 ring-[var(--grid-border)]' : ''}
+                `}
+              >
+                {isDone ? (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <span className="text-[10px]">{i + 1}</span>
+                )}
+              </div>
+              {/* Label */}
+              <span
+                className={`
+                  text-[10px] tracking-wide font-medium transition-colors
+                  ${isDone ? 'text-[var(--grid-success)]/70' : ''}
+                  ${isActive ? 'text-[var(--grid-accent)]' : ''}
+                  ${isFuture ? 'text-[var(--grid-text-muted)]' : ''}
+                `}
+              >
+                {PHASE_LABELS[step]}
+              </span>
             </div>
+
+            {/* Connector line */}
             {i < PHASE_STEPS.length - 1 && (
-              <div style={{
-                width: 20,
-                height: 1,
-                background: isDone ? 'var(--grid-success)' : 'var(--grid-border)',
-                margin: '0 2px',
-              }} />
+              <div
+                className={`
+                  w-8 h-px mx-1 mt-[-18px] transition-colors duration-300
+                  ${i < currentIdx ? 'bg-[var(--grid-success)]/40' : 'bg-[var(--grid-border)]'}
+                `}
+              />
             )}
           </div>
         );
@@ -152,185 +144,92 @@ function PhaseIndicator({ phase }: { phase: string }) {
   );
 }
 
-/* ─── Empty Column State ──────────────────────────────────── */
-function EmptyColumn({ status }: { status: string }) {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '32px 16px',
-      borderRadius: 'var(--grid-radius)',
-      border: '1px dashed var(--grid-border)',
-      background: 'var(--grid-surface)',
-      opacity: 0.5,
-    }}>
-      <span style={{ fontSize: 20, marginBottom: 8, opacity: 0.4 }}>{STATUS_ICONS[status]}</span>
-      <span style={{ fontSize: 10, color: 'var(--grid-text-muted)', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-        No tasks
-      </span>
-    </div>
-  );
-}
-
 /* ─── Task Card ───────────────────────────────────────────── */
-function TaskCard({ task, status, projectId }: { task: Task; status: string; projectId: string }) {
+function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
   const agent = parseAgentFromTitle(task.title);
   const agentEmoji = agent ? AGENT_EMOJIS[agent] : null;
   const agentName = agent ? AGENT_NAMES[agent] : null;
   const elapsed = timeAgo(task.started_at);
   const cleanTitle = task.title.replace(/\[agent:\w+\]\s*/, '');
   const shortDesc = task.description
-    ? task.description.length > 100
-      ? task.description.slice(0, 100) + '…'
+    ? task.description.length > 120
+      ? task.description.slice(0, 120) + '…'
       : task.description
     : null;
 
+  const hasReviews = task.spec_review || task.quality_review;
+
   return (
-    <div
-      draggable
-      className="kanban-card"
-      style={{
-        background: 'var(--grid-surface)',
-        border: '1px solid var(--grid-border)',
-        borderRadius: 'var(--grid-radius-lg)',
-        padding: '12px 14px',
-        cursor: 'grab',
-        transition: 'all 0.2s ease',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = 'var(--grid-border-bright)';
-        e.currentTarget.style.boxShadow = `0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px var(--grid-accent-dim)`;
-        e.currentTarget.style.transform = 'translateY(-1px)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'var(--grid-border)';
-        e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.transform = 'translateY(0)';
-      }}
+    <a
+      href={`/project/${projectId}/task/${task.task_number}`}
+      draggable={false}
+      onClick={e => e.stopPropagation()}
+      className="
+        block rounded-lg p-3 transition-all duration-150
+        bg-[var(--grid-surface)] border border-[var(--grid-border)]
+        hover:border-[var(--grid-border-bright)] hover:bg-[var(--grid-surface-hover)]
+        group cursor-pointer
+      "
     >
-      {/* Left accent bar */}
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 3,
-        background: STATUS_COLORS[task.status] || STATUS_COLORS[status],
-        borderRadius: '3px 0 0 3px',
-      }} />
-
-      <a
-        href={`/project/${projectId}/task/${task.task_number}`}
-        style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header: agent + number + time */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          {agentEmoji && (
-            <span style={{
-              fontSize: 14,
-              width: 26,
-              height: 26,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 'var(--grid-radius)',
-              background: 'var(--grid-surface-hover)',
-              border: '1px solid var(--grid-border)',
-              flexShrink: 0,
-            }}>
-              {agentEmoji}
-            </span>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span style={{ fontFamily: 'inherit', fontSize: 10, color: 'var(--grid-text-muted)', letterSpacing: '0.05em' }}>
-              #{task.task_number}
-              {agentName && <span style={{ marginLeft: 6, color: 'var(--grid-text-dim)' }}>· {agentName}</span>}
-            </span>
-          </div>
-          {elapsed && (
-            <span style={{
-              marginLeft: 'auto',
-              fontSize: 9,
-              color: 'var(--grid-text-muted)',
-              fontFamily: 'inherit',
-              background: 'var(--grid-surface-hover)',
-              padding: '2px 6px',
-              borderRadius: 'var(--grid-radius)',
-              flexShrink: 0,
-            }}>
-              ⏱ {elapsed}
-            </span>
-          )}
-        </div>
-
-        {/* Title */}
-        <div style={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: 'var(--grid-text)',
-          marginBottom: shortDesc ? 6 : 0,
-          lineHeight: 1.4,
-        }}>
-          {cleanTitle}
-        </div>
-
-        {/* Description */}
-        {shortDesc && (
-          <div style={{
-            fontSize: 11,
-            color: 'var(--grid-text-dim)',
-            lineHeight: 1.4,
-            marginBottom: 8,
-          }}>
-            {shortDesc}
-          </div>
+      {/* Top row: number + agent + time */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[11px] font-mono text-[var(--grid-text-muted)]">
+          #{task.task_number}
+        </span>
+        {agentEmoji && agentName && (
+          <span className="flex items-center gap-1 text-[10px] text-[var(--grid-text-muted)] bg-[var(--grid-surface-hover)] px-1.5 py-0.5 rounded">
+            <span className="text-xs">{agentEmoji}</span>
+            {agentName}
+          </span>
         )}
+        {elapsed && (
+          <span className="ml-auto text-[10px] text-[var(--grid-text-muted)] tabular-nums">
+            {elapsed}
+          </span>
+        )}
+      </div>
 
-        {/* Badges */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+      {/* Title */}
+      <p className="text-[13px] font-medium text-[var(--grid-text)] leading-snug mb-0 group-hover:text-white transition-colors">
+        {cleanTitle}
+      </p>
+
+      {/* Description */}
+      {shortDesc && (
+        <p className="text-[11px] text-[var(--grid-text-dim)] leading-relaxed mt-1.5 line-clamp-2">
+          {shortDesc}
+        </p>
+      )}
+
+      {/* Badges */}
+      {(task.status === 'failed' || hasReviews) && (
+        <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
           {task.status === 'failed' && (
-            <span style={{
-              fontSize: 10,
-              padding: '2px 8px',
-              borderRadius: 'var(--grid-radius)',
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: 'var(--grid-error)',
-              fontWeight: 700,
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-            }}>FAILED</span>
+            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-[var(--grid-error)]/10 text-[var(--grid-error)] ring-1 ring-[var(--grid-error)]/20">
+              FAILED
+            </span>
           )}
           {task.spec_review && (
-            <span style={{
-              fontSize: 10,
-              padding: '2px 6px',
-              borderRadius: 'var(--grid-radius)',
-              background: task.spec_review.startsWith('PASS') ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-              color: task.spec_review.startsWith('PASS') ? 'var(--grid-success)' : 'var(--grid-error)',
-              border: `1px solid ${task.spec_review.startsWith('PASS') ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
-            }}>
+            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ring-1 ${
+              task.spec_review.startsWith('PASS')
+                ? 'bg-[var(--grid-success)]/10 text-[var(--grid-success)] ring-[var(--grid-success)]/20'
+                : 'bg-[var(--grid-error)]/10 text-[var(--grid-error)] ring-[var(--grid-error)]/20'
+            }`}>
               spec {task.spec_review.startsWith('PASS') ? '✓' : '✗'}
             </span>
           )}
           {task.quality_review && (
-            <span style={{
-              fontSize: 10,
-              padding: '2px 6px',
-              borderRadius: 'var(--grid-radius)',
-              background: task.quality_review.startsWith('PASS') ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-              color: task.quality_review.startsWith('PASS') ? 'var(--grid-success)' : 'var(--grid-error)',
-              border: `1px solid ${task.quality_review.startsWith('PASS') ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
-            }}>
+            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ring-1 ${
+              task.quality_review.startsWith('PASS')
+                ? 'bg-[var(--grid-success)]/10 text-[var(--grid-success)] ring-[var(--grid-success)]/20'
+                : 'bg-[var(--grid-error)]/10 text-[var(--grid-error)] ring-[var(--grid-error)]/20'
+            }`}>
               quality {task.quality_review.startsWith('PASS') ? '✓' : '✗'}
             </span>
           )}
         </div>
-      </a>
-    </div>
+      )}
+    </a>
   );
 }
 
@@ -345,9 +244,7 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
   useEffect(() => {
     const es = new EventSource(`/api/events?projectId=${projectId}`);
     eventSourceRef.current = es;
-
     es.onopen = () => setConnected(true);
-
     es.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -357,15 +254,8 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
         }
       } catch {}
     };
-
-    es.onerror = () => {
-      setConnected(false);
-    };
-
-    return () => {
-      es.close();
-      eventSourceRef.current = null;
-    };
+    es.onerror = () => setConnected(false);
+    return () => { es.close(); eventSourceRef.current = null; };
   }, [projectId]);
 
   const handleDragStart = useCallback((e: DragEvent, task: Task) => {
@@ -387,13 +277,9 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
     try {
       const { taskId, from } = JSON.parse(e.dataTransfer.getData('text/plain'));
       if (from === targetStatus) return;
-
-      setTasks(prev => 
-        prev.map(task => 
-          task.id === taskId ? { ...task, status: targetStatus as any } : task
-        )
-      );
-
+      setTasks(prev => prev.map(task =>
+        task.id === taskId ? { ...task, status: targetStatus as Task['status'] } : task
+      ));
       fetch('/api/kanban/move', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -411,39 +297,24 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
   const progressPct = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-      {/* Connection status + Phase */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--grid-text-muted)' }}>
-          <span style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: connected ? 'var(--grid-success)' : 'var(--grid-error)',
-            boxShadow: connected ? '0 0 6px var(--grid-success)' : '0 0 6px var(--grid-error)',
-            animation: connected ? 'none' : 'pulse 2s ease-in-out infinite',
-            display: 'inline-block',
-          }} />
-          {connected ? 'LIVE' : 'RECONNECTING…'}
-        </div>
+    <div className="flex flex-col gap-10">
 
+      {/* ── Header: Connection + Phase ── */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-2 text-[11px] text-[var(--grid-text-muted)]">
+          <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-[var(--grid-success)]' : 'bg-[var(--grid-error)] animate-pulse'}`} />
+          {connected ? 'Live' : 'Reconnecting…'}
+        </div>
         <PhaseIndicator phase={phase} />
       </div>
 
+      {/* ── Designs ── */}
       {designs.length > 0 && (
-        <section>
-          <h2 style={{
-            fontSize: 13,
-            fontWeight: 600,
-            marginBottom: 12,
-            color: 'var(--grid-info)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            fontFamily: 'inherit',
-          }}>
-            📐 Designs
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-semibold text-[var(--grid-text-muted)] uppercase tracking-widest">
+            Designs
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {designs.map((a) => (
               <ArtifactCard key={a.id} artifact={a} projectId={projectId} onAction={() => {}} />
             ))}
@@ -451,20 +322,13 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
         </section>
       )}
 
+      {/* ── Plans ── */}
       {plans.length > 0 && (
-        <section>
-          <h2 style={{
-            fontSize: 13,
-            fontWeight: 600,
-            marginBottom: 12,
-            color: 'var(--grid-info)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            fontFamily: 'inherit',
-          }}>
-            📋 Plans
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-semibold text-[var(--grid-text-muted)] uppercase tracking-widest">
+            Plans
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {plans.map((a) => (
               <ArtifactCard key={a.id} artifact={a} projectId={projectId} onAction={() => {}} />
             ))}
@@ -472,56 +336,32 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
         </section>
       )}
 
+      {/* ── Tasks ── */}
       {tasks.length > 0 && (
-        <section>
+        <section className="flex flex-col gap-5">
           {/* Section header with progress */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-            <h2 style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: 'var(--grid-accent)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              fontFamily: 'inherit',
-              margin: 0,
-            }}>
-              ⚡ Tasks
+          <div className="flex items-center gap-4">
+            <h2 className="text-xs font-semibold text-[var(--grid-text)] uppercase tracking-widest m-0">
+              Tasks
             </h2>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                flex: 1,
-                height: 3,
-                background: 'var(--grid-border)',
-                borderRadius: 2,
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  width: `${progressPct}%`,
-                  height: '100%',
-                  background: progressPct === 100 ? 'var(--grid-success)' : 'var(--grid-accent)',
-                  borderRadius: 2,
-                  transition: 'width 0.5s ease',
-                  boxShadow: `0 0 8px ${progressPct === 100 ? 'var(--grid-success)' : 'var(--grid-accent-glow)'}`,
-                }} />
+            <div className="flex-1 flex items-center gap-3">
+              <div className="flex-1 h-[3px] bg-[var(--grid-border)] rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${progressPct}%`,
+                    backgroundColor: progressPct === 100 ? 'var(--grid-success)' : 'var(--grid-accent)',
+                  }}
+                />
               </div>
-              <span style={{
-                fontSize: 10,
-                color: 'var(--grid-text-dim)',
-                fontFamily: 'inherit',
-                whiteSpace: 'nowrap',
-              }}>
-                {doneCount}/{tasks.length} · {progressPct}%
+              <span className="text-[10px] text-[var(--grid-text-muted)] tabular-nums whitespace-nowrap">
+                {doneCount}/{tasks.length}
               </span>
             </div>
           </div>
 
           {/* Kanban Board */}
-          <div className="kanban-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 16,
-            minHeight: 400,
-          }}>
+          <div className="kanban-grid grid grid-cols-4 gap-4 min-h-[400px]">
             {COLUMN_ORDER.map(status => {
               const isOver = dragOver === status;
               const count = tasksByStatus[status].length;
@@ -531,67 +371,44 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
                   onDragOver={e => handleDragOver(e, status)}
                   onDragLeave={handleDragLeave}
                   onDrop={e => handleDrop(e, status)}
-                  style={{
-                    borderRadius: 'var(--grid-radius-lg)',
-                    padding: 12,
-                    background: isOver ? 'var(--grid-surface-hover)' : 'var(--grid-surface)',
-                    border: `1px solid ${isOver ? (STATUS_COLORS[status] || 'var(--grid-border-bright)') : 'var(--grid-border)'}`,
-                    transition: 'all 0.2s ease',
-                    boxShadow: isOver ? `0 0 20px var(--grid-accent-dim), inset 0 0 20px var(--grid-accent-dim)` : 'none',
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
+                  className={`
+                    rounded-xl p-3 flex flex-col transition-all duration-150
+                    ${isOver
+                      ? 'bg-[var(--grid-surface-hover)] border border-[var(--grid-accent)]/30'
+                      : 'bg-transparent border border-transparent'
+                    }
+                  `}
                 >
                   {/* Column header */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 12,
-                    paddingBottom: 10,
-                    borderBottom: '1px solid var(--grid-border)',
-                  }}>
-                    <span style={{
-                      fontSize: 12,
-                      color: STATUS_COLORS[status],
-                      opacity: 0.8,
-                    }}>{STATUS_ICONS[status]}</span>
-                    <span style={{
-                      fontFamily: 'inherit',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.08em',
-                      color: STATUS_COLORS[status],
-                    }}>
+                  <div className="flex items-center gap-2 mb-3 pb-0">
+                    <span className="text-[11px] text-[var(--grid-text-muted)]">
+                      {COLUMN_ICONS[status]}
+                    </span>
+                    <span className="text-[11px] font-medium text-[var(--grid-text-dim)] tracking-wide">
                       {COLUMN_LABELS[status]}
                     </span>
-                    <span style={{
-                      marginLeft: 'auto',
-                      fontSize: 10,
-                      fontFamily: 'inherit',
-                      color: 'var(--grid-text-muted)',
-                      background: count > 0 ? 'var(--grid-surface-hover)' : 'transparent',
-                      padding: count > 0 ? '2px 8px' : '2px',
-                      borderRadius: 'var(--grid-radius)',
-                      border: count > 0 ? '1px solid var(--grid-border)' : 'none',
-                    }}>
-                      {count}
-                    </span>
+                    {count > 0 && (
+                      <span className="text-[10px] text-[var(--grid-text-muted)] tabular-nums ml-auto">
+                        {count}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Cards or empty state */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+                  {/* Cards */}
+                  <div className="flex flex-col gap-2 flex-1">
                     {count === 0 ? (
-                      <EmptyColumn status={status} />
+                      <div className="flex-1 flex items-center justify-center min-h-[80px] rounded-lg border border-dashed border-[var(--grid-border)] opacity-40">
+                        <span className="text-[10px] text-[var(--grid-text-muted)]">No tasks</span>
+                      </div>
                     ) : (
                       tasksByStatus[status].map(task => (
                         <div
                           key={task.id}
                           draggable
                           onDragStart={e => handleDragStart(e, task)}
+                          className="cursor-grab active:cursor-grabbing"
                         >
-                          <TaskCard task={task} status={status} projectId={projectId} />
+                          <TaskCard task={task} projectId={projectId} />
                         </div>
                       ))
                     )}
@@ -608,20 +425,13 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
         <QuickActions />
       </section>
 
-      {/* Responsive styles */}
+      {/* Responsive */}
       <style>{`
         @media (max-width: 768px) {
-          .kanban-grid {
-            grid-template-columns: 1fr !important;
-          }
+          .kanban-grid { grid-template-columns: 1fr !important; }
         }
         @media (min-width: 769px) and (max-width: 1024px) {
-          .kanban-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-        .kanban-card:active {
-          cursor: grabbing;
+          .kanban-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
     </div>
