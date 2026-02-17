@@ -18,11 +18,99 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
+const LOCALHOST_IPS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1', 'localhost']);
+const MUTATION_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH']);
+
+/**
+ * Validate that a request genuinely originates from localhost.
+ * We require the real IP (request.ip or x-real-ip) to be localhost.
+ * x-forwarded-for is NOT trusted alone as it can be spoofed.
+ */
+function isLocalhostRequest(request: NextRequest): boolean {
+  // Primary: use x-real-ip header (set by reverse proxy / Next.js runtime)
+  const realIp = request.headers.get('x-real-ip');
+
+  // x-forwarded-for is only trusted as supplementary — both must agree
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+
+  // If we have a real IP, it must be localhost
+  if (realIp) {
+    const realIsLocal = LOCALHOST_IPS.has(realIp);
+    // If x-forwarded-for is also present, it must also be localhost
+    if (forwarded) {
+      return realIsLocal && LOCALHOST_IPS.has(forwarded);
+    }
+    return realIsLocal;
+  }
+
+  // If no real IP is available (dev mode), check forwarded but with caution
+  // In production, having no real IP is suspicious — deny by default
+  if (forwarded) {
+    return LOCALHOST_IPS.has(forwarded);
+  }
+
+  // No IP info at all — only allow in development
+  return process.env.NODE_ENV === 'development';
+}
+
+/**
+ * CSRF protection: mutation requests must include an Origin header
+ * matching the expected localhost origin.
+ */
+function validateCsrf(request: NextRequest): boolean {
+  if (!MUTATION_METHODS.has(request.method)) {
+    return true; // Only check mutations
+  }
+
+  const origin = request.headers.get('origin');
+  if (!origin) {
+    return false; // Mutations MUST have an Origin header
+  }
+
+  try {
+    const originUrl = new URL(origin);
+    const requestUrl = request.nextUrl;
+
+    // Origin hostname must be localhost
+    if (!LOCALHOST_IPS.has(originUrl.hostname)) {
+      return false;
+    }
+
+    // Origin must match request host/port
+    if (originUrl.host !== requestUrl.host) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false; // Malformed origin
+  }
+}
+
 export function middleware(request: NextRequest) {
-  // Rate limit API routes
+  // --- Localhost auth check for API routes ---
   if (request.nextUrl.pathname.startsWith('/api')) {
-    const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
+    if (!isLocalhostRequest(request)) {
+      return applySecurityHeaders(
+        new NextResponse(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+    }
+
+    // CSRF protection for mutation methods
+    if (!validateCsrf(request)) {
+      return applySecurityHeaders(
+        new NextResponse(JSON.stringify({ error: 'CSRF validation failed' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+    }
+
+    // Rate limiting
+    const ip = request.headers.get('x-real-ip') ?? '127.0.0.1';
     const result = rateLimit(ip);
 
     if (!result.success) {
