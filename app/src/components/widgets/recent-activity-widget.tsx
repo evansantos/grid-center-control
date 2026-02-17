@@ -3,8 +3,13 @@
 export function RecentActivityWidget() {
   return (
     <div className="flex flex-col items-center justify-center py-8 gap-3">
-      <span className="text-3xl opacity-40">🕐</span>
-      <p className="text-sm" style={{ color: 'var(--grid-text-dim)' }}>No recent activity</p>
+      <div className="text-4xl opacity-30">📡</div>
+      <p className="text-sm font-medium" style={{ color: 'var(--grid-text-dim)' }}>
+        Awaiting transmissions...
+      </p>
+      <p className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--grid-text-muted, #44445a)' }}>
+        Activity will appear here
+      </p>
     </div>
   );
 }

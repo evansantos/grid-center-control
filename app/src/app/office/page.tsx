@@ -3,7 +3,7 @@ import OfficeZone from '../../components/office-zone';
 const zones = [
   {
     name: 'Engineering',
-    icon: '🔧',
+    icon: '⚡',
     description: 'Design, build, test, and fix — the core dev loop.',
     accentColor: '#3b82f6',
     agents: [
@@ -26,8 +26,8 @@ const zones = [
   },
   {
     name: 'Management',
-    icon: '📊',
-    description: 'Strategy, planning, and coordination.',
+    icon: '🎯',
+    description: 'Strategy, planning, and coordination across all teams.',
     accentColor: '#a855f7',
     agents: [
       { name: 'CEO', role: 'Strategic direction', status: 'active' as const },
@@ -35,16 +35,40 @@ const zones = [
       { name: 'PO', role: 'Product ownership', status: 'active' as const },
     ],
   },
+  {
+    name: 'Creative',
+    icon: '🎨',
+    description: 'Design, content, and visual identity.',
+    accentColor: '#ec4899',
+    agents: [
+      { name: 'PIXEL', role: 'Lead Designer — UI/UX', status: 'busy' as const },
+      { name: 'WRITER', role: 'Content & documentation', status: 'idle' as const },
+    ],
+  },
+  {
+    name: 'Support',
+    icon: '🛡️',
+    description: 'Research, intelligence, and security.',
+    accentColor: '#10b981',
+    agents: [
+      { name: 'SCOUT', role: 'Research & discovery', status: 'active' as const },
+      { name: 'GUARD', role: 'Security & compliance', status: 'idle' as const },
+    ],
+  },
 ];
 
 export default function OfficePage() {
   return (
     <div>
-      <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>🏢 Office</h1>
-      <p style={{ color: 'var(--grid-text-dim)', fontSize: '14px', marginBottom: '32px' }}>
-        Agents organized by department and function.
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--grid-text)' }}>
+          🏢 Office Zones
+        </h1>
+        <p className="text-sm" style={{ color: 'var(--grid-text-dim)' }}>
+          14 agents organized by department — the MCP <span style={{ color: 'var(--grid-accent)' }}>🔴</span> team.
+        </p>
+      </div>
+      <div className="flex flex-col gap-6">
         {zones.map((zone) => (
           <OfficeZone key={zone.name} {...zone} />
         ))}

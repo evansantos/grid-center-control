@@ -1,64 +1,53 @@
 'use client';
 
-type AgentStatus = 'active' | 'idle' | 'busy';
+type AgentStatus = 'active' | 'idle' | 'busy' | 'error';
 
 interface AgentCardProps {
   name: string;
   role: string;
   status: AgentStatus;
+  activity?: string;
+  onClick?: () => void;
 }
 
-const statusColors: Record<AgentStatus, string> = {
-  active: '#22c55e',
-  idle: '#eab308',
-  busy: '#ef4444',
+const statusConfig: Record<AgentStatus, { color: string; label: string; className: string }> = {
+  active: { color: 'var(--grid-success, #22c55e)', label: 'Active', className: 'status-dot active' },
+  idle: { color: 'var(--grid-text-muted, #44445a)', label: 'Idle', className: 'status-dot idle' },
+  busy: { color: 'var(--grid-warning, #f59e0b)', label: 'Busy', className: 'status-dot busy' },
+  error: { color: 'var(--grid-error, #ef4444)', label: 'Error', className: 'status-dot error' },
 };
 
-export default function AgentCard({ name, role, status }: AgentCardProps) {
+export default function AgentCard({ name, role, status, activity, onClick }: AgentCardProps) {
+  const cfg = statusConfig[status];
+
   return (
     <div
+      onClick={onClick}
+      className="grid-card p-4 flex items-center gap-3 cursor-pointer group transition-all duration-200 hover:scale-[1.02]"
       style={{
-        background: 'var(--grid-surface)',
-        border: '1px solid var(--grid-border)',
-        borderRadius: '8px',
-        padding: '16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
+        borderLeft: `3px solid ${cfg.color}`,
       }}
     >
       <div
+        className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-300"
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          background: 'var(--grid-border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '14px',
-          fontWeight: 700,
-          color: 'var(--grid-text)',
-          flexShrink: 0,
+          background: `${cfg.color}22`,
+          color: cfg.color,
+          boxShadow: status === 'active' ? `0 0 12px ${cfg.color}44` : 'none',
         }}
       >
-        {name}
+        {name.slice(0, 3)}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: '14px' }}>{name}</div>
-        <div style={{ fontSize: '12px', color: 'var(--grid-text-dim)' }}>{role}</div>
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold text-sm" style={{ color: 'var(--grid-text)' }}>{name}</div>
+        <div className="text-xs truncate" style={{ color: 'var(--grid-text-dim)' }}>
+          {activity || role}
+        </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        <div
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: statusColors[status],
-          }}
-        />
-        <span style={{ fontSize: '11px', color: 'var(--grid-text-dim)', textTransform: 'capitalize' }}>
-          {status}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <div className={cfg.className} />
+        <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--grid-text-dim)' }}>
+          {cfg.label}
         </span>
       </div>
     </div>
