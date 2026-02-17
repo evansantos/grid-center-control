@@ -1,176 +1,209 @@
 'use client';
 
-import { useState } from 'react';
-
-type TimeRange = '24h' | '7d' | '30d';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 interface ModelData {
   name: string;
-  latencyMs: number;
+  avgLatency: number;
   costPer1k: number;
   qualityScore: number;
   totalRequests: number;
+  errorRate: number;
 }
 
-const DATA: Record<TimeRange, ModelData[]> = {
-  '24h': [
-    { name: 'gpt-4o', latencyMs: 820, costPer1k: 2.50, qualityScore: 92, totalRequests: 1243 },
-    { name: 'claude-opus-4', latencyMs: 950, costPer1k: 3.00, qualityScore: 95, totalRequests: 876 },
-    { name: 'claude-sonnet-4', latencyMs: 480, costPer1k: 0.80, qualityScore: 89, totalRequests: 2105 },
-    { name: 'gpt-4o-mini', latencyMs: 310, costPer1k: 0.15, qualityScore: 78, totalRequests: 3420 },
-    { name: 'deepseek-r1', latencyMs: 1200, costPer1k: 0.55, qualityScore: 86, totalRequests: 654 },
-  ],
-  '7d': [
-    { name: 'gpt-4o', latencyMs: 790, costPer1k: 2.50, qualityScore: 91, totalRequests: 8730 },
-    { name: 'claude-opus-4', latencyMs: 920, costPer1k: 3.00, qualityScore: 94, totalRequests: 5940 },
-    { name: 'claude-sonnet-4', latencyMs: 510, costPer1k: 0.80, qualityScore: 88, totalRequests: 14280 },
-    { name: 'gpt-4o-mini', latencyMs: 290, costPer1k: 0.15, qualityScore: 77, totalRequests: 24100 },
-    { name: 'deepseek-r1', latencyMs: 1150, costPer1k: 0.55, qualityScore: 85, totalRequests: 4320 },
-  ],
-  '30d': [
-    { name: 'gpt-4o', latencyMs: 810, costPer1k: 2.50, qualityScore: 91, totalRequests: 35200 },
-    { name: 'claude-opus-4', latencyMs: 940, costPer1k: 3.00, qualityScore: 95, totalRequests: 24100 },
-    { name: 'claude-sonnet-4', latencyMs: 500, costPer1k: 0.80, qualityScore: 89, totalRequests: 58700 },
-    { name: 'gpt-4o-mini', latencyMs: 300, costPer1k: 0.15, qualityScore: 78, totalRequests: 102400 },
-    { name: 'deepseek-r1', latencyMs: 1180, costPer1k: 0.55, qualityScore: 86, totalRequests: 18600 },
-  ],
-};
+type SortKey = keyof ModelData;
+type SortDir = 'asc' | 'desc';
+type TimeRange = '24h' | '7d' | '30d';
 
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+// lower-is-better columns
+const lowerIsBetter = new Set<SortKey>(['avgLatency', 'costPer1k', 'errorRate']);
 
-function Bar({ value, max, color }: { value: number; max: number; color: string }) {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  return (
-    <div className="w-full h-5 rounded-full overflow-hidden" style={{ background: 'var(--grid-bg)' }}>
-      <div
-        className="h-full rounded-full transition-all duration-500"
-        style={{ width: `${pct}%`, background: color }}
-      />
-    </div>
-  );
-}
-
-export default function ModelComparisonPage() {
+export default function ModelComparisonDashboard() {
+  const [models, setModels] = useState<ModelData[]>([]);
   const [range, setRange] = useState<TimeRange>('24h');
-  const models = DATA[range];
+  const [sortKey, setSortKey] = useState<SortKey>('qualityScore');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const maxLatency = Math.max(...models.map((m) => m.latencyMs));
-  const maxCost = Math.max(...models.map((m) => m.costPer1k));
-  const maxRequests = Math.max(...models.map((m) => m.totalRequests));
+  useEffect(() => {
+    fetch(`/api/analytics/models?range=${range}`)
+      .then(r => r.json())
+      .then(d => setModels(d.models))
+      .catch(() => {});
+  }, [range]);
+
+  const handleSort = useCallback((key: SortKey) => {
+    setSortKey(prev => {
+      if (prev === key) { setSortDir(d => d === 'asc' ? 'desc' : 'asc'); return key; }
+      setSortDir(key === 'name' ? 'asc' : 'desc');
+      return key;
+    });
+  }, []);
+
+  const sorted = useMemo(() => {
+    const s = [...models].sort((a, b) => {
+      const av = a[sortKey], bv = b[sortKey];
+      const cmp = typeof av === 'string' ? (av as string).localeCompare(bv as string) : (av as number) - (bv as number);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return s;
+  }, [models, sortKey, sortDir]);
+
+  // Compute best/worst per numeric column
+  const highlights = useMemo(() => {
+    const keys: SortKey[] = ['avgLatency', 'costPer1k', 'qualityScore', 'totalRequests', 'errorRate'];
+    const m: Record<string, { best: number; worst: number }> = {};
+    for (const k of keys) {
+      const vals = models.map(x => x[k] as number);
+      if (!vals.length) continue;
+      const low = lowerIsBetter.has(k);
+      m[k] = { best: low ? Math.min(...vals) : Math.max(...vals), worst: low ? Math.max(...vals) : Math.min(...vals) };
+    }
+    return m;
+  }, [models]);
+
+  const cellStyle = (key: SortKey, val: number): React.CSSProperties => {
+    const h = highlights[key];
+    if (!h) return {};
+    if (val === h.best) return { color: '#22c55e', fontWeight: 700 };
+    if (val === h.worst) return { color: '#ef4444', fontWeight: 700 };
+    return {};
+  };
+
+  const maxLatency = Math.max(...models.map(m => m.avgLatency), 1);
+  const maxCost = Math.max(...models.map(m => m.costPer1k), 0.001);
+
+  const s = {
+    page: { padding: 24, color: 'var(--grid-text)', background: 'var(--grid-bg)', minHeight: '100vh' } as React.CSSProperties,
+    h1: { fontSize: 24, fontWeight: 700, marginBottom: 4 } as React.CSSProperties,
+    sub: { color: 'var(--grid-text-dim)', fontSize: 14, marginBottom: 20 } as React.CSSProperties,
+    filters: { display: 'flex', gap: 8, marginBottom: 24 } as React.CSSProperties,
+    btn: (active: boolean): React.CSSProperties => ({
+      padding: '6px 16px', borderRadius: 6, border: '1px solid var(--grid-border)', cursor: 'pointer',
+      background: active ? 'var(--grid-accent)' : 'var(--grid-surface)', color: active ? '#fff' : 'var(--grid-text)',
+      fontWeight: active ? 600 : 400, fontSize: 13,
+    }),
+    table: { width: '100%', borderCollapse: 'collapse' as const, marginBottom: 32 } as React.CSSProperties,
+    th: (k: SortKey): React.CSSProperties => ({
+      textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid var(--grid-border)',
+      cursor: 'pointer', fontSize: 13, color: 'var(--grid-text-dim)', fontWeight: 600, userSelect: 'none',
+      background: sortKey === k ? 'var(--grid-surface)' : 'transparent',
+    }),
+    td: { padding: '10px 12px', borderBottom: '1px solid var(--grid-border)', fontSize: 14 } as React.CSSProperties,
+    section: { marginBottom: 32 } as React.CSSProperties,
+    sectionTitle: { fontSize: 16, fontWeight: 600, marginBottom: 12 } as React.CSSProperties,
+    barRow: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 } as React.CSSProperties,
+    barLabel: { width: 180, fontSize: 13, color: 'var(--grid-text-dim)', textAlign: 'right' as const, flexShrink: 0 } as React.CSSProperties,
+    barTrack: { flex: 1, height: 20, background: 'var(--grid-surface)', borderRadius: 4, overflow: 'hidden' } as React.CSSProperties,
+    barValue: { fontSize: 13, width: 70, flexShrink: 0 } as React.CSSProperties,
+  };
+
+  const arrow = (k: SortKey) => sortKey === k ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+
+  const columns: { key: SortKey; label: string; fmt: (v: ModelData) => string }[] = [
+    { key: 'name', label: 'Model Name', fmt: v => v.name },
+    { key: 'avgLatency', label: 'Avg Latency (ms)', fmt: v => v.avgLatency.toLocaleString() },
+    { key: 'costPer1k', label: 'Cost / 1K tokens', fmt: v => `$${v.costPer1k.toFixed(3)}` },
+    { key: 'qualityScore', label: 'Quality Score', fmt: v => String(v.qualityScore) },
+    { key: 'totalRequests', label: 'Total Requests', fmt: v => v.totalRequests.toLocaleString() },
+    { key: 'errorRate', label: 'Error Rate %', fmt: v => `${v.errorRate.toFixed(1)}%` },
+  ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-wide mb-2" style={{ color: 'var(--grid-text)' }}>
-            Model Comparison
-          </h1>
-          <p className="text-sm" style={{ color: 'var(--grid-text-dim)' }}>
-            Compare latency, cost, and quality across models
-          </p>
-        </div>
-        <div className="flex gap-1 rounded-lg p-1" style={{ background: 'var(--grid-bg)' }}>
-          {(['24h', '7d', '30d'] as TimeRange[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              className="px-3 py-1.5 rounded text-sm font-medium transition-all"
-              style={{
-                background: range === r ? 'var(--grid-accent)' : 'transparent',
-                color: range === r ? '#fff' : 'var(--grid-text-dim)',
-              }}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
+    <div style={s.page}>
+      <h1 style={s.h1}>Model Comparison</h1>
+      <p style={s.sub}>Compare performance, cost, and quality across AI models</p>
+
+      {/* Time range filter */}
+      <div style={s.filters}>
+        {(['24h', '7d', '30d'] as TimeRange[]).map(r => (
+          <button key={r} style={s.btn(range === r)} onClick={() => setRange(r)}>{r}</button>
+        ))}
       </div>
 
-      {/* Data Table */}
-      <div
-        className="rounded-lg border overflow-hidden"
-        style={{ background: 'var(--grid-surface)', borderColor: 'var(--grid-border)' }}
-      >
-        <table className="w-full text-sm">
+      {/* Table */}
+      <div style={{ overflowX: 'auto', marginBottom: 32 }}>
+        <table style={s.table}>
           <thead>
-            <tr style={{ borderColor: 'var(--grid-border)' }} className="border-b">
-              {['Model', 'Avg Latency', 'Cost/1K tokens', 'Quality', 'Requests'].map((h) => (
-                <th
-                  key={h}
-                  className="text-left px-4 py-3 font-medium"
-                  style={{ color: 'var(--grid-text-dim)' }}
-                >
-                  {h}
+            <tr>
+              {columns.map(c => (
+                <th key={c.key} style={s.th(c.key)} onClick={() => handleSort(c.key)}>
+                  {c.label}{arrow(c.key)}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {models.map((m, i) => (
-              <tr
-                key={m.name}
-                className="border-b last:border-b-0"
-                style={{ borderColor: 'var(--grid-border)' }}
-              >
-                <td className="px-4 py-3 font-medium" style={{ color: 'var(--grid-text)' }}>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-3 h-3 rounded-full inline-block"
-                      style={{ background: COLORS[i] }}
-                    />
-                    {m.name}
-                  </div>
-                </td>
-                <td className="px-4 py-3" style={{ color: 'var(--grid-text)' }}>
-                  {m.latencyMs} ms
-                </td>
-                <td className="px-4 py-3" style={{ color: 'var(--grid-text)' }}>
-                  ${m.costPer1k.toFixed(2)}
-                </td>
-                <td className="px-4 py-3" style={{ color: 'var(--grid-text)' }}>
-                  {m.qualityScore}/100
-                </td>
-                <td className="px-4 py-3" style={{ color: 'var(--grid-text)' }}>
-                  {m.totalRequests.toLocaleString()}
-                </td>
+            {sorted.map(m => (
+              <tr key={m.name} style={{ background: 'transparent' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--grid-surface)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent)')}>
+                {columns.map(c => (
+                  <td key={c.key} style={{ ...s.td, ...(c.key !== 'name' ? cellStyle(c.key, m[c.key] as number) : {}), fontFamily: c.key === 'name' ? 'monospace' : 'inherit' }}>
+                    {c.fmt(m)}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Visual Bars */}
-      {[
-        { label: 'Latency (ms)', key: 'latencyMs' as const, max: maxLatency, fmt: (v: number) => `${v} ms` },
-        { label: 'Cost per 1K tokens', key: 'costPer1k' as const, max: maxCost, fmt: (v: number) => `$${v.toFixed(2)}` },
-        { label: 'Quality Score', key: 'qualityScore' as const, max: 100, fmt: (v: number) => `${v}/100` },
-        { label: 'Total Requests', key: 'totalRequests' as const, max: maxRequests, fmt: (v: number) => v.toLocaleString() },
-      ].map((metric) => (
-        <div
-          key={metric.label}
-          className="p-4 rounded-lg border space-y-3"
-          style={{ background: 'var(--grid-surface)', borderColor: 'var(--grid-border)' }}
-        >
-          <h3 className="text-sm font-medium" style={{ color: 'var(--grid-text-dim)' }}>
-            {metric.label}
-          </h3>
-          <div className="space-y-2">
-            {models.map((m, i) => (
-              <div key={m.name} className="flex items-center gap-3">
-                <span className="text-xs w-28 shrink-0" style={{ color: 'var(--grid-text)' }}>
-                  {m.name}
-                </span>
-                <div className="flex-1">
-                  <Bar value={m[metric.key]} max={metric.max} color={COLORS[i]} />
-                </div>
-                <span className="text-xs w-16 text-right shrink-0" style={{ color: 'var(--grid-text-dim)' }}>
-                  {metric.fmt(m[metric.key])}
-                </span>
-              </div>
-            ))}
+      {/* Latency Bar Chart */}
+      <div style={s.section}>
+        <h2 style={s.sectionTitle}>Latency Comparison</h2>
+        {sorted.map(m => (
+          <div key={m.name} style={s.barRow}>
+            <div style={s.barLabel}>{m.name.replace(/-20\d{6}/, '')}</div>
+            <div style={s.barTrack}>
+              <div style={{
+                width: `${(m.avgLatency / maxLatency) * 100}%`, height: '100%', borderRadius: 4,
+                background: m.avgLatency === highlights.avgLatency?.best ? '#22c55e' : m.avgLatency === highlights.avgLatency?.worst ? '#ef4444' : 'var(--grid-accent)',
+                transition: 'width 0.4s ease',
+              }} />
+            </div>
+            <div style={s.barValue}>{m.avgLatency}ms</div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+
+      {/* Cost Bar Chart */}
+      <div style={s.section}>
+        <h2 style={s.sectionTitle}>Cost Comparison (per 1K tokens)</h2>
+        {sorted.map(m => (
+          <div key={m.name} style={s.barRow}>
+            <div style={s.barLabel}>{m.name.replace(/-20\d{6}/, '')}</div>
+            <div style={s.barTrack}>
+              <div style={{
+                width: `${(m.costPer1k / maxCost) * 100}%`, height: '100%', borderRadius: 4,
+                background: m.costPer1k === highlights.costPer1k?.best ? '#22c55e' : m.costPer1k === highlights.costPer1k?.worst ? '#ef4444' : 'var(--grid-accent)',
+                transition: 'width 0.4s ease',
+              }} />
+            </div>
+            <div style={s.barValue}>${m.costPer1k.toFixed(3)}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quality Score Ranking */}
+      <div style={s.section}>
+        <h2 style={s.sectionTitle}>Quality Score Ranking</h2>
+        {[...models].sort((a, b) => b.qualityScore - a.qualityScore).map((m, i) => (
+          <div key={m.name} style={{ ...s.barRow, marginBottom: 10 }}>
+            <div style={{ width: 24, fontSize: 16, fontWeight: 700, color: i === 0 ? '#facc15' : 'var(--grid-text-dim)' }}>
+              {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+            </div>
+            <div style={{ ...s.barLabel, width: 160 }}>{m.name.replace(/-20\d{6}/, '')}</div>
+            <div style={s.barTrack}>
+              <div style={{
+                width: `${m.qualityScore}%`, height: '100%', borderRadius: 4,
+                background: i === 0 ? '#22c55e' : i === models.length - 1 ? '#ef4444' : 'var(--grid-accent)',
+                transition: 'width 0.4s ease',
+              }} />
+            </div>
+            <div style={{ ...s.barValue, fontWeight: 600 }}>{m.qualityScore}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

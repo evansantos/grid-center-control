@@ -1,93 +1,79 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export interface SecretKey {
   id: string;
   name: string;
   provider: string;
-  maskedValue: string;
-  agents: string[];
-  status: 'active' | 'expiring' | 'expired' | 'revoked';
-  createdAt: string;
-  expiresAt: string | null;
+  maskedKey: string;
+  status: 'valid' | 'invalid' | 'rate-limited';
+  agentsUsing: string[];
+  lastUsed: string;
+  created: string;
 }
 
-const sampleKeys: SecretKey[] = [
+const mockKeys: SecretKey[] = [
   {
     id: '1',
-    name: 'Production GPT-4',
-    provider: 'OpenAI',
-    maskedValue: 'sk-...a3Xf',
-    agents: ['summarizer', 'code-review', 'chat-agent'],
-    status: 'active',
-    createdAt: '2026-01-15T10:00:00Z',
-    expiresAt: '2026-07-15T10:00:00Z',
+    name: 'Production Claude',
+    provider: 'Anthropic',
+    maskedKey: '••••••••sk-a3f1',
+    status: 'valid',
+    agentsUsing: ['Po', 'Research Bot'],
+    lastUsed: '2026-02-17T14:30:00Z',
+    created: '2025-11-01T10:00:00Z',
   },
   {
     id: '2',
-    name: 'Claude Opus Key',
-    provider: 'Anthropic',
-    maskedValue: 'sk-ant-...q9Wz',
-    agents: ['planner', 'architect'],
-    status: 'active',
-    createdAt: '2026-02-01T08:30:00Z',
-    expiresAt: '2026-08-01T08:30:00Z',
+    name: 'GPT-4o Main',
+    provider: 'OpenAI',
+    maskedKey: '••••••••x9Tk',
+    status: 'valid',
+    agentsUsing: ['Summarizer'],
+    lastUsed: '2026-02-17T12:15:00Z',
+    created: '2025-09-15T08:00:00Z',
   },
   {
     id: '3',
-    name: 'Gemini Staging',
+    name: 'Gemini Experimental',
     provider: 'Google',
-    maskedValue: 'AIza...mR7k',
-    agents: ['research-bot'],
-    status: 'expiring',
-    createdAt: '2025-09-10T14:00:00Z',
-    expiresAt: '2026-02-28T14:00:00Z',
+    maskedKey: '••••••••Qm7e',
+    status: 'rate-limited',
+    agentsUsing: ['Vision Agent', 'Po'],
+    lastUsed: '2026-02-16T22:00:00Z',
+    created: '2026-01-10T12:00:00Z',
   },
   {
     id: '4',
-    name: 'Mistral Dev',
-    provider: 'Mistral',
-    maskedValue: 'ms-...pL2d',
-    agents: [],
-    status: 'expired',
-    createdAt: '2025-06-01T12:00:00Z',
-    expiresAt: '2026-01-01T12:00:00Z',
+    name: 'Voice Generation',
+    provider: 'ElevenLabs',
+    maskedKey: '••••••••vL2d',
+    status: 'valid',
+    agentsUsing: ['Po'],
+    lastUsed: '2026-02-15T18:45:00Z',
+    created: '2025-12-20T09:00:00Z',
   },
   {
     id: '5',
-    name: 'Legacy OpenAI',
-    provider: 'OpenAI',
-    maskedValue: 'sk-...nB4x',
-    agents: ['legacy-bot'],
-    status: 'revoked',
-    createdAt: '2025-03-20T09:00:00Z',
-    expiresAt: null,
+    name: 'Web Search',
+    provider: 'Brave',
+    maskedKey: '••••••••nR8w',
+    status: 'invalid',
+    agentsUsing: [],
+    lastUsed: '2026-01-30T10:00:00Z',
+    created: '2025-08-05T14:00:00Z',
+  },
+  {
+    id: '6',
+    name: 'Backup Claude Key',
+    provider: 'Anthropic',
+    maskedKey: '••••••••jP4c',
+    status: 'valid',
+    agentsUsing: ['Fallback Router'],
+    lastUsed: '2026-02-10T06:20:00Z',
+    created: '2026-01-25T11:00:00Z',
   },
 ];
 
 export async function GET() {
-  return NextResponse.json(sampleKeys);
-}
-
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const newKey: SecretKey = {
-    id: crypto.randomUUID(),
-    name: body.name,
-    provider: body.provider,
-    maskedValue: body.key ? body.key.slice(0, 4) + '...' + body.key.slice(-4) : 'sk-...????',
-    agents: [],
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    expiresAt: null,
-  };
-  return NextResponse.json(newKey, { status: 201 });
-}
-
-export async function DELETE(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) {
-    return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-  }
-  return NextResponse.json({ id, status: 'revoked' });
+  return NextResponse.json({ keys: mockKeys });
 }
