@@ -3,7 +3,6 @@ import { DashboardGrid } from '@/components/dashboard-grid';
 import { ProjectsWidget } from '@/components/widgets/projects-widget';
 import { QuickStatsWidget } from '@/components/widgets/quick-stats-widget';
 import { RecentActivityWidget } from '@/components/widgets/recent-activity-widget';
-import { SmartRecommendations } from '@/components/smart-recommendations';
 import { FleetStatusWidget } from '@/components/widgets/fleet-status-widget';
 import { TaskDistributionWidget } from '@/components/widgets/task-distribution-widget';
 
@@ -21,18 +20,14 @@ export default function Home() {
   }));
 
   return (
-    <>
-    <SmartRecommendations />
     <DashboardGrid>
       {{
         'projects': <ProjectsWidget projects={projectRows} />,
         'quick-stats': <QuickStatsWidget projectCount={projects.length} />,
         'recent-activity': <RecentActivityWidget />,
-        'recommendations': <SmartRecommendations />,
         'fleet-status': <FleetStatusWidget />,
         'task-distribution': <TaskDistributionWidget />,
       }}
     </DashboardGrid>
-    </>
   );
 }

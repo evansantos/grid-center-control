@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { playSpawn } from '@/lib/sound-effects';
 import type { ActivityItem } from './types';
 import { FLOOR_W } from './types';
 
@@ -101,7 +100,7 @@ export function useLivingOfficeState() {
           setSpawnAnimations(prev => [...prev, {
             id: animId, parentId: data.parentAgent, childId: data.agent, reverse: false, startTime: Date.now()
           }]);
-          playSpawn();
+          
           setTimeout(() => setSpawnAnimations(prev => prev.filter(a => a.id !== animId)), 10000);
         }
       } catch (err) {

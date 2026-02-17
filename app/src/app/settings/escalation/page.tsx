@@ -3,9 +3,6 @@
 import { useState, useEffect } from 'react';
 import EscalationRuleCard, { type EscalationRule } from '@/components/escalation-rule-card';
 import EscalationRuleForm from '@/components/escalation-rule-form';
-import { replayOnboardingTour } from '@/components/onboarding-tour';
-import SoundSettings from '@/components/sound-settings';
-import { OfficeThemeSelector } from '@/components/office-theme-selector';
 
 const STORAGE_KEY = 'grid-escalation-rules';
 
@@ -89,17 +86,15 @@ export default function EscalationPage() {
         <p style={{ color: 'var(--grid-text-dim)', fontSize: '13px', marginBottom: '12px' }}>
           Choose a visual theme for the Living Office floor.
         </p>
-        <OfficeThemeSelector />
       </div>
 
       <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--grid-border)' }}>
         <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>🔊 Sound Effects</h2>
-        <SoundSettings />
       </div>
 
       <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--grid-border)' }}>
         <button
-          onClick={() => { replayOnboardingTour(); window.location.href = '/'; }}
+          onClick={() => { window.location.href = '/'; }}
           style={{
             background: 'var(--grid-surface)',
             border: '1px solid var(--grid-border)',

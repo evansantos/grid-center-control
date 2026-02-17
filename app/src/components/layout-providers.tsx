@@ -4,7 +4,6 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { NotificationProvider } from '@/components/notification-provider';
 import { NavBar } from '@/components/nav-bar';
 import { GlobalSearch } from '@/components/global-search';
-import { OnboardingTourWithReplay } from '@/components/onboarding-tour';
 import { useIsMobile } from '@/lib/useMediaQuery';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -18,7 +17,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           {children}
         </main>
         <GlobalSearch />
-        <OnboardingTourWithReplay />
       </NotificationProvider>
     </ThemeProvider>
   );
