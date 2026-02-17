@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
+import { OfficeThemeProvider } from '@/components/office-theme-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NotificationProvider } from '@/components/notification-provider';
 import { NotificationCenter } from '@/components/notification-center';
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen antialiased">
         <ThemeProvider>
+          <OfficeThemeProvider>
           <NotificationProvider>
             <nav className="border-b px-4 md:px-6 py-3 flex items-center gap-4" style={{ borderColor: 'var(--grid-border)' }}>
               <a href="/" className="font-bold text-lg tracking-wider" style={{ color: 'var(--grid-accent)' }}>🔴 GRID</a>
@@ -33,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <a href="/agents" className="text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Agents</a>
                 <a href="/reports" className="text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Reports</a>
                 <a href="/analytics" className="text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Analytics</a>
-                <a href="/settings/escalation" className="text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Settings</a>
+                <a href="/settings" className="text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Settings</a>
               </div>
 
               {/* Mobile Navigation */}
@@ -65,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <a href="/agents" className="block py-2 text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Agents</a>
                   <a href="/reports" className="block py-2 text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Reports</a>
                   <a href="/analytics" className="block py-2 text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Analytics</a>
-                  <a href="/settings/escalation" className="block py-2 text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Settings</a>
+                  <a href="/settings" className="block py-2 text-sm hover:opacity-80" style={{ color: 'var(--grid-text-dim)' }}>Settings</a>
                   <div className="flex items-center gap-2 py-2">
                     <ThemeToggle />
                     <NotificationCenter />
@@ -79,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
             <GlobalSearch />
           </NotificationProvider>
+          </OfficeThemeProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ConversationPanel } from './conversation-panel';
+import { MiniMap } from './mini-map';
+import { VisitorIndicator } from './visitor-indicator';
 import { useSprintData } from '@/hooks/use-sprint-data';
 
 /* ── Types ── */
@@ -1363,6 +1365,18 @@ export function LivingOffice() {
               </div>
             );
           })}
+
+          {/* Visitor indicator */}
+          <VisitorIndicator />
+
+          {/* Mini-map */}
+          <MiniMap
+            agents={AGENTS}
+            floorW={FLOOR_W}
+            floorH={FLOOR_H}
+            getStatus={getStatus}
+            onAgentClick={handleSelect}
+          />
 
           {/* Clock in corner */}
           <div style={{

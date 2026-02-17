@@ -19,6 +19,28 @@
   --grid-text-dim: #666;
 }
 
+/* Office Themes */
+[data-office-theme="corporate"] {
+  --office-bg: #1e293b;
+  --office-floor: #334155;
+  --office-accent: #3b82f6;
+  --office-wall: #475569;
+}
+
+[data-office-theme="space"] {
+  --office-bg: #0f0a1e;
+  --office-floor: #1a1333;
+  --office-accent: #8b5cf6;
+  --office-wall: #2d1f5e;
+}
+
+[data-office-theme="cafe"] {
+  --office-bg: #292018;
+  --office-floor: #3d2e1e;
+  --office-accent: #d97706;
+  --office-wall: #4a3728;
+}
+
 body {
   background: var(--grid-bg);
   color: var(--grid-text);
