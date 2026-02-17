@@ -15,19 +15,14 @@ export default function TimelinePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/subagents')
+    fetch('/api/analytics/timeline?list=true')
       .then(r => r.json())
       .then(data => {
-        const flat: SessionOption[] = [];
-        interface SessionNode { sessionKey: string; agentId: string; startedAt: string; children?: SessionNode[] }
-        const flatten = (items: SessionNode[]) => {
-          for (const item of items) {
-            flat.push({ key: item.sessionKey, agent: item.agentId, date: item.startedAt });
-            if (item.children?.length) flatten(item.children);
-          }
-        };
-        flatten(data);
-        flat.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const flat: SessionOption[] = (data.sessions || []).map((s: { key: string; agentId: string; date: string }) => ({
+          key: s.key,
+          agent: s.agentId,
+          date: s.date,
+        }));
         setSessions(flat);
         if (flat.length > 0) setSelected(flat[0].key);
       })

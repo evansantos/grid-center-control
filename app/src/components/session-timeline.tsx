@@ -77,7 +77,7 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
   if (!data || data.entries.length === 0) return <div className="text-zinc-500 text-sm p-8 text-center">No timeline data</div>;
 
   const { entries, summary } = data;
-  const maxDuration = Math.max(...entries.map(e => e.durationMs), 1);
+  const totalMs = summary.totalMs || 1;
 
   return (
     <div className="space-y-6">

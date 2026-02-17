@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { apiError } from '@/lib/api-error';
-import { readFile, readdir, access } from 'fs/promises';
+import { readFile, readdir, access, stat } from 'fs/promises';
 import { constants } from 'fs';
 import path from 'path';
 import { AGENTS_DIR } from '@/lib/constants';
@@ -27,8 +27,38 @@ async function resolveSessionFile(sessionKey: string): Promise<string | null> {
   return null;
 }
 
+async function listSessions() {
+  const agents = await readdir(AGENTS_DIR).catch(() => []);
+  const sessions: { key: string; agentId: string; date: string }[] = [];
+  for (const agent of agents) {
+    const sessionsDir = path.join(AGENTS_DIR, agent, 'sessions');
+    if (!(await exists(sessionsDir))) continue;
+    const files = await readdir(sessionsDir).catch(() => []);
+    for (const file of files) {
+      if (!file.endsWith('.jsonl')) continue;
+      const filePath = path.join(sessionsDir, file);
+      try {
+        const s = await stat(filePath);
+        sessions.push({
+          key: file.replace(/\.jsonl$/, ''),
+          agentId: agent,
+          date: s.mtime.toISOString(),
+        });
+      } catch { /* skip */ }
+    }
+  }
+  sessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return sessions.slice(0, 100);
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+
+  if (searchParams.get('list') === 'true') {
+    const sessions = await listSessions();
+    return NextResponse.json({ sessions });
+  }
+
   const sessionKey = searchParams.get('sessionKey');
   if (!sessionKey) {
     return NextResponse.json({ error: 'sessionKey required' }, { status: 400 });
@@ -56,28 +86,38 @@ export async function GET(request: Request) {
         const ts = new Date(parsed.timestamp || parsed.ts || 0).getTime();
         if (!ts) continue;
 
+        const entryType = parsed.type;
+
+        // Skip non-conversation types
+        if (!entryType || !['user', 'assistant', 'tool_use', 'tool_result', 'thinking'].includes(entryType)) {
+          prevTs = ts;
+          continue;
+        }
+
         let type: TimelineEntry['type'] = 'assistant';
         let label = '';
         let detail = '';
 
-        if (parsed.role === 'user') {
+        if (entryType === 'user') {
           type = 'user';
-          label = 'User message';
+          label = 'User';
           detail = typeof parsed.content === 'string' ? parsed.content.slice(0, 200) : '';
-        } else if (parsed.role === 'assistant') {
-          if (parsed.thinking) {
-            type = 'thinking';
-            label = 'Thinking';
-            detail = typeof parsed.thinking === 'string' ? parsed.thinking.slice(0, 200) : '';
-          } else {
-            type = 'assistant';
-            label = 'Response';
-            detail = typeof parsed.content === 'string' ? parsed.content.slice(0, 200) : '';
-          }
-        } else if (parsed.type === 'tool_call' || parsed.role === 'tool') {
-          type = parsed.type === 'tool_call' ? 'tool_call' : 'tool_result';
-          label = parsed.name || parsed.tool || 'Tool';
-          detail = typeof parsed.content === 'string' ? parsed.content.slice(0, 200) : JSON.stringify(parsed.input || '').slice(0, 200);
+        } else if (entryType === 'thinking') {
+          type = 'thinking';
+          label = 'Thinking';
+          detail = typeof parsed.thinking === 'string' ? parsed.thinking.slice(0, 200) : '';
+        } else if (entryType === 'assistant') {
+          type = 'assistant';
+          label = 'Response';
+          detail = typeof parsed.content === 'string' ? parsed.content.slice(0, 200) : '';
+        } else if (entryType === 'tool_use') {
+          type = 'tool_call';
+          label = parsed.name || 'Tool';
+          detail = JSON.stringify(parsed.input || '').slice(0, 200);
+        } else if (entryType === 'tool_result') {
+          type = 'tool_result';
+          label = parsed.name || 'Result';
+          detail = typeof parsed.content === 'string' ? parsed.content.slice(0, 200) : JSON.stringify(parsed.content || '').slice(0, 200);
         }
 
         const startMs = prevTs || ts;
