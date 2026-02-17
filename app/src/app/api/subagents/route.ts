@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFile, readdir, access } from 'fs/promises';
 import { constants } from 'fs';
 import path from 'path';
-import os from 'os';
+import { AGENTS_DIR } from '@/lib/constants';
 
 export interface SubagentInfo {
   sessionKey: string;
@@ -15,18 +15,23 @@ export interface SubagentInfo {
   children: SubagentInfo[];
 }
 
-const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
+async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { return false; } }
 
 async function parseSessionFiles(): Promise<SubagentInfo[]> {
   const agents: SubagentInfo[] = [];
   try {
-    try { await access(SESSIONS_DIR, constants.R_OK); } catch { /* sessions dir not accessible */ return agents; }
-    const allFiles = await readdir(SESSIONS_DIR);
-    const files = allFiles.filter(f => f.endsWith('.jsonl'));
+    if (!(await exists(AGENTS_DIR))) return agents;
+    const agentDirs = await readdir(AGENTS_DIR);
+
+    for (const agentDir of agentDirs) {
+      const sessionsDir = path.join(AGENTS_DIR, agentDir, 'sessions');
+      if (!(await exists(sessionsDir))) continue;
+      const allFiles = await readdir(sessionsDir);
+      const files = allFiles.filter(f => f.endsWith('.jsonl'));
 
     for (const file of files) {
       try {
-        const content = await readFile(path.join(SESSIONS_DIR, file), 'utf-8');
+        const content = await readFile(path.join(sessionsDir, file), 'utf-8');
         const lines = content.trim().split('\n').filter(Boolean);
         if (lines.length === 0) continue;
 
@@ -77,6 +82,7 @@ async function parseSessionFiles(): Promise<SubagentInfo[]> {
         });
       } catch (err) { console.error(err); }
     }
+    } // end agentDir loop
   } catch (err) { console.error(err); }
 
   const map = new Map<string, SubagentInfo>();

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFile, readdir, access } from 'fs/promises';
 import { constants } from 'fs';
 import path from 'path';
-import os from 'os';
+import { AGENTS_DIR } from '@/lib/constants';
 
 export interface HeatmapDay {
   date: string;
@@ -17,7 +17,6 @@ export interface SessionStats {
   peakHours: number[];
 }
 
-const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
 let cache: { data: { heatmap: HeatmapDay[]; stats: SessionStats }; ts: number } | null = null;
 
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
@@ -28,25 +27,30 @@ async function computeSessionAnalytics() {
   let totalSessions = 0;
 
   try {
-    if (!(await exists(SESSIONS_DIR))) return emptyResult();
-    const allFiles = await readdir(SESSIONS_DIR);
-    const files = allFiles.filter(f => f.endsWith('.jsonl'));
+    if (!(await exists(AGENTS_DIR))) return emptyResult();
+    const agents = await readdir(AGENTS_DIR);
+    
+    for (const agent of agents) {
+      const sessionsDir = path.join(AGENTS_DIR, agent, 'sessions');
+      if (!(await exists(sessionsDir))) continue;
+      const files = (await readdir(sessionsDir)).filter(f => f.endsWith('.jsonl'));
 
-    for (const file of files) {
-      try {
-        const content = await readFile(path.join(SESSIONS_DIR, file), 'utf-8');
-        const firstLine = content.split('\n')[0];
-        if (!firstLine) continue;
-        const parsed = JSON.parse(firstLine);
-        const ts = parsed.timestamp || parsed.ts;
-        if (!ts) continue;
+      for (const file of files) {
+        try {
+          const content = await readFile(path.join(sessionsDir, file), 'utf-8');
+          const firstLine = content.split('\n')[0];
+          if (!firstLine) continue;
+          const parsed = JSON.parse(firstLine);
+          const ts = parsed.timestamp || parsed.ts;
+          if (!ts) continue;
 
-        const date = new Date(ts);
-        const day = ts.slice(0, 10);
-        dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
-        hourCounts[date.getHours()]++;
-        totalSessions++;
-      } catch (err) { console.error(err); }
+          const date = new Date(ts);
+          const day = ts.slice(0, 10);
+          dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
+          hourCounts[date.getHours()]++;
+          totalSessions++;
+        } catch (err) { console.error(err); }
+      }
     }
   } catch (err) { console.error(err); }
 

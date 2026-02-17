@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SoulUpdateSchema, validateBody } from '@/lib/validators';
 import { promises as fs } from 'fs';
 import path from 'path';
-import os from 'os';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { AGENTS_DIR } from '@/lib/constants';
 
 const execFileAsync = promisify(execFile);
-const AGENTS_DIR = path.join(os.homedir(), '.openclaw', 'agents');
 const VALID_FILES = ['SOUL.md', 'IDENTITY.md', 'USER.md', 'AGENTS.md', 'TOOLS.md'];
 const AGENT_ID_RE = /^[a-zA-Z0-9_-]+$/;
 

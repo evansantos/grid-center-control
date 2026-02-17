@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import os from 'os';
-
-const OPENCLAW_DIR = path.join(os.homedir(), '.openclaw');
+import { OPENCLAW_DIR } from '@/lib/constants';
 const SKILLS_DIR = path.join(OPENCLAW_DIR, 'skills');
 const SAFE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 

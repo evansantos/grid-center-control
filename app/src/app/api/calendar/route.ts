@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import os from 'os';
-
-const AGENTS_DIR = path.join(os.homedir(), '.openclaw', 'agents');
+import { AGENTS_DIR } from '@/lib/constants';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}\.md$/;
 
 interface CalendarEntry {

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AgentActionSchema, validateBody } from '@/lib/validators';
-
-const MAX_AGENT_ID_LENGTH = 64;
+import { MAX_AGENT_ID_LENGTH } from '@/lib/constants';
 const ALLOWED_ACTIONS = ['start', 'stop', 'restart', 'status'] as const;
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFile, readdir, access } from 'fs/promises';
 import { constants } from 'fs';
 import path from 'path';
-import os from 'os';
+import { AGENTS_DIR, AGENT_EMOJIS } from '@/lib/constants';
 
 export interface AgentScorecard {
   agentId: string;
@@ -18,13 +18,6 @@ export interface AgentScorecard {
   health: 'healthy' | 'watch' | 'issues';
 }
 
-const AGENT_EMOJIS: Record<string, string> = {
-  arch: '🏛️', grid: '🔴', dev: '💻', bug: '🐛', vault: '🔐',
-  atlas: '🗺️', scribe: '📝', pixel: '🎨', sentinel: '🛡️', riff: '🎵',
-  sage: '🧙', main: '👤', unknown: '❓',
-};
-
-const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
 let cache: { data: AgentScorecard[]; ts: number } | null = null;
 
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { return false; } }
@@ -44,17 +37,21 @@ async function computeScorecards(): Promise<AgentScorecard[]> {
   }>();
 
   try {
-    if (!(await exists(SESSIONS_DIR))) return [];
-    const allFiles = await readdir(SESSIONS_DIR);
-    const files = allFiles.filter(f => f.endsWith('.jsonl'));
+    if (!(await exists(AGENTS_DIR))) return [];
+    const agents = await readdir(AGENTS_DIR);
 
-    for (const file of files) {
-      try {
-        const sessionKey = file.replace('.jsonl', '');
-        const parts = sessionKey.split(':');
-        const agentId = parts[1] || 'unknown';
-        const lines = await readFirstAndLastLines(path.join(SESSIONS_DIR, file), 5, 20);
-        if (lines.length === 0) continue;
+    for (const agent of agents) {
+      const sessionsDir = path.join(AGENTS_DIR, agent, 'sessions');
+      if (!(await exists(sessionsDir))) continue;
+      const files = (await readdir(sessionsDir)).filter(f => f.endsWith('.jsonl'));
+
+      for (const file of files) {
+        try {
+          const sessionKey = file.replace('.jsonl', '');
+          const parts = sessionKey.split(':');
+          const agentId = parts[1] || 'unknown';
+          const lines = await readFirstAndLastLines(path.join(sessionsDir, file), 5, 20);
+          if (lines.length === 0) continue;
 
         if (!agentMap.has(agentId)) {
           agentMap.set(agentId, {
@@ -93,7 +90,8 @@ async function computeScorecards(): Promise<AgentScorecard[]> {
 
         const day = (firstTs || new Date().toISOString()).slice(0, 10);
         entry.dailyCounts.set(day, (entry.dailyCounts.get(day) || 0) + 1);
-      } catch (err) { console.error(err); }
+        } catch (err) { console.error(err); }
+      }
     }
   } catch (err) { console.error(err); }
 

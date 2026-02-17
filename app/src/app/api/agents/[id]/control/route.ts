@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AgentControlSchema, validateBody } from '@/lib/validators';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { MAX_AGENT_ID_LENGTH } from '@/lib/constants';
 
 const execFileAsync = promisify(execFile);
 
@@ -11,8 +12,6 @@ const SAFE_ENV: Record<string, string> = {
   HOME: process.env.HOME ?? '',
   LANG: 'en_US.UTF-8',
 };
-
-const MAX_AGENT_ID_LENGTH = 64;
 const ALLOWED_ACTIONS = ['pause', 'resume', 'kill'] as const;
 
 export async function POST(
