@@ -24,3 +24,13 @@ body {
   color: var(--grid-text);
   font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
 }
+
+/* Mobile responsive utilities */
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
+}
+
+@media (min-width: 769px) {
+  .mobile-only { display: none !important; }
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import AgentCard from './agent-card';
+import { useIsMobile } from '@/lib/useMediaQuery';
 
 interface Agent {
   name: string;
@@ -17,6 +18,8 @@ interface OfficeZoneProps {
 }
 
 export default function OfficeZone({ name, icon, description, agents, accentColor }: OfficeZoneProps) {
+  const isMobile = useIsMobile();
+  
   return (
     <section
       style={{
@@ -36,7 +39,7 @@ export default function OfficeZone({ name, icon, description, agents, accentColo
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(220px, 1fr))',
           gap: '12px',
         }}
       >

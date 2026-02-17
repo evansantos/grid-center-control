@@ -25,6 +25,7 @@ export default function AgentCard({ name, role, status }: AgentCardProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
+        minHeight: '44px', // Touch target size
       }}
     >
       <div
