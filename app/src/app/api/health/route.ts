@@ -7,6 +7,13 @@ import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
 
+// Minimal environment to prevent env variable injection
+const SAFE_ENV: Record<string, string> = {
+  PATH: '/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin',
+  HOME: process.env.HOME ?? '',
+  LANG: 'en_US.UTF-8',
+};
+
 interface HealthCheck {
   name: string;
   status: 'green' | 'yellow' | 'red';
@@ -28,7 +35,10 @@ const CACHE_DURATION = 30 * 1000; // 30 seconds
 async function checkGatewayStatus(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execFileAsync('openclaw', ['gateway', 'status'], { timeout: 5000 });
+    const { stdout, stderr } = await execFileAsync('openclaw', ['gateway', 'status'], {
+      timeout: 5000,
+      env: SAFE_ENV,
+    });
     const latencyMs = Date.now() - start;
     const output = stdout.toLowerCase();
     

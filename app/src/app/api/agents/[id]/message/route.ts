@@ -4,6 +4,16 @@ import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
 
+// Minimal environment to prevent env variable injection
+const SAFE_ENV: Record<string, string> = {
+  PATH: '/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin',
+  HOME: process.env.HOME ?? '',
+  LANG: 'en_US.UTF-8',
+};
+
+const MAX_AGENT_ID_LENGTH = 64;
+const MAX_MESSAGE_LENGTH = 10000;
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,14 +27,18 @@ export async function POST(
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return NextResponse.json({ error: `Message too long (max ${MAX_MESSAGE_LENGTH} chars)` }, { status: 400 });
+    }
+
+    if (!id || id.length > MAX_AGENT_ID_LENGTH || !/^[a-zA-Z0-9_-]+$/.test(id)) {
       return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
     }
 
     const { stdout, stderr } = await execFileAsync(
       'openclaw',
       ['message', 'send', '--agent', id, '--text', message],
-      { timeout: 15000 }
+      { timeout: 15000, env: SAFE_ENV }
     );
 
     return NextResponse.json({
