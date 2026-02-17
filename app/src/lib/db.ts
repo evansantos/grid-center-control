@@ -11,6 +11,7 @@ export function getDB(): Database.Database {
     db = new Database(DB_PATH, { readonly: false });
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
+    db.pragma('wal_checkpoint(TRUNCATE)');
 
     // Check foreign key integrity on startup
     const fkViolations = db.pragma('foreign_key_check');
