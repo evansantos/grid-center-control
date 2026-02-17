@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NotificationCenter } from '@/components/notification-center';
+import { useIsMobile } from '@/lib/useMediaQuery';
 
 interface DropdownItem {
   label: string;
@@ -152,69 +153,151 @@ function SearchTrigger() {
   );
 }
 
+const allGroups = [
+  { label: 'Main', items: mainLinks },
+  analyticsGroup,
+  toolsGroup,
+  settingsGroup,
+];
+
 export function NavBar() {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav
-      className="relative border-b px-4 py-2 flex items-center gap-1"
-      style={{
-        borderColor: 'var(--grid-border)',
-        background: 'var(--grid-surface)',
-      }}
-    >
-      {/* Bottom glow */}
+    <>
+      {/* Accent glow bar at very top */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-px"
+        className="h-[2px] w-full"
         style={{
-          background: `linear-gradient(90deg, transparent, var(--grid-accent-glow), var(--grid-accent-dim), var(--grid-accent-glow), transparent)`,
+          background: `linear-gradient(90deg, transparent, var(--grid-accent), var(--grid-accent-glow), var(--grid-accent), transparent)`,
         }}
       />
-
-      {/* Logo */}
-      <Link href="/" className="font-bold text-sm tracking-widest mr-4 flex items-center gap-2" style={{ color: 'var(--grid-accent)' }}>
-        <span className="text-base">🔴</span>
-        <span>GRID</span>
-      </Link>
-
-      {/* Separator */}
-      <div className="w-px h-4 mx-1" style={{ background: 'var(--grid-border-bright)' }} />
-
-      {/* Main links */}
-      {mainLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className="text-xs tracking-wide px-2 py-1 rounded transition-colors"
+      <nav
+        className="relative border-b px-4 py-2 flex items-center gap-1 backdrop-blur-sm"
+        style={{
+          borderColor: 'var(--grid-border)',
+          background: 'color-mix(in srgb, var(--grid-surface) 90%, transparent)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+        }}
+      >
+        {/* Bottom glow */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-px"
           style={{
-            color: pathname === link.href ? 'var(--grid-accent)' : 'var(--grid-text-dim)',
+            background: `linear-gradient(90deg, transparent, var(--grid-accent-glow), var(--grid-accent-dim), var(--grid-accent-glow), transparent)`,
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--grid-text)')}
-          onMouseLeave={(e) => {
-            if (pathname !== link.href) e.currentTarget.style.color = 'var(--grid-text-dim)';
+        />
+
+        {/* Logo */}
+        <Link href="/" className="font-bold text-sm tracking-widest mr-4 flex items-center gap-2" style={{ color: 'var(--grid-accent)' }}>
+          <span style={{
+            display: 'inline-block',
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            background: 'var(--grid-accent)',
+            boxShadow: '0 0 8px var(--grid-accent)',
+            animation: 'pulse 2s ease-in-out infinite',
+          }} />
+          <span>GRID</span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:contents">
+          {/* Separator */}
+          <div className="w-px h-4 mx-1" style={{ background: 'var(--grid-border-bright)' }} />
+
+          {/* Main links */}
+          {mainLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-xs tracking-wide px-2 py-1 rounded transition-colors"
+              style={{
+                color: pathname === link.href ? 'var(--grid-accent)' : 'var(--grid-text-dim)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--grid-text)')}
+              onMouseLeave={(e) => {
+                if (pathname !== link.href) e.currentTarget.style.color = 'var(--grid-text-dim)';
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          {/* Separator */}
+          <div className="w-px h-4 mx-1" style={{ background: 'var(--grid-border)' }} />
+
+          {/* Dropdown groups */}
+          <Dropdown group={analyticsGroup} />
+          <Dropdown group={toolsGroup} />
+          <Dropdown group={settingsGroup} />
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Right side */}
+          <SearchTrigger />
+          <div className="ml-2 flex items-center gap-1">
+            <ThemeToggle />
+            <NotificationCenter />
+          </div>
+        </div>
+
+        {/* Mobile: spacer + hamburger */}
+        <div className="flex-1 md:hidden" />
+        <button
+          className="md:hidden p-2 text-xl"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{ color: 'var(--grid-text)' }}
+        >
+          {mobileMenuOpen ? '✕' : '☰'}
+        </button>
+      </nav>
+
+      {/* Mobile Menu Dropdown */}
+      {isMobile && mobileMenuOpen && (
+        <div
+          className="border-b md:hidden"
+          style={{
+            borderColor: 'var(--grid-border)',
+            background: 'var(--grid-surface)',
+            position: 'sticky',
+            top: 42,
+            zIndex: 99,
           }}
         >
-          {link.label}
-        </Link>
-      ))}
-
-      {/* Separator */}
-      <div className="w-px h-4 mx-1" style={{ background: 'var(--grid-border)' }} />
-
-      {/* Dropdown groups */}
-      <Dropdown group={analyticsGroup} />
-      <Dropdown group={toolsGroup} />
-      <Dropdown group={settingsGroup} />
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Right side */}
-      <SearchTrigger />
-      <div className="ml-2 flex items-center gap-1">
-        <ThemeToggle />
-        <NotificationCenter />
-      </div>
-    </nav>
+          <div className="px-4 py-2 space-y-1">
+            {allGroups.map((group) => (
+              <div key={group.label}>
+                <div className="text-xs uppercase tracking-wider py-1 mt-2" style={{ color: 'var(--grid-text-muted)', opacity: 0.6 }}>
+                  {group.label}
+                </div>
+                {group.items.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 py-2 text-sm hover:opacity-80"
+                    style={{ color: pathname === link.href ? 'var(--grid-accent)' : 'var(--grid-text-dim)' }}
+                  >
+                    {link.icon && <span className="opacity-50 w-4 text-center">{link.icon}</span>}
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
+            <div className="flex items-center gap-2 py-2 border-t" style={{ borderColor: 'var(--grid-border)' }}>
+              <ThemeToggle />
+              <NotificationCenter />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

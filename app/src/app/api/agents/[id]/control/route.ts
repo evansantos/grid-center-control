@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export async function POST(
   req: NextRequest,
@@ -21,22 +21,11 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid action. Use: pause, resume, kill' }, { status: 400 });
     }
 
-    let command: string;
-    switch (action) {
-      case 'pause':
-        command = `openclaw agent pause ${id}`;
-        break;
-      case 'resume':
-        command = `openclaw agent resume ${id}`;
-        break;
-      case 'kill':
-        command = `openclaw agent kill ${id}`;
-        break;
-      default:
-        return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
-    }
-
-    const { stdout, stderr } = await execAsync(command, { timeout: 15000 });
+    const { stdout, stderr } = await execFileAsync(
+      'openclaw',
+      ['agent', action, id],
+      { timeout: 15000 }
+    );
 
     return NextResponse.json({
       success: true,

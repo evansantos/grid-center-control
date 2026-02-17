@@ -4,19 +4,41 @@
 :root {
   --grid-bg: #0a0a0f;
   --grid-surface: #12121a;
+  --grid-surface-hover: #1a1a28;
   --grid-border: #1e1e2e;
+  --grid-border-bright: #2e2e44;
   --grid-accent: #ff4444;
+  --grid-accent-dim: rgba(255, 68, 68, 0.15);
+  --grid-accent-glow: rgba(255, 68, 68, 0.3);
   --grid-text: #e0e0e0;
   --grid-text-dim: #888;
+  --grid-text-muted: #555;
+  --grid-success: #22c55e;
+  --grid-warning: #f59e0b;
+  --grid-error: #ef4444;
+  --grid-info: #3b82f6;
+  --grid-radius: 0.5rem;
+  --grid-radius-lg: 0.75rem;
 }
 
 [data-theme="light"] {
   --grid-bg: #f5f5f7;
   --grid-surface: #ffffff;
+  --grid-surface-hover: #f0f0f2;
   --grid-border: #e0e0e0;
+  --grid-border-bright: #ccc;
   --grid-accent: #ff4444;
+  --grid-accent-dim: rgba(255, 68, 68, 0.08);
+  --grid-accent-glow: rgba(255, 68, 68, 0.15);
   --grid-text: #1a1a1a;
   --grid-text-dim: #666;
+  --grid-text-muted: #999;
+  --grid-success: #16a34a;
+  --grid-warning: #d97706;
+  --grid-error: #dc2626;
+  --grid-info: #2563eb;
+  --grid-radius: 0.5rem;
+  --grid-radius-lg: 0.75rem;
 }
 
 /* Office Themes */
@@ -46,6 +68,128 @@ body {
   color: var(--grid-text);
   font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
 }
+
+/* CRT scanline overlay — subtle mission control feel */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+[data-theme="light"] body::after {
+  background: none;
+}
+
+/* Selection styling */
+::selection {
+  background: var(--grid-accent-dim);
+  color: var(--grid-accent);
+}
+
+/* Focus rings */
+:focus-visible {
+  outline: 2px solid var(--grid-accent);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Grid card component */
+.grid-card {
+  background: var(--grid-surface);
+  border: 1px solid var(--grid-border);
+  border-radius: var(--grid-radius-lg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.grid-card:hover {
+  border-color: var(--grid-border-bright);
+  box-shadow: 0 0 0 1px var(--grid-accent-dim);
+}
+
+/* Status dots */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--grid-text-muted);
+}
+.status-dot.active {
+  background: var(--grid-success);
+  box-shadow: 0 0 6px var(--grid-success);
+}
+.status-dot.idle {
+  background: var(--grid-warning);
+  box-shadow: 0 0 6px var(--grid-warning);
+}
+.status-dot.busy {
+  background: var(--grid-info);
+  box-shadow: 0 0 6px var(--grid-info);
+}
+.status-dot.error {
+  background: var(--grid-error);
+  box-shadow: 0 0 6px var(--grid-error);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Skeleton loading shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--grid-surface) 25%,
+    var(--grid-surface-hover) 50%,
+    var(--grid-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--grid-radius);
+}
+
+/* Pulse animation for status indicators */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Active nav link */
+nav a.nav-active {
+  color: var(--grid-accent) !important;
+  position: relative;
+}
+nav a.nav-active::after {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--grid-accent);
+  border-radius: 1px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--grid-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--grid-text-dim); }
 
 /* Mobile responsive utilities */
 @media (max-width: 768px) {

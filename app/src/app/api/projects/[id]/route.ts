@@ -3,6 +3,11 @@ import { getProject, listArtifacts, listTasks, listWorktrees, listEvents } from 
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+    return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+  }
+
   const project = getProject(id);
   if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

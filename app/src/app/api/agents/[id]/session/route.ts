@@ -26,13 +26,21 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: agentId } = await params;
+
+  if (!agentId || !/^[a-zA-Z0-9_-]+$/.test(agentId)) {
+    return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
+  }
+
   const url = new URL(request.url);
   const requestedKey = url.searchParams.get('key') ?? '';
   const requestedFile = url.searchParams.get('file') ?? '';
   const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h ago
 
+  // MCP's agent id in the office map is 'mcp' but sessions live under 'main'
+  const resolvedId = agentId === 'mcp' ? 'main' : agentId;
+
   // Look for session files in the agent's sessions dir
-  const sessionsDir = join(OPENCLAW_DIR, 'agents', agentId, 'sessions');
+  const sessionsDir = join(OPENCLAW_DIR, 'agents', resolvedId, 'sessions');
   if (!existsSync(sessionsDir)) {
     return NextResponse.json({ messages: [], agentId });
   }
@@ -50,13 +58,24 @@ export async function GET(
     ? [requestedFile, ...files.filter(f => f !== requestedFile)]
     : files;
 
-  // Return the most recent session's messages
+  // Aggregate messages from ALL session files within 24h window
+  const allMessages: Message[] = [];
+  const sessionFiles: string[] = [];
+
   for (const file of orderedFiles) {
-    const messages: Message[] = [];
     try {
       const content = readFileSync(join(sessionsDir, file), 'utf-8');
       const lines = content.trim().split('\n').filter(l => l.trim());
 
+      // If a specific session key was requested, check if this file contains it
+      if (requestedKey) {
+        const hasKey = lines.some(l => {
+          try { const e = JSON.parse(l); return e.type === 'session' && e.id === requestedKey; } catch { return false; }
+        });
+        if (!hasKey) continue;
+      }
+
+      let fileHasMessages = false;
       for (const line of lines) {
         try {
           const entry = JSON.parse(line);
@@ -66,35 +85,36 @@ export async function GET(
           if (!msg) continue;
 
           const role = msg.role;
-          if (role !== 'user' && role !== 'assistant') continue;
+          if (!role || !['user', 'assistant', 'system'].includes(role)) continue;
 
-          // Skip messages older than 24h
           const ts = entry.timestamp ? new Date(entry.timestamp).getTime() : 0;
           if (ts && ts < cutoff) continue;
 
           const text = extractText(msg.content);
           if (!text) continue;
 
-          messages.push({
+          allMessages.push({
             role,
             content: text,
             timestamp: entry.timestamp ? new Date(entry.timestamp).toISOString() : undefined,
           });
+          fileHasMessages = true;
         } catch {}
       }
-
-      if (messages.length > 0) {
-        // If a specific session key was requested, check if this file contains it
-        if (requestedKey) {
-          const hasKey = lines.some(l => {
-            try { const e = JSON.parse(l); return e.type === 'session' && e.id === requestedKey; } catch { return false; }
-          });
-          if (!hasKey) continue;
-        }
-        return NextResponse.json({ messages, agentId, file });
-      }
+      if (fileHasMessages) sessionFiles.push(file);
     } catch {}
   }
 
-  return NextResponse.json({ messages: [], agentId });
+  // Sort all messages chronologically
+  allMessages.sort((a, b) => {
+    const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return ta - tb;
+  });
+
+  return NextResponse.json({
+    messages: allMessages,
+    agentId,
+    sessions: sessionFiles.length,
+  });
 }

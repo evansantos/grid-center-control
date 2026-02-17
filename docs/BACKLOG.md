@@ -1,234 +1,135 @@
-# Grid Dashboard — Backlog Extenso de Melhorias
+# Grid Dashboard — Unified Backlog
 
-> Criado: 2026-02-17 | Diretiva: Evan  
-> Status: Ready for SPEC → Grid CLI pipeline  
-> Prioridades: P0 (crítico/próximo), P1 (alto valor), P2 (bom ter), P3 (visão futura)
-
----
-
-## 0. 🐛 BUG EXISTENTE — PRIORIDADE MÁXIMA
-
-### BUG-01: Living Office Status Intermitente (P0 — FIX FIRST)
-O mapa do Living Office às vezes não atualiza o status dos agentes — ficam todos mostrando "idle" mesmo com agentes trabalhando. Bug intermitente. Provável causa: polling da API `/api/activity` com race conditions, dados stale, ou timing issues. **Investigar root cause primeiro.** Se for limitação do polling, migrar pra SSE (Server-Sent Events) como parte do AUT-01. Assign: GRID ⚡
+> Last updated: 2026-02-17 | Sources: AUDIT-ATLAS (43 issues), AUDIT-VAULT (20 issues), SAGE UX Review, BACKLOG-VIDCLAW (8 features)
+> Deduplicated and prioritized. Items tagged with source: [ATLAS], [VAULT], [SAGE], [VIDCLAW]
 
 ---
 
-## 0.5 🔧 BUG REVIEW FIXES — Wave 2 (P1)
+## Wave 7 — Security & Stability (P0 — MUST DO FIRST)
 
-### FIX-01: Cache `/api/subagents` Route (P1)
-Única rota API sem cache. Lê JSONL inteiros a cada request. Adicionar cache in-memory (30-60s) como as outras rotas.
+These are non-negotiable. Ship nothing else until these are resolved.
 
-### FIX-02: Error Feedback em subagent-tree e spawn-form (P1)
-Catch blocks vazios — erros somem sem feedback pro user. Adicionar toast/alert quando fetch falha.
-
-### FIX-03: Otimizar `/api/analytics/performance` (P1)
-Lê cada linha de cada JSONL. Considerar ler só first+last line para timestamps, ou background aggregation.
-
-### FIX-04: Batch 1 Polish (P1)
-- Remover `isAgentActive` dead code em `api/agents/status/route.ts`
-- Fix `require('fs')` → usar `readdirSync` já importado
-- Extrair `AGENT_DISPLAY` para `lib/agent-meta.ts` (duplicado em 3 componentes)
-- Tighten error detection regexes (muito broad, pega texto normal)
-- Escape key no ErrorModal
-- Health circle: pulse só em yellow/red, não green
+| ID | Title | Scope | Source |
+|----|-------|-------|--------|
+| SEC-01 | Remove/sandbox `/api/terminal` endpoint (RCE vulnerability) | S | ATLAS AUD-01, VAULT ARCH-01 |
+| SEC-02 | Fix command injection in agent message/control APIs (use `execFile` with args array) | S | ATLAS AUD-02, AUD-03 |
+| SEC-03 | Add path traversal protection on all agent ID inputs (strict regex `^[a-zA-Z0-9_-]+$`) | S | ATLAS AUD-07, VAULT ARCH-02 |
+| SEC-04 | Add authentication middleware to all API routes (API key or localhost-only binding) | M | ATLAS AUD-04, VAULT ARCH-03 |
+| SEC-05 | Fix command injection risk in health API (use Node.js `os` APIs instead of shell) | S | ATLAS AUD-16 |
+| SEC-06 | Add CORS configuration in Next.js middleware | S | VAULT ARCH-16 |
+| SEC-07 | Add CSRF protection on mutating endpoints | S | ATLAS AUD-18 |
+| SEC-08 | Sanitize agent config write endpoint (validate resolved path is within expected dir) | S | ATLAS AUD-30 |
 
 ---
 
-## 1. 🔭 Observabilidade — Real-Time Visibility
+## Wave 8 — Core Reliability (P0)
 
-### OBS-01: Live Agent Activity Stream (P0)
-Feed em real-time mostrando o que cada agente está fazendo AGORA — tool calls, file edits, web searches, messages enviadas. WebSocket-based, não polling. Cada evento com timestamp, tipo, e preview do conteúdo.
+Error handling, broken features, data integrity.
 
-### OBS-02: Agent State Machine Visualization (P0)
-Status detalhado de cada agente: idle, thinking, executing tool, waiting for response, error. Indicador visual claro (pulsing dot, cor, ícone) tanto na office view quanto na list view. Tempo no estado atual.
-
-### OBS-03: Session Timeline com Flame Graph (P1)
-Timeline visual de uma sessão mostrando cada step: user message → thinking → tool call → response. Tipo flame graph horizontal. Permite ver onde o tempo foi gasto (thinking vs tool execution vs waiting).
-
-### OBS-04: Error & Alert Dashboard (P1)
-Painel dedicado a erros, timeouts, retries, rate limits. Filtros por agente, tipo de erro, timeframe. Alertas visuais (badge no nav, toast) quando algo dá errado. Histórico de incidentes.
-
-### OBS-05: Token Usage Live Counter (P1)
-Contador em tempo real de tokens sendo consumidos. Por agente, por sessão, acumulado do dia. Gauge visual mostrando burn rate atual vs média.
-
-### OBS-06: Tool Call Heatmap (P2)
-Mapa de calor mostrando quais tools são mais usadas, por agente, por hora do dia. Identifica padrões — "SPEC usa muito exec às 3am", "CEO faz web_search em rajadas".
-
-### OBS-07: Dependency Graph Between Agents (P2)
-Visualização de quem spawna quem, quem delega pra quem. Graph interativo mostrando as relações entre agentes em tempo real. Útil pra entender cascatas de sub-agents.
-
-### OBS-08: Log Aggregator com Full-Text Search (P1)
-Busca unificada em todos os logs de todos os agentes. Filtros por data, agente, tipo de mensagem, tool. Syntax highlighting. Export.
+| ID | Title | Scope | Source |
+|----|-------|-------|--------|
+| REL-01 | Add root `error.tsx` + per-route error boundaries | S | ATLAS AUD-05, AUD-33, VAULT ARCH-19 |
+| REL-02 | Fix 5 broken nav links (`/tools/*` → root paths) | S | ATLAS AUD-06 |
+| REL-03 | Fix log search reading from wrong directory (`sessions/` → `agents/*/sessions/`) | S | VAULT ARCH-07 |
+| REL-04 | Standardize task status values (`in_progress` only, add CHECK constraint, migrate data) | M | VAULT ARCH-06 |
+| REL-05 | Add `loading.tsx` / Suspense boundaries for all route segments | M | ATLAS AUD-14 |
+| REL-06 | Fix SSE stream resource leak (add abort signal cleanup, shared watcher singleton) | M | ATLAS AUD-10, VAULT ARCH-05 |
+| REL-07 | Convert synchronous file I/O to async `fs/promises` in all API routes | M | VAULT ARCH-08 |
+| REL-08 | Fix database singleton pattern (`globalThis` for dev, connection error handling) | S | ATLAS AUD-17, VAULT ARCH-14 |
+| REL-09 | Fix `os.homedir()` fallback instead of `process.env.HOME ?? '~'` | S | ATLAS AUD-42, VAULT ARCH-20 |
+| REL-10 | Add input validation (zod schemas) on all mutating API endpoints | M | ATLAS AUD-09 |
+| REL-11 | Add JSON schema validation on config/DB field parsing (wrap `JSON.parse` with defaults) | S | VAULT ARCH-09 |
+| REL-12 | Fix broken EventSource connecting to non-existent `/api/events` endpoint | S | VAULT ARCH-13 |
+| REL-13 | Add DB indexes on foreign keys (artifacts, tasks, worktrees, events) | S | VAULT ARCH-04 |
+| REL-14 | Add `UNIQUE(project_id, task_number)` constraint on tasks table | S | VAULT ARCH-12 |
+| REL-15 | Add `ON DELETE CASCADE` to foreign key declarations | S | VAULT ARCH-10 |
+| REL-16 | Fix orchestrator to allow parallel task execution (configurable concurrency) | M | VAULT ARCH-15 |
 
 ---
 
-## 2. 🎮 Controle — Interagir com Agentes
+## Wave 9 — UX & Quality (P1)
 
-### CTL-01: Send Message to Agent (P0)
-Caixa de texto no dashboard pra mandar mensagem direta pra qualquer agente. Equivalente a falar com ele no Telegram, mas pelo dashboard. Com histórico da conversa inline.
+Polish, consistency, real data over mocks.
 
-### CTL-02: Pause / Resume / Kill Agent (P0)
-Botões de controle por agente: pausar processamento, resumir, matar sessão. Com confirmação pra ações destrutivas. Status reflete imediatamente na UI.
-
-### CTL-03: Steer Sub-Agent from Dashboard (P1)
-Interface visual pra usar o `subagents steer` — ver sub-agents ativos, mandar steering messages, ver progresso. Arvore de sub-agents com expand/collapse.
-
-### CTL-04: Quick Actions / Runbook Buttons (P1)
-Botões configuráveis por agente: "Run daily report", "Check emails", "Deploy staging". Cada botão é um comando pré-definido. Configurável via YAML/JSON.
-
-### CTL-05: Agent Configuration Editor (P2)
-Editar SOUL.md, TOOLS.md, HEARTBEAT.md de cada agente direto no dashboard. Monaco editor com syntax highlighting, preview, save com git commit automático.
-
-### CTL-06: Spawn New Agent Session (P1)
-Formulário pra criar nova sessão: escolher agente, modelo, task description, timeout. Equivalente ao `sessions_spawn` mas visual. Template library pra tasks comuns.
-
-### CTL-07: Cron Job Manager (P2)
-UI pra ver, criar, editar, deletar cron jobs de cada agente. Próxima execução, histórico de runs, logs de cada execução. Toggle enable/disable.
-
-### CTL-08: Bulk Operations (P3)
-Selecionar múltiplos agentes e aplicar ação: restart all, send broadcast message, update config. Útil pra manutenção.
-
----
-
-## 3. 📊 Analytics — Performance, Custos, Tendências
-
-### ANA-01: Cost Dashboard (P0)
-Custo total por dia/semana/mês. Breakdown por agente, por modelo, por tipo de operação. Gráfico de tendência. Budget alerts configuráveis. Projeção de custo mensal baseado no ritmo atual.
-
-### ANA-02: Agent Performance Scorecards (P1)
-Métricas por agente: tasks completed, avg response time, error rate, tokens per task, cost per task. Comparação entre agentes. Trend sparklines.
-
-### ANA-03: Session Analytics (P1)
-Duração média de sessões, distribuição de steps por sessão, taxa de sucesso, sessions por hora do dia. Heatmap de atividade (calendar view tipo GitHub contributions).
-
-### ANA-04: Model Comparison Dashboard (P2)
-Quando múltiplos modelos são usados: comparar latência, custo, quality (se houver feedback). Ajuda a decidir qual modelo pra qual agente.
-
-### ANA-05: Trend Alerts & Anomaly Detection (P2)
-Detectar automaticamente: custo subiu 50% vs semana passada, agente X com error rate incomum, usage spike fora do padrão. Notificação visual + optional push.
-
-### ANA-06: Weekly/Monthly Report Generator (P2)
-Gerar relatório automático: o que foi feito, custos, highlights, problemas. Export PDF/markdown. Pode ser scheduled via cron.
-
-### ANA-07: ROI Tracker (P3)
-Estimar valor gerado vs custo. Input manual de "quanto tempo humano isso economizou". Dashboard mostrando payback.
+| ID | Title | Scope | Source |
+|----|-------|-------|--------|
+| UX-01 | Replace mock/stub APIs with real implementations or return 501 | L | ATLAS AUD-15, SAGE |
+| UX-02 | Consolidate 3 office views into 1 (keep isometric, remove living-office + pixel-hq) | M | SAGE |
+| UX-03 | Replace hardcoded colors with `var(--grid-*)` design tokens across all components | M | ATLAS AUD-22 |
+| UX-04 | Standardize styling: Tailwind + CSS vars only, eliminate inline styles | M | ATLAS AUD-23 |
+| UX-05 | Replace `<a href>` with Next.js `<Link>` for internal navigation | S | ATLAS AUD-28 |
+| UX-06 | Add confirmation dialogs for destructive actions (delete budgets, cron jobs, etc.) | S | ATLAS AUD-29 |
+| UX-07 | Fix `alert()` usage → use NotificationCenter | S | ATLAS AUD-37 |
+| UX-08 | Add loading spinners/skeletons to all client components that fetch data | M | ATLAS AUD-27 |
+| UX-09 | Replace agents page SAMPLE_AGENTS with real data + proper empty state | S | ATLAS AUD-25, SAGE |
+| UX-10 | Fix server page try/catch (page.tsx crashes if DB unavailable) | S | ATLAS AUD-13 |
+| UX-11 | Remove low-value features: achievement badges, sound effects provider | S | SAGE |
+| UX-12 | Fix silent error swallowing (empty `catch {}` → log + user feedback) | M | ATLAS AUD-12 |
+| UX-13 | Fix command palette `role="dialog"`, focus trap, ARIA attributes | S | ATLAS AUD-21 |
+| UX-14 | Fix nav-bar ARIA: `aria-expanded`, `aria-haspopup`, keyboard nav | S | ATLAS AUD-19 |
+| UX-15 | Add text labels to color-only status indicators (accessibility) | S | ATLAS AUD-20 |
+| UX-16 | Fix search trigger (shared context instead of synthetic KeyboardEvent) | S | ATLAS AUD-31 |
+| UX-17 | Replace mock analytics endpoints with real data or remove | S | ATLAS AUD-32 |
+| UX-18 | Add `not-found.tsx` for dynamic route segments | S | ATLAS AUD-38 |
+| UX-19 | Lazy-load heavy components (isometric-office, session-heatmap) via `next/dynamic` | S | ATLAS AUD-39 |
+| UX-20 | Add auto-refresh pause/resume button to metrics page | S | ATLAS AUD-41 |
+| UX-21 | Fix mobile menu z-index stacking issues | S | ATLAS AUD-43 |
+| UX-22 | Fix LRU cache for log search (replace single-entry cache) | S | VAULT ARCH-18 |
+| UX-23 | Clarify state machine gate semantics (brainstorm → design gate) | S | VAULT ARCH-11 |
+| UX-24 | Persist workflow instances to SQLite (currently in-memory, lost on restart) | M | ATLAS AUD-08 |
 
 ---
 
-## 4. ✨ UX / Polish — Prazer de Usar
+## Wave 10 — VidClaw Features (P1)
 
-### UX-01: Keyboard-First Navigation (P0)
-Além do ⌘K existente: vim-like shortcuts (j/k pra navegar lista de agentes, Enter pra abrir, Esc pra voltar). Cheat sheet acessível via `?`. Zero mouse needed.
+New features inspired by competitor analysis.
 
-### UX-02: Light Theme + Theme Switcher (P1)
-Tema claro pra quem prefere, com toggle no navbar. Respeitar system preference. Smooth transition animation.
-
-### UX-03: Customizable Dashboard Layout (P1)
-Drag-and-drop widgets na home. Cada pessoa monta seu dashboard: quais cards, qual ordem, qual tamanho. Persist no localStorage. Presets: "ops view", "cost view", "dev view".
-
-### UX-04: Global Search (⌘K Enhancement) (P1)
-Command palette buscar tudo: agentes, sessões, logs, configs, métricas. Fuzzy search. Recent items. Quick actions inline nos resultados.
-
-### UX-05: Notification Center (P1)
-Dropdown no navbar com histórico de notificações. Filtros, mark as read, click to navigate. Agrupa notificações similares. Badge counter.
-
-### UX-06: Breadcrumb Navigation (P2)
-Breadcrumbs claros: Home > Agents > SPEC > Session #42 > Step 7. Clickable. Ajuda orientação em deep navigation.
-
-### UX-07: Responsive Mobile View (P2)
-Layout que funciona em celular. Office view adaptado (scroll horizontal ou zoom). Cards empilhados. Touch-friendly controls.
-
-### UX-08: Onboarding Tour (P3)
-First-time user tour guiado: "this is the office", "click an agent to see details", "use ⌘K for quick access". Skippable, replayable.
-
-### UX-09: Sound Effects & Audio Feedback (P3)
-Sons sutis: notification ding, agent completed task, error alert. Toggleable. Volume control. Ambient office sounds opcional.
+| ID | Title | Scope | Source |
+|----|-------|-------|--------|
+| VID-01 | Kanban Task Board (drag-drop, priorities, agent assignment, multi-agent swimlanes) | L | VIDCLAW |
+| VID-02 | Skills Manager Panel (browse, toggle, create, per-agent assignment) | M | VIDCLAW |
+| VID-03 | Soul Editor + git-based version history + diff view + persona templates | M | VIDCLAW |
+| VID-04 | Activity Calendar (monthly view, parsed from memory files, multi-agent) | S | VIDCLAW |
+| VID-05 | Workspace Content Browser (file tree, markdown preview, syntax highlighting) | M | VIDCLAW |
+| VID-06 | Rate Limit Window Progress Bars (navbar widget) | S | VIDCLAW |
+| VID-07 | Model Hot-Switch from Navbar (per-agent model override) | S | VIDCLAW |
+| VID-08 | Task Auto-Pickup via Heartbeat Integration (depends VID-01) | M | VIDCLAW |
 
 ---
 
-## 5. 🏢 Living Office — Escritório Virtual Vivo
+## Summary
 
-### OFF-01: Agent Speech Bubbles (P0)
-Quando um agente está processando, mostrar speech bubble com resumo do que tá fazendo: "Searching web...", "Writing code...", "Thinking...". Disappear após idle.
-
-### OFF-02: Visual Status Indicators on Sprites (P0)
-Sprites dos agentes mudam visualmente baseado no status: brilho/aura quando ativo, Zzz quando idle longo, ! quando erro, 💬 quando conversando. Sem precisar hover.
-
-### OFF-03: Agent Interaction Animations (P1)
-Quando agente A spawna sub-agent B, mostrar animação: A vai até B, "conversa", B começa a trabalhar. Quando termina, B vai até A entregar resultado. Visualiza o fluxo de trabalho.
-
-### OFF-04: Office Zones / Departments (P1)
-Organizar o escritório em zonas: "Engineering" (SPEC, DEV, QA), "Operations" (OPS, DEVOPS), "Management" (CEO, PM). Separadores visuais, labels. Drag to reorganize.
-
-### OFF-05: Mini-Map (P2)
-Se o office crescer, mini-map no canto mostrando visão geral. Click to navigate. Highlight de atividade.
-
-### OFF-06: Day/Night Cycle (P2)
-Office muda baseado na hora real: luz do dia, entardecer, noite. Agentes inativos "vão embora" à noite. Puramente cosmético mas delightful.
-
-### OFF-07: Achievement Badges on Desks (P2)
-Cada mesa mostra badges/trophies: "1000 tasks completed", "Zero errors today", "Most active this week". Gamification visual.
-
-### OFF-08: Customizable Office Theme (P3)
-Escolher estilo do office: escritório corporativo, café hipster, nave espacial, floresta. Skins diferentes pros sprites. Fun factor.
-
-### OFF-09: Visitor Indicator (P3)
-Quando o humano está ativo no dashboard, mostrar um avatar do usuário andando pelo office. Múltiplos usuários podem ver uns aos outros (futuro multi-user).
+| Wave | Focus | Items | Priority |
+|------|-------|-------|----------|
+| 7 | Security & Stability | 8 | P0 |
+| 8 | Core Reliability | 16 | P0 |
+| 9 | UX & Quality | 24 | P1 |
+| 10 | VidClaw Features | 8 | P1 |
+| **Total** | | **56** | |
 
 ---
 
-## 6. 🤖 Automação — Dashboard Inteligente
+## Completed (Waves 1-6)
 
-### AUT-01: Auto-Refresh & Smart Polling (P0)
-Dashboard se atualiza automaticamente. WebSocket pra dados críticos (status, activity). Polling inteligente pra dados menos urgentes. Indicador "last updated" e manual refresh button.
+<details>
+<summary>Previously completed items (click to expand)</summary>
 
-### AUT-02: Scheduled Dashboard Snapshots (P2)
-Gerar screenshot/report do dashboard automaticamente todo dia/semana. Salvar histórico. Útil pra ver evolução ao longo do tempo.
+### Wave 1 (9 P0s) ✅
+SSE stream, live activity, state machine, speech bubbles, status sprites, send message, pause/kill, cost dashboard, keyboard nav
 
-### AUT-03: Auto-Escalation Rules (P1)
-Configurar regras: "se agente X fica em error por >5min, notificar no Telegram", "se custo diário passa de $Y, pausar agentes não-críticos". Rule builder visual.
+### Wave 2 (9 P1s) ✅
+Token counter, error dashboard, health checks, sub-agent tree, spawn form, agent scorecards, session heatmap
 
-### AUT-04: Smart Agent Recommendations (P2)
-Dashboard sugere: "SPEC está idle e há 3 tasks no backlog — assign?", "DEV terminou — QA deveria revisar", "Custo alto hoje — considere trocar pra modelo mais barato".
+### Wave 3 (8 tasks) ✅
+Cache fix, error feedback, performance, polish, flame graph, log search, agent animations, day/night cycle
 
-### AUT-05: Automated Health Checks (P1)
-Dashboard roda health checks periódicos: gateway online? agentes responsivos? disk space? API keys válidas? Status page com green/yellow/red.
+### Wave 4 (7 P1s) ✅
+Theme switcher, notifications, global search, dashboard grid, quick actions, office zones, escalation rules
 
-### AUT-06: Workflow Templates (P3)
-Definir workflows multi-agente visuais: "New Feature" = CEO define → SPEC desenha → DEV implementa → QA testa → DEVOPS deploya. One-click start, track progress.
+### Wave 5 (7 items) ✅
+Responsive mobile, agent config editor, cron manager, trend alerts, dependency graph, report generator, tool call heatmap
 
----
+### Wave 6 (partial) ⚠️
+Some items delivered (bulk ops, snapshots, etc.) but wave incomplete — remaining items merged into Waves 7-10.
 
-## Resumo por Prioridade
-
-| Prio | Count | Items |
-|------|-------|-------|
-| P0   | 8     | OBS-01, OBS-02, CTL-01, CTL-02, ANA-01, UX-01, OFF-01, OFF-02, AUT-01 |
-| P1   | 14    | OBS-03, OBS-04, OBS-05, OBS-08, CTL-03, CTL-04, CTL-06, ANA-02, ANA-03, UX-02, UX-03, UX-04, UX-05, OFF-03, OFF-04, AUT-03, AUT-05 |
-| P2   | 12    | OBS-06, OBS-07, CTL-05, CTL-07, ANA-04, ANA-05, ANA-06, UX-06, UX-07, OFF-05, OFF-06, OFF-07, AUT-02, AUT-04 |
-| P3   | 7     | CTL-08, ANA-07, UX-08, UX-09, OFF-08, OFF-09, AUT-06 |
-
-**Total: 41 items**
-
----
-
-## Sequência Sugerida de Execução
-
-### Wave 1 — Foundation (P0s)
-1. AUT-01 (Auto-Refresh/WebSocket) — base pra tudo real-time
-2. OBS-01 + OBS-02 (Live Activity + State Machine) — ver o que tá acontecendo
-3. OFF-01 + OFF-02 (Speech Bubbles + Status on Sprites) — office ganha vida
-4. CTL-01 + CTL-02 (Message + Pause/Kill) — controle básico
-5. ANA-01 (Cost Dashboard) — visibilidade de custo
-6. UX-01 (Keyboard Navigation) — power user flow
-
-### Wave 2 — Power Features (P1s)
-7. OBS-08 (Log Search) + OBS-05 (Token Counter)
-8. CTL-03 + CTL-06 (Steer Sub-agents + Spawn)
-9. ANA-02 + ANA-03 (Scorecards + Session Analytics)
-10. UX-02 + UX-03 + UX-04 (Themes + Layout + Search)
-11. OFF-03 + OFF-04 (Interactions + Zones)
-12. AUT-03 + AUT-05 (Escalation + Health Checks)
-
-### Wave 3+ — Polish & Vision (P2/P3)
-Priorizar baseado em feedback das waves anteriores.
+</details>

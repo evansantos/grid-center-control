@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { readdir, stat } from 'fs/promises';
 import { join } from 'path';
 import os from 'os';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 interface HealthCheck {
   name: string;
@@ -28,7 +28,7 @@ const CACHE_DURATION = 30 * 1000; // 30 seconds
 async function checkGatewayStatus(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execAsync('openclaw gateway status', { timeout: 5000 });
+    const { stdout, stderr } = await execFileAsync('openclaw', ['gateway', 'status'], { timeout: 5000 });
     const latencyMs = Date.now() - start;
     const output = stdout.toLowerCase();
     
@@ -96,15 +96,14 @@ async function checkAgentResponsiveness(): Promise<HealthCheck> {
         }
         
         const ageMs = now - latestMtime;
-        if (ageMs < 5 * 60 * 1000) { // < 5 minutes
+        if (ageMs < 5 * 60 * 1000) {
           recentAgents++;
-        } else if (ageMs < 60 * 60 * 1000) { // < 1 hour
+        } else if (ageMs < 60 * 60 * 1000) {
           stalePivot++;
         } else {
           oldAgents++;
         }
-      } catch (err) {
-        // Skip agents that can't be read
+      } catch {
         continue;
       }
     }
@@ -148,48 +147,51 @@ async function checkAgentResponsiveness(): Promise<HealthCheck> {
   }
 }
 
-async function checkDiskSpace(): Promise<HealthCheck> {
+async function checkSystemResources(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const { stdout } = await execAsync('df -h /', { timeout: 5000 });
-    const lines = stdout.trim().split('\n');
-    const diskLine = lines[1]; // Skip header line
-    const parts = diskLine.split(/\s+/);
-    const usagePercent = parseInt(parts[4].replace('%', ''));
-    
+    const loadAvg = os.loadavg();
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const memUsagePercent = Math.round(((totalMem - freeMem) / totalMem) * 100);
+    const cpuCount = os.cpus().length;
+    const loadPerCpu = loadAvg[0] / cpuCount;
+
     const latencyMs = Date.now() - start;
-    
-    if (usagePercent > 90) {
+
+    const details = `Load: ${loadAvg.map(l => l.toFixed(2)).join(', ')} | Memory: ${memUsagePercent}% used (${Math.round(freeMem / 1024 / 1024)}MB free)`;
+
+    if (memUsagePercent > 90 || loadPerCpu > 2) {
       return {
-        name: 'Disk Space',
+        name: 'System Resources',
         status: 'red',
-        message: `Disk usage at ${usagePercent}%`,
-        details: diskLine,
+        message: `High resource usage — Memory: ${memUsagePercent}%, Load/CPU: ${loadPerCpu.toFixed(2)}`,
+        details,
         latencyMs
       };
-    } else if (usagePercent > 80) {
+    } else if (memUsagePercent > 80 || loadPerCpu > 1) {
       return {
-        name: 'Disk Space',
+        name: 'System Resources',
         status: 'yellow',
-        message: `Disk usage at ${usagePercent}%`,
-        details: diskLine,
+        message: `Elevated resource usage — Memory: ${memUsagePercent}%, Load/CPU: ${loadPerCpu.toFixed(2)}`,
+        details,
         latencyMs
       };
     } else {
       return {
-        name: 'Disk Space',
+        name: 'System Resources',
         status: 'green',
-        message: `Disk usage at ${usagePercent}%`,
-        details: diskLine,
+        message: `Resources OK — Memory: ${memUsagePercent}%, Load/CPU: ${loadPerCpu.toFixed(2)}`,
+        details,
         latencyMs
       };
     }
   } catch (error: any) {
     const latencyMs = Date.now() - start;
     return {
-      name: 'Disk Space',
+      name: 'System Resources',
       status: 'red',
-      message: 'Failed to check disk space',
+      message: 'Failed to check system resources',
       details: error.message,
       latencyMs
     };
@@ -199,14 +201,12 @@ async function checkDiskSpace(): Promise<HealthCheck> {
 async function performHealthChecks(): Promise<HealthResponse> {
   const startTime = Date.now();
   
-  // Run all checks in parallel
-  const [gatewayCheck, agentCheck, diskCheck] = await Promise.all([
+  const [gatewayCheck, agentCheck, resourceCheck] = await Promise.all([
     checkGatewayStatus(),
     checkAgentResponsiveness(),
-    checkDiskSpace()
+    checkSystemResources()
   ]);
   
-  // API self-check (response time)
   const apiLatency = Date.now() - startTime;
   const apiCheck: HealthCheck = {
     name: 'API Response',
@@ -215,9 +215,8 @@ async function performHealthChecks(): Promise<HealthResponse> {
     latencyMs: apiLatency
   };
   
-  const checks = [gatewayCheck, agentCheck, diskCheck, apiCheck];
+  const checks = [gatewayCheck, agentCheck, resourceCheck, apiCheck];
   
-  // Determine overall status (worst individual status)
   const statuses = checks.map(c => c.status);
   let overall: 'green' | 'yellow' | 'red' = 'green';
   if (statuses.includes('red')) {
@@ -236,18 +235,14 @@ async function performHealthChecks(): Promise<HealthResponse> {
 export async function GET() {
   const now = Date.now();
   
-  // Return cached response if still valid
   if (cachedHealth && (now - lastCheckTime) < CACHE_DURATION) {
     return NextResponse.json(cachedHealth);
   }
   
   try {
     const health = await performHealthChecks();
-    
-    // Cache the response
     cachedHealth = health;
     lastCheckTime = now;
-    
     return NextResponse.json(health);
   } catch (error: any) {
     return NextResponse.json(

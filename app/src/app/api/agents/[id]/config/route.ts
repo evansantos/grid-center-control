@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { homedir } from 'os';
 
 const ALLOWED_FILES = ['SOUL.md', 'TOOLS.md', 'HEARTBEAT.md'];
@@ -15,12 +15,18 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+      return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
+    }
+
     const workspacePath = getAgentWorkspacePath(id);
     
     const files: Record<string, string> = {};
     
     for (const fileName of ALLOWED_FILES) {
-      const filePath = join(workspacePath, fileName);
+      const filePath = resolve(join(workspacePath, fileName));
+      if (!filePath.startsWith(resolve(workspacePath))) continue;
       try {
         if (existsSync(filePath)) {
           files[fileName] = readFileSync(filePath, 'utf-8');
@@ -49,6 +55,11 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+
+    if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+      return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
+    }
+
     const { file, content } = await request.json();
     
     if (!ALLOWED_FILES.includes(file)) {
@@ -59,7 +70,12 @@ export async function POST(
     }
     
     const workspacePath = getAgentWorkspacePath(id);
-    const filePath = join(workspacePath, file);
+    const filePath = resolve(join(workspacePath, file));
+    
+    // SEC-08: Verify resolved path stays within expected directory
+    if (!filePath.startsWith(resolve(workspacePath))) {
+      return NextResponse.json({ error: 'Path traversal detected' }, { status: 400 });
+    }
     
     writeFileSync(filePath, content, 'utf-8');
     

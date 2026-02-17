@@ -61,26 +61,36 @@ export function DashboardGrid({ children }: { children: Record<string, ReactNode
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-wide" style={{ color: 'var(--grid-text)' }}>
-          Dashboard
-        </h1>
-        {/* Hide layout selector on mobile */}
-        <div className={`flex items-center gap-2 ${isMobile ? 'desktop-only' : ''}`}>
-          <label className="text-sm" style={{ color: 'var(--grid-text-dim)' }}>Layout:</label>
-          <select
-            value={preset}
-            onChange={(e) => handlePresetChange(e.target.value as PresetName)}
-            className="text-sm rounded px-2 py-1 cursor-pointer"
-            style={{
-              background: 'var(--grid-surface)',
-              border: '1px solid var(--grid-border)',
-              color: 'var(--grid-text)',
-            }}
+        <div>
+          <h1 className="text-2xl font-bold tracking-wide" style={{ color: 'var(--grid-text)' }}>
+            Mission Control
+          </h1>
+          <p className="text-xs mt-1" style={{ color: 'var(--grid-text-muted)' }}>
+            MCP 🔴 Operations Dashboard
+          </p>
+        </div>
+        {/* Segmented layout selector — hide on mobile */}
+        <div className={`items-center gap-1 ${isMobile ? 'hidden' : 'flex'}`}>
+          <span className="text-xs mr-2" style={{ color: 'var(--grid-text-muted)' }}>Layout</span>
+          <div
+            className="flex rounded-lg overflow-hidden"
+            style={{ border: '1px solid var(--grid-border)' }}
           >
-            {Object.keys(PRESETS).map((name) => (
-              <option key={name} value={name}>{name}</option>
+            {(Object.keys(PRESETS) as PresetName[]).map((name) => (
+              <button
+                key={name}
+                onClick={() => handlePresetChange(name)}
+                className="px-3 py-1.5 text-xs font-medium transition-colors"
+                style={{
+                  background: preset === name ? 'var(--grid-accent)' : 'var(--grid-surface)',
+                  color: preset === name ? '#fff' : 'var(--grid-text-dim)',
+                  borderRight: '1px solid var(--grid-border)',
+                }}
+              >
+                {name}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
       </div>
 

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export async function POST(
   req: NextRequest,
@@ -21,10 +21,9 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
     }
 
-    // Use openclaw CLI to send message to agent
-    const escaped = message.replace(/'/g, "'\\''");
-    const { stdout, stderr } = await execAsync(
-      `openclaw message send --agent ${id} --text '${escaped}'`,
+    const { stdout, stderr } = await execFileAsync(
+      'openclaw',
+      ['message', 'send', '--agent', id, '--text', message],
       { timeout: 15000 }
     );
 

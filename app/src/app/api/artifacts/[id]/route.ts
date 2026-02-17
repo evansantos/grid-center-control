@@ -4,6 +4,11 @@ import { sendNotification } from '@/lib/notify';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+    return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+  }
+
   const body = await req.json();
   const { action, projectId, feedback } = body;
 
