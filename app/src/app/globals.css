@@ -19,6 +19,20 @@
   --grid-info: #3b82f6;
   --grid-radius: 0.5rem;
   --grid-radius-lg: 0.75rem;
+  /* Map / SVG specific */
+  --grid-map-bg: #0a0a0a;
+  --grid-map-grid: #18181b;
+  --grid-map-desk: #0f0f0f;
+  --grid-map-desk-selected: #1c1917;
+  --grid-border-subtle: #27272a;
+  --grid-text-faint: #3f3f46;
+  --grid-text-label: #a1a1aa;
+  --grid-text-secondary: #52525b;
+  --grid-yellow: #eab308;
+  --grid-danger: #dc2626;
+  --grid-purple: #8b5cf6;
+  --grid-cyan: #06b6d4;
+  --grid-orange: #f97316;
 }
 
 [data-theme="light"] {
@@ -39,6 +53,20 @@
   --grid-info: #2563eb;
   --grid-radius: 0.5rem;
   --grid-radius-lg: 0.75rem;
+  /* Map / SVG specific */
+  --grid-map-bg: #f0f0f2;
+  --grid-map-grid: #d4d4d8;
+  --grid-map-desk: #ffffff;
+  --grid-map-desk-selected: #fef2f2;
+  --grid-border-subtle: #d4d4d8;
+  --grid-text-faint: #a1a1aa;
+  --grid-text-label: #52525b;
+  --grid-text-secondary: #71717a;
+  --grid-yellow: #ca8a04;
+  --grid-danger: #dc2626;
+  --grid-purple: #7c3aed;
+  --grid-cyan: #0891b2;
+  --grid-orange: #ea580c;
 }
 
 /* Office Themes */

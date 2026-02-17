@@ -15,14 +15,14 @@ const TYPE_ICONS: Record<ParsedActivity['type'], string> = {
 };
 
 const TYPE_COLORS: Record<ParsedActivity['type'], string> = {
-  'message': '#3b82f6',
-  'tool-call': '#8b5cf6',
-  'tool-result': '#22c55e',
-  'thinking': '#eab308',
-  'error': '#ef4444',
-  'session-start': '#22c55e',
-  'session-end': '#ef4444',
-  'file-change': '#06b6d4',
+  'message': 'var(--grid-info)',
+  'tool-call': 'var(--grid-purple)',
+  'tool-result': 'var(--grid-success)',
+  'thinking': 'var(--grid-yellow)',
+  'error': 'var(--grid-error)',
+  'session-start': 'var(--grid-success)',
+  'session-end': 'var(--grid-error)',
+  'file-change': 'var(--grid-cyan)',
 };
 
 function timeAgo(ts: string): string {
@@ -86,7 +86,7 @@ export function LiveActivityStream({ maxHeight = 400 }: { maxHeight?: number }) 
                 <div className="flex items-center gap-2">
                   <span
                     className="text-xs font-mono font-bold"
-                    style={{ color: TYPE_COLORS[item.type] || '#94a3b8' }}
+                    style={{ color: TYPE_COLORS[item.type] || 'var(--grid-text-label)' }}
                   >
                     {item.agent.toUpperCase()}
                   </span>

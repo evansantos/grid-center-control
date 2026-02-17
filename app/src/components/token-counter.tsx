@@ -27,9 +27,9 @@ function formatNumber(num: number): string {
 }
 
 function getGaugeColor(tokens: number): string {
-  if (tokens < 100_000) return '#22c55e'; // green
-  if (tokens < 500_000) return '#eab308'; // yellow
-  return '#ef4444'; // red
+  if (tokens < 100_000) return 'var(--grid-success)'; // green
+  if (tokens < 500_000) return 'var(--grid-yellow)'; // yellow
+  return 'var(--grid-error)'; // red
 }
 
 function TokenGauge({ tokens, maxTokens = 1_000_000 }: { tokens: number; maxTokens?: number }) {
@@ -40,7 +40,7 @@ function TokenGauge({ tokens, maxTokens = 1_000_000 }: { tokens: number; maxToke
     <div style={{
       width: '100%',
       height: 8,
-      backgroundColor: '#1e293b',
+      backgroundColor: 'var(--grid-surface)',
       borderRadius: 4,
       overflow: 'hidden',
       marginTop: 8,
@@ -68,7 +68,7 @@ function DailyChart({ dailyData }: { dailyData: Record<string, number> }) {
       <div style={{ 
         padding: 16, 
         textAlign: 'center', 
-        color: '#64748b',
+        color: 'var(--grid-text-secondary)',
         fontFamily: 'monospace',
         fontSize: 12 
       }}>
@@ -83,7 +83,7 @@ function DailyChart({ dailyData }: { dailyData: Record<string, number> }) {
         fontFamily: 'monospace', 
         fontSize: 12, 
         fontWeight: 'bold',
-        color: '#e2e8f0',
+        color: 'var(--grid-text)',
         marginBottom: 12 
       }}>
         Daily Token Usage
@@ -109,7 +109,7 @@ function DailyChart({ dailyData }: { dailyData: Record<string, number> }) {
               />
               <div style={{ 
                 fontSize: 8, 
-                color: '#64748b',
+                color: 'var(--grid-text-secondary)',
                 fontFamily: 'monospace',
                 marginTop: 4,
                 textAlign: 'center' 
@@ -158,7 +158,7 @@ export function TokenCounter() {
         justifyContent: 'center', 
         alignItems: 'center', 
         height: 200,
-        color: '#64748b',
+        color: 'var(--grid-text-secondary)',
         fontFamily: 'monospace' 
       }}>
         Loading token usage...
@@ -173,7 +173,7 @@ export function TokenCounter() {
         justifyContent: 'center', 
         alignItems: 'center', 
         height: 200,
-        color: '#ef4444',
+        color: 'var(--grid-error)',
         fontFamily: 'monospace' 
       }}>
         Error: {error || 'No data'}
@@ -191,8 +191,8 @@ export function TokenCounter() {
       margin: '0 auto', 
       padding: 16,
       fontFamily: 'monospace',
-      backgroundColor: '#0f172a',
-      color: '#e2e8f0',
+      backgroundColor: 'var(--grid-bg)',
+      color: 'var(--grid-text)',
       minHeight: '100vh'
     }}>
       {/* Hero Total */}
@@ -202,21 +202,21 @@ export function TokenCounter() {
         padding: 24,
         background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
         borderRadius: 12,
-        border: '1px solid #334155',
+        border: '1px solid var(--grid-border)',
       }}>
-        <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 8 }}>
+        <div style={{ fontSize: 14, color: 'var(--grid-text-label)', marginBottom: 8 }}>
           💰 Total Today
         </div>
         <div style={{ 
           fontSize: 36, 
           fontWeight: 'bold',
-          color: '#22c55e',
+          color: 'var(--grid-success)',
           marginBottom: 8,
           textShadow: '0 0 10px #22c55e40'
         }}>
           {formatNumber(data.total.total)}
         </div>
-        <div style={{ fontSize: 12, color: '#64748b' }}>
+        <div style={{ fontSize: 12, color: 'var(--grid-text-secondary)' }}>
           {formatNumber(data.total.input)} input • {formatNumber(data.total.output)} output
         </div>
       </div>
@@ -236,9 +236,9 @@ export function TokenCounter() {
               key={agentId}
               style={{
                 padding: 16,
-                backgroundColor: '#1e293b',
+                backgroundColor: 'var(--grid-surface)',
                 borderRadius: 8,
-                border: '1px solid #334155',
+                border: '1px solid var(--grid-border)',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               }}
               onMouseEnter={(e) => {
@@ -255,7 +255,7 @@ export function TokenCounter() {
                 <span style={{ fontSize: 20 }}>{agent.emoji}</span>
                 <div>
                   <div style={{ fontWeight: 'bold', fontSize: 14 }}>{agent.name}</div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>
+                  <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>
                     {usage.sessionCount} sessions
                   </div>
                 </div>
@@ -264,19 +264,19 @@ export function TokenCounter() {
               {/* Token Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>Input</div>
-                  <div style={{ fontSize: 12, fontWeight: 'bold', color: '#3b82f6' }}>
+                  <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Input</div>
+                  <div style={{ fontSize: 12, fontWeight: 'bold', color: 'var(--grid-info)' }}>
                     {formatNumber(usage.inputTokens)}
                   </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>Output</div>
-                  <div style={{ fontSize: 12, fontWeight: 'bold', color: '#f59e0b' }}>
+                  <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Output</div>
+                  <div style={{ fontSize: 12, fontWeight: 'bold', color: 'var(--grid-warning)' }}>
                     {formatNumber(usage.outputTokens)}
                   </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>Total</div>
+                  <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Total</div>
                   <div style={{ fontSize: 14, fontWeight: 'bold', color: getGaugeColor(usage.totalTokens) }}>
                     {formatNumber(usage.totalTokens)}
                   </div>
@@ -292,9 +292,9 @@ export function TokenCounter() {
 
       {/* Daily Chart */}
       <div style={{
-        backgroundColor: '#1e293b',
+        backgroundColor: 'var(--grid-surface)',
         borderRadius: 8,
-        border: '1px solid #334155',
+        border: '1px solid var(--grid-border)',
       }}>
         <DailyChart dailyData={data.daily} />
       </div>

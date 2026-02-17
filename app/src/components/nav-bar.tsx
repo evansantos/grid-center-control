@@ -41,6 +41,8 @@ const toolsGroup: NavGroup = {
     { label: 'Tokens', href: '/tools/tokens', icon: '⬡' },
     { label: 'Errors', href: '/tools/errors', icon: '⚠' },
     { label: 'Health', href: '/tools/health', icon: '♥' },
+    { label: 'Files', href: '/files', icon: '📁' },
+    { label: 'Kanban', href: '/kanban', icon: '▥' },
   ],
 };
 

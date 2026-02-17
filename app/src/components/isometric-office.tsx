@@ -23,19 +23,19 @@ interface AgentCfg {
 }
 
 const AGENTS: AgentCfg[] = [
-  { id: 'mcp',      name: 'MCP',      emoji: '🔴', color: '#dc2626', role: 'Orchestrator',  zone: 'boss',        pos: { x: 120, y: 90 },  accessory: '👑' },
+  { id: 'mcp',      name: 'MCP',      emoji: '🔴', color: 'var(--grid-danger)', role: 'Orchestrator',  zone: 'boss',        pos: { x: 120, y: 90 },  accessory: '👑' },
   { id: 'ceo',      name: 'CEO',      emoji: '👔', color: '#d97706', role: 'CEO',           zone: 'boss',        pos: { x: 220, y: 90 },  accessory: '👔' },
-  { id: 'grid',     name: 'GRID',     emoji: '⚡', color: '#8b5cf6', role: 'Frontend',      zone: 'engineering', pos: { x: 60, y: 240 },  accessory: '🧥' },
-  { id: 'sentinel', name: 'SENTINEL', emoji: '🛡️', color: '#3b82f6', role: 'Security',      zone: 'engineering', pos: { x: 160, y: 240 }, accessory: '🛡️' },
-  { id: 'bug',      name: 'BUG',      emoji: '🪲',  color: '#22c55e', role: 'QA Engineer',   zone: 'engineering', pos: { x: 260, y: 240 }, accessory: '🔍' },
+  { id: 'grid',     name: 'GRID',     emoji: '⚡', color: 'var(--grid-purple)', role: 'Frontend',      zone: 'engineering', pos: { x: 60, y: 240 },  accessory: '🧥' },
+  { id: 'sentinel', name: 'SENTINEL', emoji: '🛡️', color: 'var(--grid-info)', role: 'Security',      zone: 'engineering', pos: { x: 160, y: 240 }, accessory: '🛡️' },
+  { id: 'bug',      name: 'BUG',      emoji: '🪲',  color: 'var(--grid-success)', role: 'QA Engineer',   zone: 'engineering', pos: { x: 260, y: 240 }, accessory: '🔍' },
   { id: 'arch',     name: 'ARCH',     emoji: '🏛️', color: '#7c3aed', role: 'Architect',     zone: 'engineering', pos: { x: 360, y: 240 }, accessory: '📐' },
   { id: 'dev',      name: 'DEV',      emoji: '🔧', color: '#0ea5e9', role: 'Engineer',      zone: 'engineering', pos: { x: 460, y: 240 }, accessory: '💻' },
   { id: 'pixel',    name: 'PIXEL',    emoji: '🎨', color: '#f43f5e', role: 'Designer',      zone: 'creative',    pos: { x: 580, y: 240 }, accessory: '🎨' },
   { id: 'scribe',   name: 'SCRIBE',   emoji: '✍️',  color: '#ec4899', role: 'Writer',        zone: 'creative',    pos: { x: 700, y: 240 }, accessory: '✏️' },
-  { id: 'spec',     name: 'SPEC',     emoji: '📋', color: '#f97316', role: 'Product',       zone: 'strategy',    pos: { x: 100, y: 390 }, accessory: '📋' },
-  { id: 'sage',     name: 'SAGE',     emoji: '🧠', color: '#eab308', role: 'Strategist',    zone: 'strategy',    pos: { x: 240, y: 390 }, accessory: '🍵' },
+  { id: 'spec',     name: 'SPEC',     emoji: '📋', color: 'var(--grid-orange)', role: 'Product',       zone: 'strategy',    pos: { x: 100, y: 390 }, accessory: '📋' },
+  { id: 'sage',     name: 'SAGE',     emoji: '🧠', color: 'var(--grid-yellow)', role: 'Strategist',    zone: 'strategy',    pos: { x: 240, y: 390 }, accessory: '🍵' },
   { id: 'atlas',    name: 'ATLAS',    emoji: '📊', color: '#06b6d4', role: 'Research',      zone: 'labs',        pos: { x: 440, y: 390 }, accessory: '📊' },
-  { id: 'riff',     name: 'RIFF',     emoji: '🎸', color: '#ef4444', role: 'Audio',         zone: 'labs',        pos: { x: 580, y: 390 }, accessory: '🎸' },
+  { id: 'riff',     name: 'RIFF',     emoji: '🎸', color: 'var(--grid-error)', role: 'Audio',         zone: 'labs',        pos: { x: 580, y: 390 }, accessory: '🎸' },
   { id: 'vault',    name: 'VAULT',    emoji: '📚', color: '#10b981', role: 'Knowledge',     zone: 'labs',        pos: { x: 710, y: 390 }, accessory: '📚' },
 ];
 
@@ -205,7 +205,7 @@ function IsoCharacter({ agent, status }: { agent: AgentCfg; status: 'active' | '
               width: 4,
               height: 4,
               borderRadius: '50%',
-              background: '#22c55e',
+              background: 'var(--grid-success)',
               animation: `isoTypingDot 1s ease-in-out ${i * 0.15}s infinite`,
             }} />
           ))}
@@ -242,7 +242,7 @@ function IsoDesk({ active }: { active: boolean }) {
         left: 14,
         width: 22,
         height: 14,
-        background: active ? '#0a1628' : '#1a1a2e',
+        background: active ? 'var(--grid-bg)' : '#1a1a2e',
         borderRadius: 2,
         border: `1px solid ${active ? '#22c55e30' : '#27272a'}`,
         boxShadow: active ? '0 0 8px #22c55e20' : undefined,
@@ -274,7 +274,7 @@ function ZoneLabel({ x, y, label, icon }: { x: number; y: number; label: string;
       top: y,
       fontSize: 10,
       fontFamily: 'monospace',
-      color: '#475569',
+      color: 'var(--grid-text-muted)',
       letterSpacing: 2,
       textTransform: 'uppercase',
       pointerEvents: 'none',
@@ -324,7 +324,7 @@ function CoffeeMachine({ x, y }: { x: number; y: number }) {
       textAlign: 'center',
     }}>
       <div style={{ fontSize: 16 }}>☕</div>
-      <div style={{ fontSize: 7, fontFamily: 'monospace', color: '#64748b', marginTop: 1 }}>COFFEE</div>
+      <div style={{ fontSize: 7, fontFamily: 'monospace', color: 'var(--grid-text-secondary)', marginTop: 1 }}>COFFEE</div>
     </div>
   );
 }
@@ -377,7 +377,7 @@ function AgentUnit({
         fontSize: 8,
         fontFamily: 'monospace',
         fontWeight: 700,
-        color: status === 'active' ? agent.color : '#64748b',
+        color: status === 'active' ? agent.color : 'var(--grid-text-secondary)',
         textShadow: status === 'active' ? `0 0 6px ${agent.color}60` : undefined,
         whiteSpace: 'nowrap',
         textAlign: 'center',
@@ -389,7 +389,7 @@ function AgentUnit({
       <div style={{
         fontSize: 7,
         fontFamily: 'monospace',
-        color: '#475569',
+        color: 'var(--grid-text-muted)',
         whiteSpace: 'nowrap',
       }}>
         {agent.role}
@@ -413,16 +413,16 @@ function MetricsBar({ activity }: { activity: Record<string, ActivityItem> }) {
       marginBottom: 12,
       fontFamily: 'monospace',
       fontSize: 12,
-      color: '#94a3b8',
+      color: 'var(--grid-text-label)',
     }}>
       <span>
-        <span style={{ color: '#22c55e', fontWeight: 700 }}>● {activeCount}</span> active
+        <span style={{ color: 'var(--grid-success)', fontWeight: 700 }}>● {activeCount}</span> active
       </span>
       <span>
-        <span style={{ color: '#8b5cf6', fontWeight: 700 }}>💬 {totalMessages}</span> messages
+        <span style={{ color: 'var(--grid-purple)', fontWeight: 700 }}>💬 {totalMessages}</span> messages
       </span>
       <span>
-        <span style={{ color: '#64748b' }}>{AGENTS.length}</span> agents
+        <span style={{ color: 'var(--grid-text-secondary)' }}>{AGENTS.length}</span> agents
       </span>
     </div>
   );
@@ -563,7 +563,7 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
               letterSpacing: '0.02em',
             }}>{agent.name}</div>
             <div style={{
-              color: '#64748b',
+              color: 'var(--grid-text-secondary)',
               fontSize: 10,
               display: 'flex',
               alignItems: 'center',
@@ -588,7 +588,7 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
             background: 'rgba(255,255,255,0.04)',
             border: `1px solid ${agent.color}25`,
             borderRadius: 6,
-            color: '#94a3b8',
+            color: 'var(--grid-text-label)',
             cursor: 'pointer',
             padding: '4px 8px',
             fontSize: 11,
@@ -603,7 +603,7 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
           onMouseLeave={e => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
             e.currentTarget.style.borderColor = `${agent.color}25`;
-            e.currentTarget.style.color = '#94a3b8';
+            e.currentTarget.style.color = 'var(--grid-text-label)';
           }}
         >✕</button>
       </div>
@@ -612,7 +612,7 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
       <div style={{
         display: 'flex',
         gap: 0,
-        borderBottom: '1px solid #1e293b',
+        borderBottom: '1px solid var(--grid-border)',
         flexShrink: 0,
         position: 'relative',
         zIndex: 2,
@@ -621,7 +621,7 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
         {(['all', 'user', 'assistant', 'system'] as RoleFilter[]).map(f => {
           const count = f === 'all' ? messages.length : messages.filter(m => m.role === f).length;
           const active = filter === f;
-          const colors: Record<string, string> = { all: '#94a3b8', user: '#3b82f6', assistant: agent.color, system: '#eab308' };
+          const colors: Record<string, string> = { all: 'var(--grid-text-label)', user: 'var(--grid-info)', assistant: agent.color, system: 'var(--grid-yellow)' };
           return (
             <button key={f} onClick={() => setFilter(f)} style={{
               flex: 1,
@@ -629,7 +629,7 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
               background: 'none',
               border: 'none',
               borderBottom: active ? `2px solid ${colors[f]}` : '2px solid transparent',
-              color: active ? colors[f] : '#475569',
+              color: active ? colors[f] : 'var(--grid-text-muted)',
               fontSize: 9,
               fontFamily: 'monospace',
               cursor: 'pointer',
@@ -669,11 +669,11 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
         )}
         {!loading && filtered.length === 0 && (
           <div style={{
-            color: '#334155',
+            color: 'var(--grid-text-muted)',
             fontSize: 11,
             textAlign: 'center',
             marginTop: 40,
-            border: '1px dashed #1e293b',
+            border: '1px dashed var(--grid-border)',
             padding: '16px 12px',
             borderRadius: 8,
           }}>
@@ -681,9 +681,9 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
           </div>
         )}
         {filtered.map((msg, i) => {
-          const roleColors: Record<string, string> = { user: '#3b82f6', assistant: agent.color, system: '#eab308' };
+          const roleColors: Record<string, string> = { user: 'var(--grid-info)', assistant: agent.color, system: 'var(--grid-yellow)' };
           const roleLabels: Record<string, string> = { user: 'USER', assistant: 'AGENT', system: 'SYS' };
-          const rc = roleColors[msg.role] ?? '#64748b';
+          const rc = roleColors[msg.role] ?? 'var(--grid-text-secondary)';
           const isLong = msg.content.length > 300;
           const isExpanded = expanded.has(i);
           const displayText = isLong && !isExpanded ? msg.content.slice(0, 300) + '…' : msg.content;
@@ -722,7 +722,7 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
                   boxShadow: `0 1px 6px ${rc}10`,
                   fontSize: 11,
                   lineHeight: 1.55,
-                  color: '#cbd5e1',
+                  color: 'var(--grid-text)',
                   wordBreak: 'break-word',
                   whiteSpace: 'pre-wrap',
                   cursor: isLong ? 'pointer' : 'default',
@@ -746,7 +746,7 @@ function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () =>
         background: `linear-gradient(90deg, ${agent.color}05, transparent)`,
         flexShrink: 0,
         fontSize: 10,
-        color: '#3b4252',
+        color: 'var(--grid-text-muted)',
         textAlign: 'center',
         position: 'relative',
         zIndex: 2,
@@ -910,7 +910,7 @@ export default function IsometricOffice() {
             fontWeight: 700,
             fontFamily: 'monospace',
             letterSpacing: 8,
-            color: '#8b5cf6',
+            color: 'var(--grid-purple)',
             textShadow: '0 0 10px #8b5cf680, 0 0 20px #8b5cf640, 0 0 40px #8b5cf620',
             animation: 'isoNeonFlicker 6s ease-in-out infinite',
             pointerEvents: 'none',
@@ -962,7 +962,7 @@ export default function IsometricOffice() {
           </div>
           <div style={{
             position: 'absolute', left: 705, top: 258,
-            fontSize: 7, fontFamily: 'monospace', color: '#64748b', pointerEvents: 'none',
+            fontSize: 7, fontFamily: 'monospace', color: 'var(--grid-text-secondary)', pointerEvents: 'none',
           }}>Mood Board</div>
 
           {/* Agents */}
@@ -1012,7 +1012,7 @@ export default function IsometricOffice() {
             bottom: 10,
             fontSize: 10,
             fontFamily: 'monospace',
-            color: '#475569',
+            color: 'var(--grid-text-muted)',
             pointerEvents: 'none',
             zIndex: 20,
           }}>
@@ -1054,12 +1054,12 @@ export default function IsometricOffice() {
                 gap: 5,
                 padding: '4px 10px',
                 borderRadius: 16,
-                border: isSel ? `1px solid ${a.color}80` : '1px solid #1e293b',
+                border: isSel ? `1px solid ${a.color}80` : '1px solid var(--grid-border)',
                 background: isSel ? `${a.color}15` : '#0a0a0f',
                 cursor: 'pointer',
                 fontFamily: 'monospace',
                 fontSize: 10,
-                color: st === 'active' ? '#e2e8f0' : '#64748b',
+                color: st === 'active' ? 'var(--grid-text)' : 'var(--grid-text-secondary)',
                 outline: 'none',
                 transition: 'all 0.2s',
               }}
@@ -1069,8 +1069,8 @@ export default function IsometricOffice() {
                 height: 6,
                 borderRadius: '50%',
                 display: 'inline-block',
-                background: st === 'active' ? '#22c55e' : st === 'recent' ? '#eab308' : '#4b5563',
-                boxShadow: st === 'active' ? '0 0 6px #22c55e' : undefined,
+                background: st === 'active' ? 'var(--grid-success)' : st === 'recent' ? 'var(--grid-yellow)' : 'var(--grid-text-muted)',
+                boxShadow: st === 'active' ? '0 0 6px var(--grid-success)' : undefined,
               }} />
               <span style={{ fontWeight: 700 }}>{a.name}</span>
             </button>

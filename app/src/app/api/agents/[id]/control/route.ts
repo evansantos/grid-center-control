@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { AgentControlSchema, validateBody } from '@/lib/validators';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 
@@ -20,15 +21,15 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await req.json();
-    const { action } = body;
+    const raw = await req.json();
+    const validated = validateBody(AgentControlSchema, raw);
+    if (!validated.success) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
+    const { action } = validated.data;
 
     if (!id || id.length > MAX_AGENT_ID_LENGTH || !/^[a-zA-Z0-9_-]+$/.test(id)) {
       return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
-    }
-
-    if (!ALLOWED_ACTIONS.includes(action)) {
-      return NextResponse.json({ error: `Invalid action. Use: ${ALLOWED_ACTIONS.join(', ')}` }, { status: 400 });
     }
 
     const { stdout, stderr } = await execFileAsync(

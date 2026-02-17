@@ -171,16 +171,16 @@ export function ConversationPanel({ agentId, agent, onClose }: {
       <div className="flex gap-1 px-4 py-2 border-b border-slate-700 flex-shrink-0">
         {ROLES.map(role => {
           const active = activeRoles.has(role);
-          const roleColor = role === 'user' ? '#3b82f6' : role === 'system' ? '#eab308' : agent.color;
+          const roleColor = role === 'user' ? 'var(--grid-info)' : role === 'system' ? 'var(--grid-yellow)' : agent.color;
           return (
             <button 
               key={role} 
               onClick={() => toggleRole(role)} 
               className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded-xl cursor-pointer transition-colors"
               style={{
-                border: `1px solid ${active ? roleColor + '60' : '#27272a'}`,
+                border: `1px solid ${active ? roleColor + '60' : 'var(--grid-border-subtle)'}`,
                 backgroundColor: active ? roleColor + '15' : 'transparent',
-                color: active ? roleColor : '#4b5563',
+                color: active ? roleColor : 'var(--grid-text-muted)',
               }}
             >
               {role}
@@ -203,7 +203,7 @@ export function ConversationPanel({ agentId, agent, onClose }: {
         ) : filtered.length > 0 ? (
           [...filtered].reverse().map((msg, i) => {
             const msgKey = msg.timestamp ? `${msg.timestamp}-${msg.role}` : `${i}-${msg.role}-${msg.content.slice(0, 20)}`;
-            const roleColor = msg.role === 'user' ? '#3b82f6' : msg.role === 'system' ? '#eab308' : agent.color;
+            const roleColor = msg.role === 'user' ? 'var(--grid-info)' : msg.role === 'system' ? 'var(--grid-yellow)' : agent.color;
             return (
               <div 
                 key={msgKey} 

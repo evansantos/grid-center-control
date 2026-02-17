@@ -87,7 +87,7 @@ export function QuickActions() {
               className="text-xs px-3 py-2 rounded"
               style={{
                 background: status.type === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                color: status.type === 'success' ? '#22c55e' : '#ef4444',
+                color: status.type === 'success' ? 'var(--grid-success)' : 'var(--grid-error)',
               }}
             >
               {status.message}

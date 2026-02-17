@@ -22,16 +22,16 @@ interface ErrorData {
 }
 
 const ERROR_TYPE_DISPLAY: Record<string, { label: string; color: string }> = {
-  tool_error: { label: 'Tool Error', color: '#ef4444' },
-  message_error: { label: 'Message Error', color: '#f97316' },
-  general_error: { label: 'General Error', color: '#eab308' },
-  exception: { label: 'Exception', color: '#dc2626' },
+  tool_error: { label: 'Tool Error', color: 'var(--grid-error)' },
+  message_error: { label: 'Message Error', color: 'var(--grid-orange)' },
+  general_error: { label: 'General Error', color: 'var(--grid-yellow)' },
+  exception: { label: 'Exception', color: 'var(--grid-danger)' },
 };
 
 const SEVERITY_COLORS = {
-  high: '#dc2626',
-  medium: '#f97316',
-  low: '#eab308',
+  high: 'var(--grid-danger)',
+  medium: 'var(--grid-orange)',
+  low: 'var(--grid-yellow)',
 };
 
 function formatTimeAgo(timestamp: string): string {
@@ -47,8 +47,8 @@ function formatTimeAgo(timestamp: string): string {
 }
 
 function ErrorBadge({ type, severity }: { type: string; severity: string }) {
-  const typeInfo = ERROR_TYPE_DISPLAY[type] || { label: type, color: '#64748b' };
-  const severityColor = SEVERITY_COLORS[severity as keyof typeof SEVERITY_COLORS] || '#64748b';
+  const typeInfo = ERROR_TYPE_DISPLAY[type] || { label: type, color: 'var(--grid-text-secondary)' };
+  const severityColor = SEVERITY_COLORS[severity as keyof typeof SEVERITY_COLORS] || 'var(--grid-text-secondary)';
   
   return (
     <div style={{ display: 'flex', gap: 4 }}>
@@ -90,38 +90,38 @@ function ErrorRow({ error, onClick }: { error: ErrorEntry; onClick: () => void }
       onClick={onClick}
       style={{
         padding: 12,
-        backgroundColor: '#1e293b',
+        backgroundColor: 'var(--grid-surface)',
         borderRadius: 6,
-        border: '1px solid #334155',
+        border: '1px solid var(--grid-border)',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
         marginBottom: 8,
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = '#334155';
+        e.currentTarget.style.backgroundColor = 'var(--grid-surface-hover)';
         e.currentTarget.style.borderColor = SEVERITY_COLORS[error.severity as keyof typeof SEVERITY_COLORS];
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = '#1e293b';
-        e.currentTarget.style.borderColor = '#334155';
+        e.currentTarget.style.backgroundColor = 'var(--grid-surface)';
+        e.currentTarget.style.borderColor = 'var(--grid-border)';
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
         <span style={{ fontSize: 16 }}>{agent.emoji}</span>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontWeight: 'bold', color: '#e2e8f0' }}>{agent.name}</span>
-            <span style={{ fontSize: 10, color: '#64748b', fontFamily: 'monospace' }}>
+            <span style={{ fontWeight: 'bold', color: 'var(--grid-text)' }}>{agent.name}</span>
+            <span style={{ fontSize: 10, color: 'var(--grid-text-secondary)', fontFamily: 'monospace' }}>
               {error.sessionId.slice(-8)}
             </span>
-            <span style={{ fontSize: 10, color: '#64748b' }}>{formatTimeAgo(error.timestamp)}</span>
+            <span style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>{formatTimeAgo(error.timestamp)}</span>
           </div>
           <ErrorBadge type={error.type} severity={error.severity} />
         </div>
       </div>
       <div style={{
         fontSize: 12,
-        color: '#94a3b8',
+        color: 'var(--grid-text-label)',
         lineHeight: 1.4,
         fontFamily: 'monospace',
         overflow: 'hidden',
@@ -157,8 +157,8 @@ function ErrorModal({ error, onClose }: { error: ErrorEntry; onClose: () => void
       padding: 16,
     }} onClick={onClose}>
       <div style={{
-        backgroundColor: '#1e293b',
-        border: '1px solid #334155',
+        backgroundColor: 'var(--grid-surface)',
+        border: '1px solid var(--grid-border)',
         borderRadius: 8,
         padding: 24,
         maxWidth: '80%',
@@ -170,10 +170,10 @@ function ErrorModal({ error, onClose }: { error: ErrorEntry; onClose: () => void
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
           <span style={{ fontSize: 24 }}>{agent.emoji}</span>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 'bold', color: '#e2e8f0', marginBottom: 4 }}>
+            <div style={{ fontSize: 18, fontWeight: 'bold', color: 'var(--grid-text)', marginBottom: 4 }}>
               {agent.name} Error Details
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: '#64748b' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: 'var(--grid-text-secondary)' }}>
               <span>Session: {error.sessionId}</span>
               <span>•</span>
               <span>{new Date(error.timestamp).toLocaleString()}</span>
@@ -184,8 +184,8 @@ function ErrorModal({ error, onClose }: { error: ErrorEntry; onClose: () => void
             style={{
               marginLeft: 'auto',
               background: 'none',
-              border: '1px solid #64748b',
-              color: '#64748b',
+              border: '1px solid var(--grid-text-secondary)',
+              color: 'var(--grid-text-secondary)',
               padding: '6px 12px',
               borderRadius: 4,
               cursor: 'pointer',
@@ -203,13 +203,13 @@ function ErrorModal({ error, onClose }: { error: ErrorEntry; onClose: () => void
         
         {/* Message */}
         <div style={{
-          backgroundColor: '#0f172a',
-          border: '1px solid #334155',
+          backgroundColor: 'var(--grid-bg)',
+          border: '1px solid var(--grid-border)',
           borderRadius: 4,
           padding: 16,
           fontFamily: 'monospace',
           fontSize: 12,
-          color: '#e2e8f0',
+          color: 'var(--grid-text)',
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
           maxHeight: '400px',
@@ -267,7 +267,7 @@ export function ErrorDashboard() {
         justifyContent: 'center', 
         alignItems: 'center', 
         height: '60vh',
-        color: '#64748b',
+        color: 'var(--grid-text-secondary)',
         fontFamily: 'monospace' 
       }}>
         Loading error data...
@@ -282,7 +282,7 @@ export function ErrorDashboard() {
         justifyContent: 'center', 
         alignItems: 'center', 
         height: '60vh',
-        color: '#ef4444',
+        color: 'var(--grid-error)',
         fontFamily: 'monospace' 
       }}>
         Error: {error || 'No data'}
@@ -296,8 +296,8 @@ export function ErrorDashboard() {
       margin: '0 auto', 
       padding: 16,
       fontFamily: 'monospace',
-      backgroundColor: '#0f172a',
-      color: '#e2e8f0',
+      backgroundColor: 'var(--grid-bg)',
+      color: 'var(--grid-text)',
       minHeight: '100vh'
     }}>
       {/* Header */}
@@ -309,7 +309,7 @@ export function ErrorDashboard() {
         <div style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>
           ⚠️ Error & Alert Dashboard
         </div>
-        <div style={{ fontSize: 12, color: '#64748b' }}>
+        <div style={{ fontSize: 12, color: 'var(--grid-text-secondary)' }}>
           Monitoring system errors and alerts across all agents
         </div>
       </div>
@@ -323,41 +323,41 @@ export function ErrorDashboard() {
       }}>
         <div style={{
           padding: 16,
-          backgroundColor: '#1e293b',
+          backgroundColor: 'var(--grid-surface)',
           borderRadius: 8,
-          border: '1px solid #334155',
+          border: '1px solid var(--grid-border)',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ef4444', marginBottom: 4 }}>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--grid-error)', marginBottom: 4 }}>
             {data.summary.total}
           </div>
-          <div style={{ fontSize: 10, color: '#64748b' }}>Total Errors</div>
+          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Total Errors</div>
         </div>
         
         <div style={{
           padding: 16,
-          backgroundColor: '#1e293b',
+          backgroundColor: 'var(--grid-surface)',
           borderRadius: 8,
-          border: '1px solid #334155',
+          border: '1px solid var(--grid-border)',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f97316', marginBottom: 4 }}>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--grid-orange)', marginBottom: 4 }}>
             {Object.keys(data.summary.byAgent).length}
           </div>
-          <div style={{ fontSize: 10, color: '#64748b' }}>Affected Agents</div>
+          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Affected Agents</div>
         </div>
         
         <div style={{
           padding: 16,
-          backgroundColor: '#1e293b',
+          backgroundColor: 'var(--grid-surface)',
           borderRadius: 8,
-          border: '1px solid #334155',
+          border: '1px solid var(--grid-border)',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: '#eab308', marginBottom: 4 }}>
+          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--grid-yellow)', marginBottom: 4 }}>
             {Object.keys(data.summary.byType).length}
           </div>
-          <div style={{ fontSize: 10, color: '#64748b' }}>Error Types</div>
+          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Error Types</div>
         </div>
       </div>
 
@@ -367,22 +367,22 @@ export function ErrorDashboard() {
         gap: 16,
         marginBottom: 24,
         padding: 16,
-        backgroundColor: '#1e293b',
+        backgroundColor: 'var(--grid-surface)',
         borderRadius: 8,
-        border: '1px solid #334155',
+        border: '1px solid var(--grid-border)',
         flexWrap: 'wrap',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
-          <label style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>Agent</label>
+          <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase' }}>Agent</label>
           <select
             value={selectedAgent}
             onChange={(e) => setSelectedAgent(e.target.value)}
             style={{
               padding: '6px 8px',
-              backgroundColor: '#0f172a',
-              border: '1px solid #334155',
+              backgroundColor: 'var(--grid-bg)',
+              border: '1px solid var(--grid-border)',
               borderRadius: 4,
-              color: '#e2e8f0',
+              color: 'var(--grid-text)',
               fontSize: 12,
             }}
           >
@@ -396,16 +396,16 @@ export function ErrorDashboard() {
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
-          <label style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>Error Type</label>
+          <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase' }}>Error Type</label>
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
             style={{
               padding: '6px 8px',
-              backgroundColor: '#0f172a',
-              border: '1px solid #334155',
+              backgroundColor: 'var(--grid-bg)',
+              border: '1px solid var(--grid-border)',
               borderRadius: 4,
-              color: '#e2e8f0',
+              color: 'var(--grid-text)',
               fontSize: 12,
             }}
           >
@@ -419,16 +419,16 @@ export function ErrorDashboard() {
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
-          <label style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>Time Range</label>
+          <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase' }}>Time Range</label>
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
             style={{
               padding: '6px 8px',
-              backgroundColor: '#0f172a',
-              border: '1px solid #334155',
+              backgroundColor: 'var(--grid-bg)',
+              border: '1px solid var(--grid-border)',
               borderRadius: 4,
-              color: '#e2e8f0',
+              color: 'var(--grid-text)',
               fontSize: 12,
             }}
           >
@@ -446,10 +446,10 @@ export function ErrorDashboard() {
           <div style={{
             textAlign: 'center',
             padding: 48,
-            backgroundColor: '#1e293b',
+            backgroundColor: 'var(--grid-surface)',
             borderRadius: 8,
-            border: '1px solid #334155',
-            color: '#64748b',
+            border: '1px solid var(--grid-border)',
+            color: 'var(--grid-text-secondary)',
           }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
             <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>No Errors Found</div>
@@ -459,7 +459,7 @@ export function ErrorDashboard() {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 12, color: '#e2e8f0' }}>
+            <div style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 12, color: 'var(--grid-text)' }}>
               Recent Errors ({data.errors.length})
             </div>
             {data.errors.map((errorItem, index) => (

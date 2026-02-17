@@ -1,11 +1,21 @@
-import { readFileSync, existsSync, statSync, readdirSync } from 'fs';
+import { NextRequest } from 'next/server';
+import { readFile, readdir, stat, access } from 'fs/promises';
+import { constants } from 'fs';
 import { join } from 'path';
+import os from 'os';
 
-const OPENCLAW_DIR = join(process.env.HOME ?? '', '.openclaw');
+const OPENCLAW_DIR = join(os.homedir(), '.openclaw');
 
-function getAgentStatuses() {
+async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check — expected */ return false; } }
+
+async function getAgentStatuses() {
   try {
-    const config = JSON.parse(readFileSync(join(OPENCLAW_DIR, 'openclaw.json'), 'utf-8'));
+    let config: any;
+    try {
+      config = JSON.parse(await readFile(join(OPENCLAW_DIR, 'openclaw.json'), 'utf-8'));
+    } catch (err) { console.error("[agents/stream] config read failed", err);
+      config = { agents: { list: [] } };
+    }
     const agentList = config.agents?.list ?? [];
     const statuses: Record<string, { active: boolean; lastActivity?: string }> = {};
 
@@ -14,14 +24,14 @@ function getAgentStatuses() {
       const sessionsDir = join(OPENCLAW_DIR, 'agents', id, 'sessions');
       let lastMtime = 0;
 
-      if (existsSync(sessionsDir)) {
+      if (await exists(sessionsDir)) {
         try {
-          const files = readdirSync(sessionsDir).filter((f: string) => f.endsWith('.jsonl'));
+          const files = (await readdir(sessionsDir)).filter((f: string) => f.endsWith('.jsonl'));
           for (const file of files) {
-            const stat = statSync(join(sessionsDir, file));
-            if (stat.mtimeMs > lastMtime) lastMtime = stat.mtimeMs;
+            const s = await stat(join(sessionsDir, file));
+            if (s.mtimeMs > lastMtime) lastMtime = s.mtimeMs;
           }
-        } catch {}
+        } catch (err) { console.error(err); }
       }
 
       const statusKey = id === 'main' ? 'mcp' : id;
@@ -32,21 +42,21 @@ function getAgentStatuses() {
     }
 
     return statuses;
-  } catch {
+  } catch (err) { console.error("[agents/stream] getAgentStatuses error", err);
     return {};
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     start(controller) {
-      const send = () => {
+      const send = async () => {
         try {
-          const statuses = getAgentStatuses();
+          const statuses = await getAgentStatuses();
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', statuses })}\n\n`));
-        } catch {
+        } catch (err) { console.error("[agents/stream] send status error", err);
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'heartbeat' })}\n\n`));
         }
       };
@@ -54,11 +64,15 @@ export async function GET() {
       send();
       const interval = setInterval(send, 5000);
 
-      // Clean up after 5 minutes to prevent hanging connections
       setTimeout(() => {
         clearInterval(interval);
-        controller.close();
+        try { controller.close(); } catch (err) { console.error(err); }
       }, 5 * 60 * 1000);
+
+      req.signal.addEventListener('abort', () => {
+        clearInterval(interval);
+        try { controller.close(); } catch (err) { console.error(err); }
+      });
     },
   });
 

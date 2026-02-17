@@ -72,7 +72,7 @@ export default function EscalationRuleCard({ rule, onToggle, onDelete }: Props) 
           <button
             onClick={() => onDelete(rule.id)}
             style={{
-              background: '#ef4444',
+              background: 'var(--grid-error)',
               color: '#fff',
               border: 'none',
               borderRadius: 4,

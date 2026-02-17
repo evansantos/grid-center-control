@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { SpawnSchema, validateBody } from '@/lib/validators';
 
 const AVAILABLE_AGENTS = [
   { id: 'arch', emoji: '🏛️', name: 'Arch' },
@@ -19,17 +20,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { agentId, model, task, timeoutSeconds } = body as {
-    agentId: string;
-    model: string;
-    task: string;
-    timeoutSeconds: number;
-  };
-
-  if (!agentId || !task) {
-    return NextResponse.json({ error: 'agentId and task required' }, { status: 400 });
+  const raw = await request.json();
+  const validated = validateBody(SpawnSchema, raw);
+  if (!validated.success) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
   }
+  const { agentId, model, task, timeoutSeconds } = validated.data;
 
   console.log(`[SPAWN] Agent: ${agentId}, Model: ${model}, Timeout: ${timeoutSeconds}s, Task: ${task}`);
 

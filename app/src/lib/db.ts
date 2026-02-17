@@ -1,7 +1,8 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import os from 'os';
 
-const DB_PATH = process.env.GRID_DB ?? path.join(process.env.HOME ?? '~', 'workspace/mcp-projects/grid/grid.db');
+const DB_PATH = process.env.GRID_DB ?? path.join(os.homedir(), 'workspace/mcp-projects/grid/grid.db');
 
 let db: Database.Database | null = null;
 

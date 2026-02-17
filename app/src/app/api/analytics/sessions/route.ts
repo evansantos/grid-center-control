@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import { readFile, readdir, access } from 'fs/promises';
+import { constants } from 'fs';
 import path from 'path';
+import os from 'os';
 
 export interface HeatmapDay {
   date: string;
@@ -15,21 +17,24 @@ export interface SessionStats {
   peakHours: number[];
 }
 
-const SESSIONS_DIR = path.join(process.env.HOME || '~', '.openclaw', 'sessions');
+const SESSIONS_DIR = path.join(os.homedir(), '.openclaw', 'sessions');
 let cache: { data: { heatmap: HeatmapDay[]; stats: SessionStats }; ts: number } | null = null;
 
-function computeSessionAnalytics() {
+async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
+
+async function computeSessionAnalytics() {
   const dayCounts = new Map<string, number>();
   const hourCounts = new Array(24).fill(0);
   let totalSessions = 0;
 
   try {
-    if (!fs.existsSync(SESSIONS_DIR)) return emptyResult();
-    const files = fs.readdirSync(SESSIONS_DIR).filter(f => f.endsWith('.jsonl'));
+    if (!(await exists(SESSIONS_DIR))) return emptyResult();
+    const allFiles = await readdir(SESSIONS_DIR);
+    const files = allFiles.filter(f => f.endsWith('.jsonl'));
 
     for (const file of files) {
       try {
-        const content = fs.readFileSync(path.join(SESSIONS_DIR, file), 'utf-8');
+        const content = await readFile(path.join(SESSIONS_DIR, file), 'utf-8');
         const firstLine = content.split('\n')[0];
         if (!firstLine) continue;
         const parsed = JSON.parse(firstLine);
@@ -41,11 +46,10 @@ function computeSessionAnalytics() {
         dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
         hourCounts[date.getHours()]++;
         totalSessions++;
-      } catch {}
+      } catch (err) { console.error(err); }
     }
-  } catch {}
+  } catch (err) { console.error(err); }
 
-  // Build heatmap for last 90 days
   const heatmap: HeatmapDay[] = [];
   for (let i = 89; i >= 0; i--) {
     const d = new Date();
@@ -54,13 +58,11 @@ function computeSessionAnalytics() {
     heatmap.push({ date: key, count: dayCounts.get(key) || 0 });
   }
 
-  // Stats
   let busiestDay = { date: '', count: 0 };
   for (const [date, count] of dayCounts) {
     if (count > busiestDay.count) busiestDay = { date, count };
   }
 
-  // Streak
   let streak = 0;
   for (let i = 0; i < 90; i++) {
     const d = new Date();
@@ -100,7 +102,7 @@ export async function GET() {
   if (cache && now - cache.ts < 300_000) {
     return NextResponse.json(cache.data);
   }
-  const data = computeSessionAnalytics();
+  const data = await computeSessionAnalytics();
   cache = { data, ts: now };
   return NextResponse.json(data);
 }

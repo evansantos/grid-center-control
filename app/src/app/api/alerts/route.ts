@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { AlertRulesSchema, validateBody } from '@/lib/validators';
 import fs from 'fs/promises';
 import path from 'path';
 import { getDB } from '@/lib/db';
 import { detectAnomalies, DEFAULT_ALERT_RULES, AlertRule, Event } from '@/lib/alerts';
+import os from 'os';
 
-const ALERT_CONFIG_FILE = path.join(process.env.HOME!, '.openclaw', 'alert-config.json');
+const ALERT_CONFIG_FILE = path.join(os.homedir(), '.openclaw', 'alert-config.json');
 
 async function loadAlertConfig(): Promise<AlertRule[]> {
   try {
@@ -56,8 +58,8 @@ async function getRecentEvents(): Promise<Event[]> {
           metric = data.metric || row.type;
           value = typeof data.value === 'number' ? data.value : undefined;
         }
-      } catch {
-        // Invalid JSON, ignore
+      } catch (error) {
+        /* Invalid JSON in event data — skip metadata parsing */
       }
 
       return {
@@ -143,27 +145,20 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { rules } = body;
-
-    if (!Array.isArray(rules)) {
-      return NextResponse.json(
-        { error: 'Rules must be an array' },
-        { status: 400 }
-      );
+    const raw = await request.json();
+    const validated = validateBody(AlertRulesSchema, raw);
+    if (!validated.success) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
     }
+    const { rules } = validated.data;
 
-    // Validate rules structure
-    for (const rule of rules) {
-      if (!rule.id || !rule.name || !rule.metric || typeof rule.threshold !== 'number') {
-        return NextResponse.json(
-          { error: 'Invalid rule structure' },
-          { status: 400 }
-        );
-      }
-    }
+    // Normalize rules with defaults for AlertRule compatibility
+    const normalized: AlertRule[] = rules.map(rule => ({
+      ...rule,
+      description: rule.description ?? rule.name,
+    }));
 
-    await saveAlertConfig(rules);
+    await saveAlertConfig(normalized);
 
     return NextResponse.json({ message: 'Alert configuration updated successfully' });
   } catch (error) {

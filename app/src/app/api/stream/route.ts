@@ -1,15 +1,20 @@
 import { NextRequest } from 'next/server';
 import fs from 'fs';
+import { readdir, stat, access } from 'fs/promises';
+import { constants } from 'fs';
 import path from 'path';
+import os from 'os';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const AGENTS_DIR = path.join(process.env.HOME || '', '.openclaw', 'agents');
+const AGENTS_DIR = path.join(os.homedir(), '.openclaw', 'agents');
 
 export async function GET(req: NextRequest) {
   const encoder = new TextEncoder();
   let closed = false;
+
+  const initialAgents = await getAgentList();
 
   const stream = new ReadableStream({
     start(controller) {
@@ -17,54 +22,47 @@ export async function GET(req: NextRequest) {
         if (closed) return;
         try {
           controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
-        } catch { /* stream closed */ }
+        } catch { /* stream closed — expected when client disconnects */ }
       };
 
-      // Send heartbeat every 15s to keep connection alive
       const heartbeat = setInterval(() => send('ping', { ts: Date.now() }), 15000);
-
-      // Watch agent session directories
       const watchers: fs.FSWatcher[] = [];
 
-      const setupWatchers = () => {
+      const setupWatchers = async () => {
         try {
-          if (!fs.existsSync(AGENTS_DIR)) return;
-          const agents = fs.readdirSync(AGENTS_DIR).filter(f => {
-            try { return fs.statSync(path.join(AGENTS_DIR, f)).isDirectory(); } catch { return false; }
-          });
+          try { await access(AGENTS_DIR, constants.R_OK); } catch { /* agents dir missing */ return; }
+          const allDirs = await readdir(AGENTS_DIR);
+          const agents: string[] = [];
+          for (const f of allDirs) {
+            try { if ((await stat(path.join(AGENTS_DIR, f))).isDirectory()) agents.push(f); } catch (err) { console.error('[stream] stat failed', err); }
+          }
 
           for (const agent of agents) {
             const sessionsDir = path.join(AGENTS_DIR, agent, 'sessions');
-            if (!fs.existsSync(sessionsDir)) continue;
+            try { await access(sessionsDir, constants.R_OK); } catch { /* no sessions dir */ continue; }
 
             try {
-              const watcher = fs.watch(sessionsDir, { recursive: true }, (eventType, filename) => {
+              const watcher = fs.watch(sessionsDir, { recursive: true }, async (eventType, filename) => {
                 if (!filename) return;
-                
-                // Compute agent status based on latest session file mtime
                 let status: 'active' | 'recent' | 'idle' = 'idle';
                 try {
-                  const files = fs.readdirSync(sessionsDir)
-                    .filter(f => f.endsWith('.jsonl'))
-                    .map(f => ({ name: f, mtime: fs.statSync(path.join(sessionsDir, f)).mtimeMs }))
+                  const allFiles = await readdir(sessionsDir);
+                  const fileStats = await Promise.all(
+                    allFiles.filter(f => f.endsWith('.jsonl')).map(async f => {
+                      try { const s = await stat(path.join(sessionsDir, f)); return { name: f, mtime: s.mtimeMs }; } catch { /* stat failed */ return null; }
+                    })
+                  );
+                  const files = fileStats.filter((f): f is { name: string; mtime: number } => f !== null)
                     .sort((a, b) => b.mtime - a.mtime);
-                  
                   if (files.length > 0) {
                     const ageMs = Date.now() - files[0].mtime;
                     status = ageMs < 60_000 ? 'active' : ageMs < 600_000 ? 'recent' : 'idle';
                   }
-                } catch { /* keep status as idle */ }
-                
-                send('activity', {
-                  agent,
-                  eventType,
-                  filename: filename.toString(),
-                  timestamp: new Date().toISOString(),
-                  status,
-                });
+                } catch (err) { console.error('[stream] status compute failed', err); }
+                send('activity', { agent, eventType, filename: filename.toString(), timestamp: new Date().toISOString(), status });
               });
               watchers.push(watcher);
-            } catch { /* skip agent if watch fails */ }
+            } catch (err) { console.error('[stream] watch setup failed for', agent, err); }
           }
         } catch (err) {
           console.error('[SSE] Error setting up watchers:', err);
@@ -73,27 +71,26 @@ export async function GET(req: NextRequest) {
 
       setupWatchers();
 
-      // Also watch the agents dir itself for new agents
-      try {
-        if (fs.existsSync(AGENTS_DIR)) {
+      const setupRootWatcher = async () => {
+        try {
+          await access(AGENTS_DIR, constants.R_OK);
           const rootWatcher = fs.watch(AGENTS_DIR, (eventType, filename) => {
             if (filename) {
               send('agent-change', { eventType, agent: filename.toString(), timestamp: new Date().toISOString() });
             }
           });
           watchers.push(rootWatcher);
-        }
-      } catch { /* ignore */ }
+        } catch (err) { console.error('[stream] root watcher setup failed', err); }
+      };
+      setupRootWatcher();
 
-      // Send initial state
-      send('connected', { agents: getAgentList(), timestamp: new Date().toISOString() });
+      send('connected', { agents: initialAgents, timestamp: new Date().toISOString() });
 
-      // Cleanup on abort
       req.signal.addEventListener('abort', () => {
         closed = true;
         clearInterval(heartbeat);
-        watchers.forEach(w => { try { w.close(); } catch {} });
-        try { controller.close(); } catch {}
+        watchers.forEach(w => { try { w.close(); } catch (err) { console.error('[stream] watcher close error', err); } });
+        try { controller.close(); } catch (err) { console.error('[stream] controller close error', err); }
       });
     },
   });
@@ -108,11 +105,14 @@ export async function GET(req: NextRequest) {
   });
 }
 
-function getAgentList(): string[] {
+async function getAgentList(): Promise<string[]> {
   try {
-    if (!fs.existsSync(AGENTS_DIR)) return [];
-    return fs.readdirSync(AGENTS_DIR).filter(f => {
-      try { return fs.statSync(path.join(AGENTS_DIR, f)).isDirectory(); } catch { return false; }
-    });
-  } catch { return []; }
+    try { await access(AGENTS_DIR, constants.R_OK); } catch { /* agents dir not found — expected */ return []; }
+    const allDirs = await readdir(AGENTS_DIR);
+    const agents: string[] = [];
+    for (const f of allDirs) {
+      try { if ((await stat(path.join(AGENTS_DIR, f))).isDirectory()) agents.push(f); } catch (err) { console.error('[stream] getAgentList stat error', err); }
+    }
+    return agents;
+  } catch (err) { console.error('[stream] getAgentList error', err); return []; }
 }

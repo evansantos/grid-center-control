@@ -113,7 +113,7 @@ async function checkAgentResponsiveness(): Promise<HealthCheck> {
         } else {
           oldAgents++;
         }
-      } catch {
+      } catch (error) { /* Failed to stat agent files */
         continue;
       }
     }
