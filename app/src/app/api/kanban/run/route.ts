@@ -31,11 +31,11 @@ export async function POST(req: NextRequest) {
 
     const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as Record<string, unknown>;
 
-    // Look up agent_session to determine HEARTBEAT.md path
-    const session = db.prepare('SELECT * FROM agent_sessions WHERE task_id = ?').get(taskId) as Record<string, unknown> | undefined;
+    // Use agent_session field from the task to determine HEARTBEAT.md path
+    const agentSession = task?.agent_session as string | null;
 
-    if (session?.agent_name) {
-      const heartbeatPath = path.join(os.homedir(), '.openclaw', 'agents', session.agent_name as string, 'workspace', 'HEARTBEAT.md');
+    if (agentSession) {
+      const heartbeatPath = path.join(os.homedir(), '.openclaw', 'agents', agentSession, 'workspace', 'HEARTBEAT.md');
 
       let existing = '';
       try {
