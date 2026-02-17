@@ -1,6 +1,4 @@
 import { listProjects, taskStats } from '@/lib/queries';
-import { DashboardStats } from '@/components/dashboard-stats';
-import { ActivityFeed } from '@/components/activity-feed';
 import { DashboardGrid } from '@/components/dashboard-grid';
 import { ProjectsWidget } from '@/components/widgets/projects-widget';
 import { QuickStatsWidget } from '@/components/widgets/quick-stats-widget';
@@ -20,15 +18,12 @@ export default function Home() {
   }));
 
   return (
-    <div>
-      <DashboardStats />
-      <DashboardGrid>
-        {{
-          'projects': <ProjectsWidget projects={projectRows} />,
-          'quick-stats': <QuickStatsWidget projectCount={projects.length} />,
-          'recent-activity': <RecentActivityWidget />,
-        }}
-      </DashboardGrid>
-    </div>
+    <DashboardGrid>
+      {{
+        'projects': <ProjectsWidget projects={projectRows} />,
+        'quick-stats': <QuickStatsWidget projectCount={projects.length} />,
+        'recent-activity': <RecentActivityWidget />,
+      }}
+    </DashboardGrid>
   );
 }

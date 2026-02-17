@@ -22,8 +22,19 @@ export function GlobalSearch() {
   const { clearAll: clearNotifications } = useNotifications();
 
   const items: SearchItem[] = [
-    { id: 'home', label: 'Home', category: 'Pages', action: () => { window.location.href = '/'; } },
-    { id: 'projects', label: 'Projects', category: 'Pages', action: () => { window.location.href = '/'; } },
+    { id: 'home', label: 'Dashboard', category: 'Pages', action: () => { window.location.href = '/'; } },
+    { id: 'office', label: 'Office Zones', category: 'Pages', action: () => { window.location.href = '/office'; } },
+    { id: 'agents', label: 'Living Office', category: 'Pages', action: () => { window.location.href = '/agents'; } },
+    { id: 'tokens', label: 'Token Counter', category: 'Pages', action: () => { window.location.href = '/tokens'; } },
+    { id: 'errors', label: 'Error Dashboard', category: 'Pages', action: () => { window.location.href = '/errors'; } },
+    { id: 'health', label: 'Health Status', category: 'Pages', action: () => { window.location.href = '/health'; } },
+    { id: 'subagents', label: 'Sub-Agent Tree', category: 'Pages', action: () => { window.location.href = '/subagents'; } },
+    { id: 'spawn', label: 'Spawn Agent', category: 'Pages', action: () => { window.location.href = '/spawn'; } },
+    { id: 'logs', label: 'Log Search', category: 'Pages', action: () => { window.location.href = '/logs'; } },
+    { id: 'performance', label: 'Performance', category: 'Pages', action: () => { window.location.href = '/analytics/performance'; } },
+    { id: 'sessions', label: 'Sessions Heatmap', category: 'Pages', action: () => { window.location.href = '/analytics/sessions'; } },
+    { id: 'timeline', label: 'Timeline', category: 'Pages', action: () => { window.location.href = '/analytics/timeline'; } },
+    { id: 'escalation', label: 'Escalation Rules', category: 'Pages', action: () => { window.location.href = '/settings/escalation'; } },
     { id: 'toggle-theme', label: 'Toggle Theme', category: 'Actions', action: toggleTheme },
     { id: 'clear-notifications', label: 'Clear Notifications', category: 'Actions', action: clearNotifications },
   ];
