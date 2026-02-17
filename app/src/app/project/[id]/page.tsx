@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { getProject, listArtifacts, listTasks, listWorktrees } from '@/lib/queries';
-import { PhaseProgress } from '@/components/phase-progress';
 import { PhaseBadge } from '@/components/phase-badge';
 import { ProjectClient } from './client';
 
@@ -23,7 +22,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       </div>
       <p className="text-sm text-zinc-500 mb-6">📁 {project.repo_path}</p>
 
-      <PhaseProgress current={project.phase} />
 
       <div className="flex gap-4 mb-6">
         <a href={`/project/${id}/log`} className="text-sm text-red-400 hover:underline">📜 Event Log</a>
