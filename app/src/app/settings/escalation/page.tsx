@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import EscalationRuleCard, { type EscalationRule } from '../../../components/escalation-rule-card';
-import EscalationRuleForm from '../../../components/escalation-rule-form';
-import { replayOnboardingTour } from '../../../components/onboarding-tour';
-import SoundSettings from '../../../components/sound-settings';
-import { OfficeThemeSelector } from '../../../components/office-theme-selector';
+import EscalationRuleCard, { type EscalationRule } from '@/components/escalation-rule-card';
+import EscalationRuleForm from '@/components/escalation-rule-form';
+import { replayOnboardingTour } from '@/components/onboarding-tour';
+import SoundSettings from '@/components/sound-settings';
+import { OfficeThemeSelector } from '@/components/office-theme-selector';
 
 const STORAGE_KEY = 'grid-escalation-rules';
 

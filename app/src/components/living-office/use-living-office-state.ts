@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { playSpawn } from '../../lib/sound-effects';
+import { playSpawn } from '@/lib/sound-effects';
 import type { ActivityItem } from './types';
 import { FLOOR_W } from './types';
 

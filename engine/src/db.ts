@@ -6,6 +6,7 @@ import type {
   Worktree, Task, TaskStatus, ReviewType, Event, Phase,
 } from './types.js';
 import { DEFAULT_MODEL_CONFIG } from './types.js';
+import { runMigrations } from './migration-runner.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS projects (
@@ -72,6 +73,7 @@ export class GridDB {
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.db.exec(SCHEMA);
+    runMigrations(this.db);
   }
 
   raw(): DatabaseType {

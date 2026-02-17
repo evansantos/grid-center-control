@@ -14,6 +14,7 @@ const PRESETS: Record<PresetName, WidgetConfig[]> = {
     { id: 'quick-stats', title: 'Quick Stats', position: { x: 9, y: 1, w: 4, h: 1 } },
     { id: 'recent-activity', title: 'Recent Activity', position: { x: 9, y: 2, w: 4, h: 1 } },
     { id: 'recommendations', title: 'Recommendations', position: { x: 1, y: 2, w: 8, h: 1 } },
+    { id: 'task-distribution', title: 'Task Distribution', position: { x: 1, y: 3, w: 12, h: 1 } },
   ],
   Compact: [
     { id: 'projects', title: 'Projects', position: { x: 1, y: 1, w: 12, h: 1 } },
