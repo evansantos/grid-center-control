@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { checkA11y, checkHeadingHierarchy } from './axe-helper';
 
 test.describe('Kanban Board E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -64,6 +65,10 @@ test.describe('Kanban Board E2E Tests', () => {
     await expect(page.locator('text=Analytics Dashboard')).toBeVisible();
     await expect(page.locator('text=Bug Fixes')).toBeVisible();
     await expect(page.locator('text=Documentation Update')).toBeVisible();
+
+    // Run accessibility checks
+    await checkA11y(page, 'Kanban - board display');
+    await checkHeadingHierarchy(page);
   });
 
   test('displays correct task counts in column badges', async ({ page }) => {

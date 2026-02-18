@@ -17,12 +17,16 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'bg-grid-surface border border-grid-border rounded-md shadow-lg p-1 min-w-[180px]',
+        'bg-grid-surface border border-grid-border rounded-md shadow-lg p-1 min-w-[180px] z-50',
+        // Enhanced animations with our animation system
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
         'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2',
         'data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+        // Use our animation tokens
+        'data-[state=open]:duration-normal data-[state=open]:ease-out',
+        'data-[state=closed]:duration-fast data-[state=closed]:ease-in',
         className
       )}
       {...props}
@@ -39,9 +43,12 @@ const DropdownMenuItem = React.forwardRef<
     ref={ref}
     className={cn(
       'text-xs text-grid-text px-2 py-1.5 rounded-sm cursor-pointer',
+      // Enhanced hover and focus animations
+      'transition-all duration-fast ease-out',
       'hover:bg-grid-surface-hover focus:bg-grid-surface-hover',
+      'hover:translate-x-0.5 focus:translate-x-0.5',
       'focus:outline-none select-none',
-      'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[disabled]:hover:translate-x-0',
       className
     )}
     {...props}

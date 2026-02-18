@@ -58,8 +58,7 @@ async function globalTeardown(config: FullConfig) {
       },
       config: {
         projects: config.projects?.map(p => p.name) || [],
-        workers: config.workers,
-        retries: config.retries,
+        workers: config.workers || 1,
       },
     };
 

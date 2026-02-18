@@ -143,7 +143,7 @@ export default function TokenAnalyticsPage() {
           value={formatNumber(analytics?.overview.totalTokens ?? 0)}
           variant="info"
           change={analytics?.trends.tokens === 'up' ? '+23%' : analytics?.trends.tokens === 'down' ? '-12%' : '0%'}
-          changeType={analytics?.trends.tokens || 'neutral'}
+          changeType={analytics?.trends.tokens === 'up' ? 'increase' : analytics?.trends.tokens === 'down' ? 'decrease' : 'neutral'}
         />
         <StatCard
           icon="💰"
@@ -151,7 +151,7 @@ export default function TokenAnalyticsPage() {
           value={formatCurrency(analytics?.overview.totalCost ?? 0)}
           variant={analytics?.overview.totalCost && analytics.overview.totalCost > 100 ? 'warning' : 'success'}
           change={analytics?.trends.cost === 'up' ? '+18%' : analytics?.trends.cost === 'down' ? '-7%' : '0%'}
-          changeType={analytics?.trends.cost || 'neutral'}
+          changeType={analytics?.trends.cost === 'up' ? 'increase' : analytics?.trends.cost === 'down' ? 'decrease' : 'neutral'}
         />
         <StatCard
           icon="📊"
@@ -159,7 +159,7 @@ export default function TokenAnalyticsPage() {
           value={formatNumber(analytics?.overview.totalRequests ?? 0)}
           variant="default"
           change={analytics?.trends.requests === 'up' ? '+31' : analytics?.trends.requests === 'down' ? '-15' : '0'}
-          changeType={analytics?.trends.requests || 'neutral'}
+          changeType={analytics?.trends.requests === 'up' ? 'increase' : analytics?.trends.requests === 'down' ? 'decrease' : 'neutral'}
         />
         <StatCard
           icon="⚖️"

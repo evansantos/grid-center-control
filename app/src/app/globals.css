@@ -16,7 +16,7 @@
   --grid-accent-glow: rgba(255, 68, 68, 0.3);
   --grid-text: #e0e0e0;
   --grid-text-dim: #888;
-  --grid-text-muted: #555;
+  --grid-text-muted: #999999;
   --grid-success: #22c55e;
   --grid-warning: #f59e0b;
   --grid-error: #ef4444;
@@ -29,14 +29,36 @@
   --grid-map-desk: #0f0f0f;
   --grid-map-desk-selected: #1c1917;
   --grid-border-subtle: #27272a;
-  --grid-text-faint: #3f3f46;
+  --grid-text-faint: #888888;
   --grid-text-label: #a1a1aa;
-  --grid-text-secondary: #52525b;
+  --grid-text-secondary: #888888;
   --grid-yellow: #eab308;
   --grid-danger: #dc2626;
   --grid-purple: #8b5cf6;
   --grid-cyan: #06b6d4;
   --grid-orange: #f97316;
+  
+  /* Animation Tokens */
+  --animation-instant: 0ms;
+  --animation-fast: 150ms;
+  --animation-normal: 200ms;
+  --animation-slow: 300ms;
+  --animation-slower: 500ms;
+  --animation-slowest: 750ms;
+  
+  /* Animation Easing */
+  --animation-ease-linear: linear;
+  --animation-ease-in: cubic-bezier(0.4, 0.0, 1, 1);
+  --animation-ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --animation-ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --animation-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --animation-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  /* Animation Scales */
+  --animation-scale-down: 0.95;
+  --animation-scale-normal: 1;
+  --animation-scale-up: 1.05;
+  --animation-scale-large: 1.1;
 }
 
 [data-theme="light"] {
@@ -63,7 +85,7 @@
   --grid-map-desk: #ffffff;
   --grid-map-desk-selected: #fef2f2;
   --grid-border-subtle: #d4d4d8;
-  --grid-text-faint: #777777;
+  --grid-text-faint: #555555;
   --grid-text-label: #444444;
   --grid-text-secondary: #555555;
   --grid-yellow: #a16207;
@@ -71,6 +93,8 @@
   --grid-purple: #7c3aed;
   --grid-cyan: #0891b2;
   --grid-orange: #ea580c;
+  
+  /* Animation tokens are inherited from :root - same for both themes */
 }
 
 @theme {
@@ -179,9 +203,198 @@ body::after {
 
 /* Smooth transitions for theme changes */
 * {
-  transition-property: background-color, border-color, color;
-  transition-duration: 0.15s;
-  transition-timing-function: ease;
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: var(--animation-normal);
+  transition-timing-function: var(--animation-ease-in-out);
+}
+
+/* Reduced Motion Support - Disable or simplify animations */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  /* Keep essential animations but make them instant */
+  .skeleton {
+    animation: none;
+    background: var(--grid-surface-hover);
+  }
+  
+  /* Disable transform animations */
+  [class*="animate-"] {
+    animation: none !important;
+  }
+  
+  /* Disable hover effects that use transforms */
+  [class*="hover:scale-"],
+  [class*="hover:-translate-"],
+  [class*="hover:rotate-"] {
+    transform: none !important;
+  }
+  
+  /* Keep focus indicators for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--grid-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Enhanced theme transition when --transition-duration is set */
+[style*="--transition-duration: 0ms"] * {
+  transition-duration: 0ms !important;
+}
+
+/* Animation Utility Classes */
+.animate-bounce-subtle {
+  animation: bounce-subtle var(--animation-normal) var(--animation-ease-bounce);
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up var(--animation-normal) var(--animation-ease-out);
+}
+
+.animate-slide-down {
+  animation: slide-down var(--animation-normal) var(--animation-ease-out);
+}
+
+.animate-scale-in {
+  animation: scale-in var(--animation-fast) var(--animation-ease-out);
+}
+
+.animate-scale-out {
+  animation: scale-out var(--animation-fast) var(--animation-ease-in);
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up var(--animation-slow) var(--animation-ease-out);
+}
+
+.animate-loading-dots {
+  animation: loading-dots 1.4s ease-in-out infinite;
+}
+
+.animate-ripple {
+  animation: ripple 0.6s linear;
+}
+
+/* Duration Utility Classes */
+.duration-instant { transition-duration: var(--animation-instant); }
+.duration-fast { transition-duration: var(--animation-fast); }
+.duration-normal { transition-duration: var(--animation-normal); }
+.duration-slow { transition-duration: var(--animation-slow); }
+.duration-slower { transition-duration: var(--animation-slower); }
+.duration-slowest { transition-duration: var(--animation-slowest); }
+
+/* Easing Utility Classes */
+.ease-linear { transition-timing-function: var(--animation-ease-linear); }
+.ease-in { transition-timing-function: var(--animation-ease-in); }
+.ease-out { transition-timing-function: var(--animation-ease-out); }
+.ease-in-out { transition-timing-function: var(--animation-ease-in-out); }
+.ease-bounce { transition-timing-function: var(--animation-ease-bounce); }
+.ease-spring { transition-timing-function: var(--animation-ease-spring); }
+
+/* Interactive States */
+.interactive {
+  transition: all var(--animation-normal) var(--animation-ease-out);
+}
+
+.interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--grid-accent-dim);
+}
+
+.interactive:active {
+  transform: translateY(0);
+  transition-duration: var(--animation-fast);
+}
+
+/* Loading State Animations */
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--grid-border);
+  border-radius: 50%;
+  border-top-color: var(--grid-accent);
+  animation: spin 1s linear infinite;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.loading-dots span {
+  width: 4px;
+  height: 4px;
+  background: var(--grid-accent);
+  border-radius: 50%;
+  animation: loading-dots 1.4s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+/* Theme toggle specific animations */
+@keyframes theme-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--grid-accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--grid-accent-glow);
+  }
+}
+
+@keyframes theme-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes theme-icon-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2px) rotate(-5deg);
+  }
+  75% {
+    transform: translateY(1px) rotate(5deg);
+  }
+}
+
+[data-theme-toggle]:hover svg {
+  animation: theme-icon-bounce 0.6s ease-in-out;
+}
+
+[data-theme-toggle]:active {
+  animation: theme-glow 0.3s ease-in-out;
+}
+
+/* Improved theme transition with page flash prevention */
+html {
+  background: var(--grid-bg);
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  background: transparent;
 }
 
 /* Grid card component */
@@ -245,6 +458,106 @@ body::after {
   50% { opacity: 0.4; }
 }
 
+/* Enhanced Animation Keyframes */
+@keyframes bounce-subtle {
+  0%, 100% { 
+    transform: translateY(0) scale(1);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% { 
+    transform: translateY(-2px) scale(1.02);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 var(--grid-accent-glow);
+    opacity: 1;
+  }
+  50% { 
+    box-shadow: 0 0 0 4px var(--grid-accent-glow);
+    opacity: 0.8;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes loading-dots {
+  0%, 80%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
 /* Active nav link */
 nav a.nav-active {
   color: var(--grid-accent) !important;
@@ -303,12 +616,53 @@ nav a.nav-active::after {
 ::-webkit-scrollbar-thumb { background: var(--grid-border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--grid-text-dim); }
 
-/* Mobile responsive utilities */
+/* Enhanced mobile responsive utilities */
+@media (max-width: 480px) {
+  .small-mobile-only { display: block !important; }
+  .large-mobile-up { display: none !important; }
+  
+  /* Responsive typography for small screens */
+  body {
+    font-size: 14px; /* Slightly larger for better readability */
+    line-height: 1.5;
+  }
+  
+  /* Ensure touch targets are properly sized */
+  button, input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 481px) {
+  .small-mobile-only { display: none !important; }
+}
+
 @media (max-width: 768px) {
   .desktop-only { display: none !important; }
   .mobile-only { display: block !important; }
+  
+  /* Better mobile typography */
+  h1 { font-size: 1.75rem; line-height: 1.3; }
+  h2 { font-size: 1.5rem; line-height: 1.3; }
+  h3 { font-size: 1.25rem; line-height: 1.4; }
+  
+  /* Improved mobile spacing */
+  .mobile-px-4 { padding-left: 1rem; padding-right: 1rem; }
+  .mobile-py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tablet-only { display: block !important; }
+  .mobile-only { display: none !important; }
+  .desktop-only { display: none !important; }
 }
 
 @media (min-width: 769px) {
   .mobile-only { display: none !important; }
+  .small-mobile-only { display: none !important; }
+}
+
+@media (min-width: 1025px) {
+  .tablet-only { display: none !important; }
+  .desktop-only { display: block !important; }
 }

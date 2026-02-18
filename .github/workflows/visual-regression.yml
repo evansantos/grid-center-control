@@ -1,0 +1,225 @@
+name: Visual Regression Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'app/**'
+      - '.github/workflows/visual-regression.yml'
+
+# Cancel in-progress jobs for same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Playwright configuration
+  PLAYWRIGHT_BROWSERS_PATH: 0
+  # Test configuration
+  NODE_ENV: test
+  DISABLE_ANALYTICS: true
+  DISABLE_TELEMETRY: true
+  # Visual regression configuration
+  VISUAL_REGRESSION_UPDATE_SNAPSHOTS: false
+
+jobs:
+  visual-regression:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Test against specific Node versions for consistency
+        node-version: [20]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for proper baseline comparison
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: 'app/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./app
+        run: npx playwright install chromium
+
+      - name: Install system dependencies for Playwright
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-color-emoji fonts-noto-sans fonts-liberation
+
+      - name: Build application
+        working-directory: ./app
+        run: npm run build
+
+      - name: Check for baseline screenshots
+        id: check-baselines
+        working-directory: ./app
+        run: |
+          if [ -d "e2e/visual-regression-screenshots" ]; then
+            echo "baselines_exist=true" >> $GITHUB_OUTPUT
+            echo "Found existing baseline screenshots"
+          else
+            echo "baselines_exist=false" >> $GITHUB_OUTPUT
+            echo "No baseline screenshots found"
+          fi
+
+      - name: Run visual regression tests (generate baselines)
+        if: steps.check-baselines.outputs.baselines_exist == 'false'
+        working-directory: ./app
+        env:
+          VISUAL_REGRESSION_UPDATE_SNAPSHOTS: true
+        run: |
+          echo "Generating baseline screenshots..."
+          npx playwright test --project=visual-regression --update-snapshots
+          
+      - name: Run visual regression tests (comparison)
+        if: steps.check-baselines.outputs.baselines_exist == 'true'
+        working-directory: ./app
+        run: |
+          echo "Running visual regression comparison..."
+          npx playwright test --project=visual-regression
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-results-${{ matrix.node-version }}
+          path: |
+            app/test-results/
+            app/playwright-report/
+            app/e2e/visual-regression-screenshots/
+          retention-days: 30
+
+      - name: Upload baseline screenshots (for new baselines)
+        if: steps.check-baselines.outputs.baselines_exist == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-baselines-${{ matrix.node-version }}
+          path: app/e2e/visual-regression-screenshots/
+          retention-days: 90
+
+      - name: Comment PR with visual regression results
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const comment = `## 📸 Visual Regression Test Failed
+            
+            Visual differences were detected in your PR. Please review the changes:
+            
+            ### 🔍 How to review:
+            1. Download the test results artifact from this workflow run
+            2. Check the \`test-results/\` folder for difference images
+            3. Review actual vs expected screenshots
+            
+            ### 🔧 If changes are intentional:
+            Run locally to update baselines:
+            \`\`\`bash
+            cd app
+            npm run test:e2e -- --project=visual-regression --update-snapshots
+            \`\`\`
+            
+            ### 📋 Files affected:
+            - Check the workflow artifacts for detailed comparison images
+            
+            > **Note:** This is an automated comment. Visual regression tests help maintain UI consistency.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Job for updating baselines when explicitly requested
+  update-baselines:
+    if: contains(github.event.head_commit.message, '[update-baselines]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'app/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./app
+        run: npx playwright install chromium
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-color-emoji fonts-noto-sans fonts-liberation
+
+      - name: Build application
+        working-directory: ./app
+        run: npm run build
+
+      - name: Update baseline screenshots
+        working-directory: ./app
+        env:
+          VISUAL_REGRESSION_UPDATE_SNAPSHOTS: true
+        run: npx playwright test --project=visual-regression --update-snapshots
+
+      - name: Upload updated baselines
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-visual-baselines
+          path: app/e2e/visual-regression-screenshots/
+          retention-days: 30
+
+      - name: Comment on commit with update results
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## 📸 Visual Regression Baselines Updated
+            
+            The baseline screenshots have been updated for commit ${context.sha.substring(0, 7)}.
+            
+            ### ✅ Next steps:
+            1. Download the \`updated-visual-baselines\` artifact
+            2. Extract and commit the updated screenshots to your repository
+            3. Push the changes to maintain consistent baselines
+            
+            > **Important:** Make sure to commit the updated baseline screenshots to your repository.`;
+            
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
+            });
+
+# Workflow dispatch for manual baseline updates
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for updating baselines'
+        required: true
+        type: string

@@ -135,7 +135,7 @@ function detectMeeting(activity: Record<string, ActivityItem>): MeetingState | n
     active: true,
     orchestrator: 'spec',
     participants,
-    topic: spec?.task || 'Sprint Standup',
+    task: spec?.task || 'Sprint Standup',
     startTime: meetingStartedAt,
   };
 }

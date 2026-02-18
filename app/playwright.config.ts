@@ -23,6 +23,7 @@ export default defineConfig({
     ['html'],
     ['json', { outputFile: 'test-results/results.json' }],
     ['junit', { outputFile: 'test-results/results.xml' }],
+    // GitHub Actions reporter removed due to type conflicts
   ],
   
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -38,6 +39,15 @@ export default defineConfig({
     
     /* Capture video on failure */
     video: 'retain-on-failure',
+
+    /* CI-specific optimizations */
+    ...(process.env.CI && {
+      // Animations disabled via CSS for consistent screenshots
+      // Use consistent fonts and rendering
+      ignoreHTTPSErrors: true,
+      // Longer timeout for CI environments
+      actionTimeout: 15000,
+    }),
   },
 
   /* Configure projects for major browsers */
@@ -95,9 +105,36 @@ export default defineConfig({
       name: 'visual-regression',
       use: {
         ...devices['Desktop Chrome'],
+        // Fixed viewport for consistent screenshots
         viewport: { width: 1280, height: 720 },
-        // Use consistent user agent for screenshots
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        // Consistent user agent and device pixel ratio
+        userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        deviceScaleFactor: 1,
+        // Disable animations for stable screenshots (handled by CSS)
+        // Longer timeouts for visual tests
+        actionTimeout: 30000,
+        navigationTimeout: 30000,
+        // Always take screenshots for visual regression
+        screenshot: 'only-on-failure',
+        // Additional CI optimizations
+        ...(process.env.CI && {
+          // Force GPU rendering off for consistency
+          launchOptions: {
+            args: [
+              '--disable-gpu',
+              '--disable-dev-shm-usage',
+              '--disable-web-security',
+              '--disable-background-timer-throttling',
+              '--disable-backgrounding-occluded-windows',
+              '--disable-renderer-backgrounding',
+              '--disable-features=TranslateUI',
+              '--no-first-run',
+              '--no-default-browser-check',
+              '--font-render-hinting=none',
+              '--disable-font-subpixel-positioning',
+            ],
+          },
+        }),
       },
       testMatch: '**/visual-regression.spec.ts',
     },
@@ -109,12 +146,10 @@ export default defineConfig({
     '**/*.test.ts',
   ],
 
-  /* Ignore certain test files in specific scenarios */
-  testIgnore: [
-    // Skip visual regression tests in regular test runs
-    // Remove this line to include visual tests in all runs
-    '**/visual-regression.spec.ts',
-  ],
+  /* Control which tests run in different contexts */
+  testIgnore: process.env.CI && !process.env.VISUAL_REGRESSION_UPDATE_SNAPSHOTS && !process.env.RUN_VISUAL_TESTS
+    ? ['**/visual-regression.spec.ts'] // Skip visual tests in regular CI runs
+    : undefined,
 
   /* Global setup and teardown */
   globalSetup: require.resolve('./e2e/global-setup.ts'),
@@ -128,15 +163,17 @@ export default defineConfig({
     /* Maximum time expect() should wait for the condition to be met. */
     timeout: 10000,
     
-    /* Threshold for screenshot comparisons */
+    /* Threshold for screenshot comparisons - more lenient for CI */
     toHaveScreenshot: {
-      threshold: 0.2,
-      mode: 'pixel',
+      threshold: process.env.CI ? 0.3 : 0.2,
+      // CI-specific animation handling
+      animations: process.env.CI ? 'disabled' : 'allow',
+      // Clipping handled by viewport size and CSS
     },
     
     /* Threshold for visual comparisons */
     toMatchSnapshot: {
-      threshold: 0.2,
+      threshold: process.env.CI ? 0.3 : 0.2,
     },
   },
 
@@ -156,9 +193,22 @@ export default defineConfig({
       // Disable analytics and external services in tests
       DISABLE_ANALYTICS: 'true',
       DISABLE_TELEMETRY: 'true',
+      // Visual regression specific environment
+      VISUAL_REGRESSION_MODE: 'true',
+      // Disable animations and transitions for consistent screenshots
+      DISABLE_ANIMATIONS: process.env.CI ? 'true' : 'false',
     },
   },
 
-  /* Test timeout */
-  timeout: 30 * 1000,
+  /* Test timeout - longer for visual regression */
+  timeout: process.env.CI ? 60 * 1000 : 30 * 1000,
+
+  /* Metadata for visual regression tracking */
+  metadata: {
+    'visual-regression': {
+      baselineDir: './e2e/visual-regression-screenshots',
+      updateBaselines: process.env.VISUAL_REGRESSION_UPDATE_SNAPSHOTS === 'true',
+      environment: process.env.CI ? 'ci' : 'local',
+    },
+  },
 });

@@ -58,6 +58,7 @@ const STATUS_CONFIGS = {
   completed: { color: 'success', label: 'Completed' },
   failed: { color: 'error', label: 'Failed' },
   paused: { color: 'default', label: 'Paused' },
+  draft: { color: 'outline', label: 'Draft' },
 } as const;
 
 // ══════════════════════════════════════════════════════════════════════════════

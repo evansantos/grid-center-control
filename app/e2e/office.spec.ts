@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { checkA11y, checkHeadingHierarchy } from './axe-helper';
 
 test.describe('Office Isometric View E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -117,6 +118,10 @@ test.describe('Office Isometric View E2E Tests', () => {
     // Check that office/isometric container is present
     const officeContainer = page.locator('[data-testid="office-view"], [data-testid="isometric-view"], [class*="office"], [class*="isometric"]');
     await expect(officeContainer.first().or(page.locator('canvas, svg')).first()).toBeVisible();
+
+    // Run accessibility checks
+    await checkA11y(page, 'Office - isometric view');
+    await checkHeadingHierarchy(page);
   });
 
   test('displays all agents in their workstations', async ({ page }) => {
