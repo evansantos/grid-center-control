@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { checkA11y } from './axe-helper';
+import { checkA11y, checkHeadingHierarchy } from './axe-helper';
 
 test.describe('Settings Page', () => {
   test('should load successfully with Settings heading', async ({ page }) => {
     await page.goto('/settings');
     await expect(page.getByText('Settings')).toBeVisible();
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Settings - page load');
+    await checkHeadingHierarchy(page);
   });
 
   test('should render card with placeholder text', async ({ page }) => {
@@ -23,6 +27,9 @@ test.describe('Settings Page', () => {
     );
     
     await expect(placeholderText.first()).toBeVisible();
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Settings - card content');
   });
 
   test('should have proper page structure', async ({ page }) => {
@@ -40,5 +47,8 @@ test.describe('Settings Page', () => {
     );
     
     await expect(mainContent.first()).toBeVisible();
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Settings - page structure');
   });
 });

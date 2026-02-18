@@ -191,7 +191,7 @@ export function NavBar() {
         {/* Mobile: spacer + hamburger */}
         <div className="flex-1 md:hidden" />
         <button
-          className="md:hidden p-2 text-xl text-grid-text"
+          className="md:hidden p-3 text-xl text-grid-text min-w-[44px] min-h-[44px] flex items-center justify-center"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? '✕' : '☰'}

@@ -130,7 +130,6 @@ function TreeNode({ agent, depth = 0, isSelected, onSelect, onKeyDown }: TreeNod
 
             <StatusDot 
               status={STATUS_MAPPING[agent.status] || 'busy'} 
-              animate={agent.status === 'running'}
               className="mt-1"
             />
 
@@ -142,7 +141,7 @@ function TreeNode({ agent, depth = 0, isSelected, onSelect, onKeyDown }: TreeNod
                 <Badge variant="outline" className="font-mono text-xs">
                   {agent.sessionKey.slice(-12)}
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="default" className="text-xs">
                   {formatRuntime(agent.runtime)}
                 </Badge>
                 <Badge 
@@ -193,7 +192,7 @@ function TreeNode({ agent, depth = 0, isSelected, onSelect, onKeyDown }: TreeNod
                   <span className="text-sm text-red-400 flex-1">
                     Are you sure you want to kill this agent?
                   </span>
-                  <Button onClick={handleKill} size="sm" variant="destructive">
+                  <Button onClick={handleKill} size="sm" variant="danger">
                     Confirm
                   </Button>
                   <Button onClick={() => setConfirmKill(false)} variant="ghost" size="sm">
@@ -282,10 +281,11 @@ export function SubagentTree() {
     return () => clearInterval(interval);
   }, [fetchAgents]);
 
-  const handleGlobalKeyDown = useCallback((e: KeyboardEvent) => {
+  const handleGlobalKeyDown = useCallback((e: Event) => {
+    const keyEvent = e as unknown as KeyboardEvent;
     // Global keyboard shortcuts
-    if (e.key === 'r' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
+    if (keyEvent.key === 'r' && (keyEvent.metaKey || keyEvent.ctrlKey)) {
+      keyEvent.preventDefault();
       handleRefresh();
     }
   }, []);
@@ -338,7 +338,7 @@ export function SubagentTree() {
                 Sub-agents will appear here when they are spawned
               </p>
             </div>
-            <Button onClick={handleRefresh} variant="outline" size="sm">
+            <Button onClick={handleRefresh} variant="secondary" size="sm">
               🔄 Refresh
             </Button>
           </div>
@@ -360,7 +360,7 @@ export function SubagentTree() {
         </div>
         <Button 
           onClick={handleRefresh} 
-          variant="outline" 
+          variant="secondary" 
           size="sm"
           disabled={refreshing}
         >

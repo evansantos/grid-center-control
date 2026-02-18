@@ -225,16 +225,16 @@ ${reportData.timeline.map(day => `- **${day.date}:** ${day.events} events`).join
             )}
 
             <div className="flex gap-2">
-              <Button onClick={generateMarkdownReport} variant="outline" size="sm">
+              <Button onClick={generateMarkdownReport} variant="secondary" size="sm">
                 📋 Copy Markdown
               </Button>
-              <Button onClick={exportToCSV} variant="outline" size="sm">
+              <Button onClick={exportToCSV} variant="secondary" size="sm">
                 📊 Export CSV
               </Button>
-              <Button onClick={exportToJSON} variant="outline" size="sm">
+              <Button onClick={exportToJSON} variant="secondary" size="sm">
                 📄 Export JSON
               </Button>
-              <Button onClick={handlePrint} variant="outline" size="sm">
+              <Button onClick={handlePrint} variant="secondary" size="sm">
                 🖨️ Print
               </Button>
             </div>
@@ -304,7 +304,7 @@ ${reportData.timeline.map(day => `- **${day.date}:** ${day.events} events`).join
                   <span className="w-3 h-3 bg-green-500 rounded-full"></span>
                   Completed
                 </span>
-                <Badge variant="secondary" className="font-mono">
+                <Badge variant="default" className="font-mono">
                   {reportData.tasks.completed}
                 </Badge>
               </div>
@@ -313,7 +313,7 @@ ${reportData.timeline.map(day => `- **${day.date}:** ${day.events} events`).join
                   <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
                   Pending
                 </span>
-                <Badge variant="secondary" className="font-mono">
+                <Badge variant="default" className="font-mono">
                   {reportData.tasks.pending}
                 </Badge>
               </div>
@@ -322,7 +322,7 @@ ${reportData.timeline.map(day => `- **${day.date}:** ${day.events} events`).join
                   <span className="w-3 h-3 bg-red-500 rounded-full"></span>
                   Failed
                 </span>
-                <Badge variant="secondary" className="font-mono">
+                <Badge variant="default" className="font-mono">
                   {reportData.tasks.failed}
                 </Badge>
               </div>
@@ -410,7 +410,7 @@ ${reportData.timeline.map(day => `- **${day.date}:** ${day.events} events`).join
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-grid-text-muted">Status:</span>
                       <Badge 
-                        variant={project.status === 'active' ? 'default' : 'secondary'}
+                        variant={project.status === 'active' ? 'success' : 'default'}
                         className={`capitalize text-xs ${
                           project.status === 'active' ? 'bg-green-500/10 text-green-500' :
                           project.status === 'completed' ? 'bg-blue-500/10 text-blue-500' : ''

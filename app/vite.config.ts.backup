@@ -1,0 +1,168 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+
+// Vite configuration for build optimization
+// Note: This project primarily uses Next.js, but this config can be used for component development/testing
+export default defineConfig({
+  plugins: [
+    react({
+      // JSX runtime optimization  
+      jsxRuntime: 'automatic',
+    }),
+  ],
+
+  // Build optimizations
+  build: {
+    // Target modern browsers for smaller bundles
+    target: 'esnext',
+    
+    // Output settings
+    outDir: 'dist',
+    assetsDir: 'assets',
+    
+    // Bundle size optimizations
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console logs
+        drop_debugger: true, // Remove debugger statements
+        pure_funcs: ['console.log', 'console.info'], // Remove specific console methods
+      },
+    },
+    
+    // Chunk optimization for better caching
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting for better caching
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom'],
+          'radix-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-separator',
+          ],
+          'lucide-vendor': ['lucide-react'],
+          'utils-vendor': ['class-variance-authority', 'clsx', 'tailwind-merge'],
+          
+          // Heavy component chunks (lazy loaded)
+          'office-components': [
+            './src/components/pixel-hq.tsx',
+            './src/components/office-map.tsx',
+            './src/components/org-chart.tsx',
+          ],
+          'dashboard-components': [
+            './src/components/error-dashboard.tsx',
+            './src/components/subagent-tree.tsx',
+            './src/components/conversation-panel.tsx',
+          ],
+        },
+        
+        // Optimize chunk file names for caching
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId
+            ? chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '')
+            : 'chunk';
+          return `js/${facadeModuleId}-[hash].js`;
+        },
+        
+        // Asset file naming
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name?.split('.') || [];
+          const ext = info[info.length - 1] || '';
+          
+          if (/\.(png|jpe?g|gif|svg|webp|avif)$/.test(assetInfo.name || '')) {
+            return `images/[name]-[hash][extname]`;
+          }
+          
+          if (/\.(css)$/.test(assetInfo.name || '')) {
+            return `css/[name]-[hash][extname]`;
+          }
+          
+          return `assets/[name]-[hash][extname]`;
+        },
+      },
+    },
+    
+    // Size analysis
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 300, // 300KB warning limit
+  },
+
+  // Path resolution
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+      '@components': resolve(__dirname, './src/components'),
+      '@lib': resolve(__dirname, './src/lib'),
+      '@types': resolve(__dirname, './src/types'),
+    },
+  },
+
+  // Development server
+  server: {
+    port: 3000,
+    open: true,
+    hmr: {
+      overlay: true,
+    },
+  },
+
+  // CSS optimization
+  css: {
+    devSourcemap: true,
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "@/styles/variables.scss";`,
+      },
+    },
+  },
+
+  // Performance optimizations
+  optimizeDeps: {
+    // Pre-bundle dependencies for better development performance
+    include: [
+      'react',
+      'react-dom',
+      'lucide-react',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-toast',
+      '@radix-ui/react-tooltip',
+      'class-variance-authority',
+      'clsx',
+      'tailwind-merge',
+    ],
+    
+    // Force optimization for problematic packages
+    force: true,
+  },
+
+  // Environment variables
+  define: {
+    __DEV__: JSON.stringify(process.env.NODE_ENV !== 'production'),
+    __PROD__: JSON.stringify(process.env.NODE_ENV === 'production'),
+  },
+
+  // Bundle analyzer (uncomment to enable)
+  /*
+  plugins: [
+    ...plugins,
+    process.env.ANALYZE && import('rollup-plugin-visualizer').then(({ visualizer }) =>
+      visualizer({
+        filename: 'dist/stats.html',
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+      })
+    ),
+  ].filter(Boolean),
+  */
+});

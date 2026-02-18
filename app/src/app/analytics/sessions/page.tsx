@@ -131,7 +131,7 @@ export default function SessionAnalyticsPage() {
           value={analytics?.overview.totalSessions ?? 0}
           variant="info"
           change={analytics?.trends.sessions === 'up' ? '+15' : analytics?.trends.sessions === 'down' ? '-3' : '0'}
-          changeType={analytics?.trends.sessions || 'neutral'}
+          changeType={analytics?.trends.sessions === 'up' ? 'increase' : analytics?.trends.sessions === 'down' ? 'decrease' : 'neutral'}
         />
         <StatCard
           icon="🟢"
@@ -145,7 +145,7 @@ export default function SessionAnalyticsPage() {
           value={analytics?.overview.avgDuration ? formatDuration(analytics.overview.avgDuration) : '0s'}
           variant="default"
           change={analytics?.trends.duration === 'up' ? '+12%' : analytics?.trends.duration === 'down' ? '-8%' : '0%'}
-          changeType={analytics?.trends.duration || 'neutral'}
+          changeType={analytics?.trends.duration === 'up' ? 'increase' : analytics?.trends.duration === 'down' ? 'decrease' : 'neutral'}
         />
         <StatCard
           icon="💬"
@@ -153,7 +153,7 @@ export default function SessionAnalyticsPage() {
           value={analytics?.overview.totalMessages ?? 0}
           variant="info"
           change={analytics?.trends.messages === 'up' ? '+142' : analytics?.trends.messages === 'down' ? '-27' : '0'}
-          changeType={analytics?.trends.messages || 'neutral'}
+          changeType={analytics?.trends.messages === 'up' ? 'increase' : analytics?.trends.messages === 'down' ? 'decrease' : 'neutral'}
         />
       </div>
 

@@ -11,7 +11,29 @@ const meta: Meta<typeof Card> = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'Versatile container component with variant support. Perfect for organizing information and creating focused content sections.',
+        component: 'Versatile container component with variant support. Perfect for organizing information and creating focused content sections. Built with semantic HTML and comprehensive accessibility support.',
+      },
+    },
+    a11y: {
+      // Custom accessibility rules for card components
+      config: {
+        rules: [
+          {
+            // Ensure proper heading hierarchy in card headers
+            id: 'heading-order',
+            enabled: true,
+          },
+          {
+            // Verify sufficient color contrast
+            id: 'color-contrast',
+            enabled: true,
+          },
+          {
+            // Check for proper landmark usage
+            id: 'landmark-one-main',
+            enabled: false, // Cards are not main landmarks
+          },
+        ],
       },
     },
   },
@@ -20,6 +42,25 @@ const meta: Meta<typeof Card> = {
     variant: {
       control: { type: 'select' },
       options: ['default', 'accent', 'glass'],
+      description: 'Visual variant affecting styling and emphasis',
+      table: {
+        type: { summary: 'default | accent | glass' },
+        defaultValue: { summary: 'default' },
+      },
+    },
+    className: {
+      control: { type: 'text' },
+      description: 'Additional CSS classes for custom styling',
+      table: {
+        type: { summary: 'string' },
+      },
+    },
+    children: {
+      control: false,
+      description: 'Card content - typically CardHeader, CardContent, and CardFooter components',
+      table: {
+        type: { summary: 'ReactNode' },
+      },
     },
   },
 };
@@ -274,7 +315,260 @@ export const NestedCards: Story = {
   ),
 };
 
-// Interactive playground
+/**
+ * Accessibility-focused card examples demonstrating proper semantic structure,
+ * ARIA attributes, and keyboard navigation patterns.
+ */
+export const AccessibilityShowcase: Story = {
+  render: () => (
+    <div className="space-y-8 max-w-4xl">
+      <div>
+        <h2 className="text-lg font-bold mb-4">Semantic Structure</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card with proper heading hierarchy */}
+          <Card role="region" aria-labelledby="system-status-heading">
+            <CardHeader>
+              <h3 id="system-status-heading" className="font-semibold text-grid-text">
+                System Status
+              </h3>
+              <p className="text-sm text-grid-text-secondary">
+                Current operational metrics
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-grid-text">CPU Usage</span>
+                  <Badge 
+                    variant="success" 
+                    role="status" 
+                    aria-label="CPU usage is normal at 24%"
+                  >
+                    24% Normal
+                  </Badge>
+                </div>
+                <div 
+                  role="progressbar" 
+                  aria-label="Memory usage" 
+                  aria-valuenow={67} 
+                  aria-valuemin={0} 
+                  aria-valuemax={100}
+                  className="space-y-1"
+                >
+                  <div className="flex justify-between text-sm">
+                    <span className="text-grid-text">Memory</span>
+                    <span className="text-grid-text-secondary">67%</span>
+                  </div>
+                  <div className="w-full bg-grid-border rounded-full h-2">
+                    <div 
+                      className="bg-grid-warning h-2 rounded-full transition-all duration-300" 
+                      style={{ width: '67%' }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                aria-describedby="refresh-help"
+              >
+                <Settings className="h-4 w-4 mr-2" aria-hidden="true" />
+                Refresh Data
+              </Button>
+              <div id="refresh-help" className="sr-only">
+                Updates system metrics in real-time
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* Interactive card with proper focus management */}
+          <Card 
+            className="cursor-pointer hover:border-grid-accent transition-colors"
+            tabIndex={0}
+            role="button"
+            aria-describedby="card-action-help"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                alert('Card activated!');
+              }
+            }}
+            onClick={() => alert('Card clicked!')}
+          >
+            <CardHeader>
+              <h3 className="font-semibold text-grid-text">Interactive Card</h3>
+              <Badge variant="info">Clickable</Badge>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-grid-text-secondary">
+                This card demonstrates keyboard accessibility. Focus it and press Enter or Space.
+              </p>
+            </CardContent>
+            <div id="card-action-help" className="sr-only">
+              Press Enter or Space to activate this card
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-bold mb-4">Screen Reader Optimizations</h2>
+        <Card>
+          <CardHeader>
+            <h3 className="font-semibold text-grid-text">
+              Mission Control Alert
+            </h3>
+            <Badge 
+              variant="error" 
+              role="alert"
+              aria-live="assertive"
+            >
+              Critical
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <p className="text-sm text-grid-text-secondary">
+                <span className="sr-only">Alert details: </span>
+                Anomalous readings detected in navigation subsystem. 
+                Immediate attention required.
+              </p>
+              <div className="flex items-start gap-3 p-3 bg-grid-error/10 border border-grid-error/30 rounded">
+                <Shield 
+                  className="h-5 w-5 text-grid-error mt-0.5" 
+                  aria-hidden="true"
+                />
+                <div>
+                  <div className="text-sm font-medium text-grid-error">
+                    Security Protocol Activated
+                  </div>
+                  <div className="text-xs text-grid-text-secondary">
+                    <span className="sr-only">Time: </span>
+                    <time dateTime="2024-02-18T22:30:00Z">
+                      Today at 22:30 UTC
+                    </time>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              aria-label="Dismiss this alert"
+            >
+              Dismiss
+            </Button>
+            <Button 
+              variant="danger" 
+              size="sm"
+              aria-describedby="acknowledge-help"
+            >
+              Acknowledge Alert
+            </Button>
+            <div id="acknowledge-help" className="sr-only">
+              This will mark the alert as seen and notify the operations team
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Examples of accessible card implementations with proper ARIA attributes, semantic HTML, and keyboard navigation support.',
+      },
+    },
+    a11y: {
+      config: {
+        rules: [
+          { id: 'color-contrast', enabled: true },
+          { id: 'keyboard', enabled: true },
+          { id: 'focus-order-semantics', enabled: true },
+        ],
+      },
+    },
+  },
+};
+
+/**
+ * Responsive design patterns showing how cards adapt to different screen sizes
+ */
+export const ResponsivePatterns: Story = {
+  render: () => (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-bold mb-4">Mobile-First Design</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="min-h-[120px]">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-grid-accent/20 rounded-full flex items-center justify-center">
+                    <Activity className="h-5 w-5 text-grid-accent" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-grid-text">Metric {i}</h3>
+                    <p className="text-sm text-grid-text-secondary">Value: {i * 42}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="mt-3 text-xs text-grid-text-muted">
+          Resize your browser to see responsive behavior: 1 column on mobile, 2 on tablet, 3 on desktop
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Responsive card layouts that adapt gracefully across different screen sizes and devices.',
+      },
+    },
+    viewport: {
+      defaultViewport: 'responsive',
+    },
+  },
+};
+
+/**
+ * Performance considerations for card components
+ */
+export const PerformanceOptimizations: Story = {
+  render: () => (
+    <div className="space-y-6 max-w-4xl">
+      <div>
+        <h2 className="text-lg font-bold mb-4">Virtualized Card List</h2>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <h3 className="font-semibold text-grid-text">Performance Tips</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm text-grid-text-secondary">
+                <div>• Use <code className="text-xs bg-grid-surface px-1 py-0.5 rounded">key</code> props for dynamic lists</div>
+                <div>• Consider virtualization for large datasets (&gt;100 cards)</div>
+                <div>• Lazy load expensive card content below the fold</div>
+                <div>• Use <code className="text-xs bg-grid-surface px-1 py-0.5 rounded">loading="lazy"</code> for images</div>
+                <div>• Implement skeleton loading states</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  ),
+};
+
+// Interactive playground with enhanced controls
 export const Playground: Story = {
   args: {
     variant: 'default',
@@ -299,7 +593,7 @@ export const Playground: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Interact with the card controls in the panel below to explore all variant combinations.',
+        story: 'Interact with the card controls in the panel below to explore all variant combinations. Test with keyboard navigation and screen readers.',
       },
     },
   },

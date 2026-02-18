@@ -150,7 +150,7 @@ export function HealthStatus() {
           <p className="text-grid-text-dim mb-4">{error}</p>
           <Button
             onClick={handleRefresh}
-            variant="destructive"
+            variant="danger"
           >
             Retry
           </Button>
@@ -202,7 +202,7 @@ export function HealthStatus() {
           <Button
             onClick={handleRefresh}
             disabled={loading}
-            variant="outline"
+            variant="secondary"
             size="sm"
           >
             {loading ? 'Refreshing...' : 'Refresh'}

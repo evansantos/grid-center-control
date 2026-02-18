@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { checkA11y, checkHeadingHierarchy } from './axe-helper';
 
 test.describe('Analytics Pages E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -189,6 +190,10 @@ test.describe('Analytics Pages E2E Tests', () => {
     const refreshButton = page.locator('text=Refresh');
     await expect(refreshButton).toBeVisible();
     await refreshButton.click();
+
+    // Run accessibility checks
+    await checkA11y(page, 'Analytics - Performance page');
+    await checkHeadingHierarchy(page);
   });
 
   test('Session Analytics page displays session data and filters', async ({ page }) => {
@@ -221,6 +226,9 @@ test.describe('Analytics Pages E2E Tests', () => {
     const searchInput = page.locator('input[placeholder*="Search"]');
     await searchInput.fill('GRID');
     // Should filter to show only GRID sessions
+
+    // Run accessibility checks
+    await checkA11y(page, 'Analytics - Session page with filters');
   });
 
   test('Token Analytics page shows usage and cost data', async ({ page }) => {
