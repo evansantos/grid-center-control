@@ -16,8 +16,8 @@ export function AgentUnit({
       onClick={onClick}
       style={{
         position: 'absolute',
-        left: agent.pos.x - 20,
-        top: agent.pos.y - 60,
+        left: agent.deskPos.x - 20,
+        top: agent.deskPos.y - 60,
         background: 'none',
         border: 'none',
         cursor: 'pointer',

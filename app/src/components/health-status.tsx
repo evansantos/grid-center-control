@@ -37,6 +37,35 @@ const STATUS_COLORS = {
   }
 };
 
+// Metric descriptions for tooltips
+const METRIC_DESCRIPTIONS: Record<string, string> = {
+  'Gateway': 'OpenClaw gateway daemon status - manages agent communication and routing',
+  'Agent Responsiveness': 'How quickly agents respond to tasks (measures session start latency)',
+  'System Resources': 'CPU, memory, disk usage of the host machine',
+  'API Response': 'Response times of the dashboard API endpoints'
+};
+
+// Info icon component
+function InfoIcon({ tooltip }: { tooltip: string }) {
+  return (
+    <div 
+      className="inline-flex items-center justify-center w-4 h-4 ml-1 text-zinc-500 hover:text-zinc-300 cursor-help transition-colors"
+      title={tooltip}
+    >
+      <svg
+        viewBox="0 0 16 16"
+        className="w-3 h-3"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export function HealthStatus() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -171,7 +200,12 @@ export function HealthStatus() {
                 <div className="flex items-center gap-3">
                   <span className={`w-3 h-3 rounded-full ${colors.bg} flex-shrink-0`} />
                   <div>
-                    <h4 className="font-medium text-zinc-200">{check.name}</h4>
+                    <div className="flex items-center">
+                      <h4 className="font-medium text-zinc-200">{check.name}</h4>
+                      {METRIC_DESCRIPTIONS[check.name] && (
+                        <InfoIcon tooltip={METRIC_DESCRIPTIONS[check.name]} />
+                      )}
+                    </div>
                     <p className="text-sm text-zinc-400">{check.message}</p>
                     {check.details && (
                       <p className="text-xs text-zinc-600 mt-1 font-mono">

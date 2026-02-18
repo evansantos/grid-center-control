@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 @plugin "@tailwindcss/typography";
 
 :root {
@@ -67,6 +71,50 @@
   --grid-purple: #7c3aed;
   --grid-cyan: #0891b2;
   --grid-orange: #ea580c;
+}
+
+@theme {
+  /* Grid Design System - Colors */
+  --color-grid-bg: var(--grid-bg);
+  --color-grid-surface: var(--grid-surface);
+  --color-grid-surface-hover: var(--grid-surface-hover);
+  --color-grid-border: var(--grid-border);
+  --color-grid-border-bright: var(--grid-border-bright);
+  --color-grid-accent: var(--grid-accent);
+  --color-grid-accent-dim: var(--grid-accent-dim);
+  --color-grid-accent-glow: var(--grid-accent-glow);
+  --color-grid-text: var(--grid-text);
+  --color-grid-text-dim: var(--grid-text-dim);
+  --color-grid-text-muted: var(--grid-text-muted);
+  --color-grid-success: var(--grid-success);
+  --color-grid-warning: var(--grid-warning);
+  --color-grid-error: var(--grid-error);
+  --color-grid-info: var(--grid-info);
+
+  /* Extended Colors */
+  --color-grid-border-subtle: var(--grid-border-subtle);
+  --color-grid-text-faint: var(--grid-text-faint);
+  --color-grid-text-label: var(--grid-text-label);
+  --color-grid-text-secondary: var(--grid-text-secondary);
+  --color-grid-yellow: var(--grid-yellow);
+  --color-grid-danger: var(--grid-danger);
+  --color-grid-purple: var(--grid-purple);
+  --color-grid-cyan: var(--grid-cyan);
+  --color-grid-orange: var(--grid-orange);
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Typography Scale */
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 28px;
 }
 
 /* Office Themes */

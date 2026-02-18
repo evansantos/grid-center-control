@@ -2,6 +2,7 @@ import { readFile, readdir, stat, access } from 'fs/promises';
 import { constants } from 'fs';
 import { join } from 'path';
 import { getOpenClawDir } from './config';
+import { extractCost, type UsageData } from '../utils/cost';
 
 async function exists(p: string) {
   try { await access(p, constants.R_OK); return true; } catch { return false; }
@@ -13,6 +14,7 @@ export interface SessionInfo {
   lastMessage?: string;
   updatedAt?: string;
   messageCount: number;
+  totalCostUSD: number;
 }
 
 export async function getSessionsForAgent(agentId: string, cutoffMs?: number): Promise<SessionInfo[]> {
@@ -49,6 +51,7 @@ export async function getSessionsForAgent(agentId: string, cutoffMs?: number): P
         let lastMessage = '';
         let updatedAt = '';
         let messageCount = 0;
+        let sessionCost = 0;
 
         for (const line of lines) {
           try {
@@ -71,12 +74,17 @@ export async function getSessionsForAgent(agentId: string, cutoffMs?: number): P
                 }
               }
               if (entry.timestamp) updatedAt = new Date(entry.timestamp).toISOString();
+              
+              // Extract cost from usage data at top level
+              if (entry.usage) {
+                sessionCost += extractCost(entry.usage as UsageData);
+              }
             }
           } catch { /* parse error, skip line */ }
         }
 
         if (sessionKey) {
-          sessions.push({ sessionKey, label, lastMessage, updatedAt, messageCount });
+          sessions.push({ sessionKey, label, lastMessage, updatedAt, messageCount, totalCostUSD: sessionCost });
         }
       } catch { /* file read error, skip */ }
     }

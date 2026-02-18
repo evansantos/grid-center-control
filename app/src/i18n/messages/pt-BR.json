@@ -1,0 +1,36 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "noData": "No data available",
+    "search": "Search...",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "agents": "Agents",
+    "office": "Office",
+    "analytics": "Analytics",
+    "logs": "Logs",
+    "tokens": "Tokens",
+    "errors": "Errors",
+    "health": "Health",
+    "settings": "Settings"
+  },
+  "status": {
+    "active": "Active",
+    "idle": "Idle",
+    "busy": "Busy",
+    "offline": "Offline",
+    "error": "Error",
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  }
+}

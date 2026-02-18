@@ -36,13 +36,12 @@ const analyticsGroup: NavGroup = {
 const toolsGroup: NavGroup = {
   label: 'Tools',
   items: [
-    { label: 'Spawn', href: '/tools/spawn', icon: '✦' },
-    { label: 'Logs', href: '/tools/logs', icon: '▤' },
-    { label: 'Tokens', href: '/tools/tokens', icon: '⬡' },
-    { label: 'Errors', href: '/tools/errors', icon: '⚠' },
-    { label: 'Health', href: '/tools/health', icon: '♥' },
+    { label: 'Spawn', href: '/spawn', icon: '✦' },
+    { label: 'Logs', href: '/logs', icon: '▤' },
+    { label: 'Tokens', href: '/tokens', icon: '⬡' },
+    { label: 'Errors', href: '/errors', icon: '⚠' },
+    { label: 'Health', href: '/health', icon: '♥' },
     { label: 'Files', href: '/files', icon: '📁' },
-    { label: 'Kanban', href: '/kanban', icon: '▥' },
   ],
 };
 

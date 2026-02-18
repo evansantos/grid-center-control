@@ -3,7 +3,7 @@ import { apiError } from '@/lib/api-error';
 import { readFile, readdir, stat, access } from 'fs/promises';
 import { constants } from 'fs';
 import { join } from 'path';
-import { OPENCLAW_DIR } from '@/lib/constants';
+import { AGENTS_DIR } from '@/lib/constants';
 
 async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
 
@@ -25,7 +25,7 @@ interface TokenData {
 }
 
 async function fetchTokenUsage(): Promise<TokenData> {
-  const agentsDir = join(OPENCLAW_DIR, 'agents');
+  const agentsDir = AGENTS_DIR;
   const result: TokenData = { agents: {}, daily: {}, total: { input: 0, output: 0, total: 0 } };
   if (!(await exists(agentsDir))) return result;
 
@@ -67,8 +67,8 @@ async function fetchTokenUsage(): Promise<TokenData> {
             if (entry.type === 'session') hasSession = true;
             if (entry.usage) {
               const usage = entry.usage;
-              const inputTokens = usage.input_tokens || 0;
-              const outputTokens = usage.output_tokens || 0;
+              const inputTokens = usage.input || 0;
+              const outputTokens = usage.output || 0;
               const totalTokens = inputTokens + outputTokens;
               result.agents[displayAgent].inputTokens += inputTokens;
               result.agents[displayAgent].outputTokens += outputTokens;

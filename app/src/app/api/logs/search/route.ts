@@ -97,14 +97,33 @@ export async function GET(request: Request) {
             if (results.length >= limit) break;
             try {
               const parsed = JSON.parse(line);
+              
+              // Only process message entries
+              if (parsed.type !== 'message' || !parsed.message) continue;
+              
               const ts = parsed.timestamp || parsed.ts || '';
               if (ts && new Date(ts).getTime() < cutoff) continue;
 
-              const msgContent = typeof parsed.content === 'string'
-                ? parsed.content
-                : JSON.stringify(parsed.content || '');
+              // Extract text content from message.content array
+              let msgContent = '';
+              const messageContent = parsed.message.content;
+              
+              if (Array.isArray(messageContent)) {
+                // Handle content as array of blocks
+                for (const block of messageContent) {
+                  if (typeof block === 'string') {
+                    msgContent += block + ' ';
+                  } else if (block && typeof block === 'object' && block.type === 'text' && block.text) {
+                    msgContent += block.text + ' ';
+                  }
+                }
+              } else if (typeof messageContent === 'string') {
+                // Handle legacy string content
+                msgContent = messageContent;
+              }
 
-              if (!msgContent.toLowerCase().includes(queryLower)) continue;
+              msgContent = msgContent.trim();
+              if (!msgContent || !msgContent.toLowerCase().includes(queryLower)) continue;
 
               const idx = msgContent.toLowerCase().indexOf(queryLower);
               const start = Math.max(0, idx - 50);
@@ -115,11 +134,11 @@ export async function GET(request: Request) {
                 sessionKey,
                 agentId,
                 timestamp: ts,
-                role: parsed.role || 'unknown',
+                role: parsed.message.role || 'unknown',
                 content: msgContent.slice(0, 500),
                 matchHighlight: highlight,
               });
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error(`Error parsing line in ${filePath}:`, err); }
           }
         } catch (err) { console.error(err); }
       }

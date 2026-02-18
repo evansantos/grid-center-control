@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { timeAgo } from '@/lib/utils';
+import { timeAgo, formatTimestamp } from '@/lib/time-utils';
 import { ControlButtons } from './control-buttons';
 
 interface Message {
@@ -215,7 +215,10 @@ export function ConversationPanel({ agentId, agent, onClose }: {
                     {msg.role}
                   </span>
                   {msg.timestamp && (
-                    <span className="text-xs font-mono text-slate-600">
+                    <span 
+                      className="text-xs font-mono text-slate-600 cursor-help"
+                      title={formatTimestamp(msg.timestamp)}
+                    >
                       {timeAgo(msg.timestamp)}
                     </span>
                   )}

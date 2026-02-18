@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { formatLargeCostUSD, formatCostUSD } from '@/lib/utils/cost';
 
 interface AgentScorecard {
   agentId: string;
@@ -8,6 +9,8 @@ interface AgentScorecard {
   sessionsCount: number;
   totalTokensIn: number;
   totalTokensOut: number;
+  totalCostUSD: number;
+  avgCostPerSession: number;
   avgDurationSec: number;
   errorCount: number;
   errorRate: number;
@@ -16,7 +19,7 @@ interface AgentScorecard {
   health: 'healthy' | 'watch' | 'issues';
 }
 
-type SortKey = 'sessions' | 'tokens' | 'errors';
+type SortKey = 'sessions' | 'tokens' | 'cost' | 'errors';
 
 const HEALTH_COLORS = {
   healthy: 'border-green-800/50 bg-green-900/10',
@@ -68,7 +71,7 @@ function timeAgo(ts: string): string {
 export function AgentScorecards() {
   const [cards, setCards] = useState<AgentScorecard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortKey>('sessions');
+  const [sortBy, setSortBy] = useState<SortKey>('cost');
 
   useEffect(() => {
     fetch('/api/analytics/performance')
@@ -78,11 +81,15 @@ export function AgentScorecards() {
       .finally(() => setLoading(false));
   }, []);
 
-  const sorted = [...cards].sort((a, b) => {
-    if (sortBy === 'tokens') return (b.totalTokensIn + b.totalTokensOut) - (a.totalTokensIn + a.totalTokensOut);
-    if (sortBy === 'errors') return b.errorCount - a.errorCount;
-    return b.sessionsCount - a.sessionsCount;
-  });
+  // Optimize sorting with useMemo for better performance
+  const sorted = useMemo(() => {
+    return [...cards].sort((a, b) => {
+      if (sortBy === 'tokens') return (b.totalTokensIn + b.totalTokensOut) - (a.totalTokensIn + a.totalTokensOut);
+      if (sortBy === 'cost') return b.totalCostUSD - a.totalCostUSD;
+      if (sortBy === 'errors') return b.errorCount - a.errorCount;
+      return b.sessionsCount - a.sessionsCount;
+    });
+  }, [cards, sortBy]);
 
   if (loading) return <div className="text-zinc-500 text-sm animate-pulse">Loading scorecards...</div>;
   if (cards.length === 0) return <div className="text-center py-12 text-zinc-600 text-sm">No agent data found</div>;
@@ -90,13 +97,13 @@ export function AgentScorecards() {
   return (
     <div>
       <div className="flex gap-2 mb-4">
-        {(['sessions', 'tokens', 'errors'] as SortKey[]).map(k => (
+        {(['cost', 'sessions', 'tokens', 'errors'] as SortKey[]).map(k => (
           <button
             key={k}
             onClick={() => setSortBy(k)}
             className={`text-xs px-3 py-1 rounded ${sortBy === k ? 'bg-zinc-700 text-zinc-200' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
-            {k === 'sessions' ? 'Most Active' : k === 'tokens' ? 'Highest Cost' : 'Most Errors'}
+            {k === 'cost' ? 'Highest Cost' : k === 'sessions' ? 'Most Active' : k === 'tokens' ? 'Most Tokens' : 'Most Errors'}
           </button>
         ))}
       </div>
@@ -116,6 +123,10 @@ export function AgentScorecards() {
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
               <span className="text-zinc-500">Sessions</span>
               <span className="text-zinc-300 text-right font-mono">{card.sessionsCount}</span>
+              <span className="text-zinc-500">Total Cost</span>
+              <span className="text-green-400 text-right font-mono font-semibold">{formatLargeCostUSD(card.totalCostUSD)}</span>
+              <span className="text-zinc-500">Avg Cost</span>
+              <span className="text-green-300 text-right font-mono">{formatCostUSD(card.avgCostPerSession)}</span>
               <span className="text-zinc-500">Tokens</span>
               <span className="text-zinc-300 text-right font-mono">{formatTokens(card.totalTokensIn + card.totalTokensOut)}</span>
               <span className="text-zinc-500">Avg Duration</span>

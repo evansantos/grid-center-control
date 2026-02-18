@@ -47,7 +47,7 @@ export default function TimelinePage() {
           {loading && <option>Loading sessions...</option>}
           {sessions.map(s => (
             <option key={s.key} value={s.key}>
-              {s.agent} — {new Date(s.date).toLocaleString()} — {s.key.slice(-12)}
+              {s.agent} — {new Date(s.date).toLocaleString()} — {s.key.slice(0, 8)}
             </option>
           ))}
         </select>

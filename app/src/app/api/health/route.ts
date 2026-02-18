@@ -35,7 +35,10 @@ const CACHE_DURATION = 30 * 1000; // 30 seconds
 async function checkGatewayStatus(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execFileAsync('openclaw', ['gateway', 'status'], {
+    // Resolve openclaw binary dynamically via PATH or common locations
+    const which = await execFileAsync('which', ['openclaw'], { timeout: 3000, env: SAFE_ENV as NodeJS.ProcessEnv }).catch(() => null);
+    const openclawBin = which?.stdout?.trim() || 'openclaw';
+    const { stdout, stderr } = await execFileAsync(openclawBin, ['gateway', 'status'], {
       timeout: 5000,
       env: SAFE_ENV as NodeJS.ProcessEnv,
     });

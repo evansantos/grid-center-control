@@ -44,7 +44,7 @@ export function ProjectsWidget({ projects }: { projects: ProjectRow[] }) {
           </div>
           <div className="flex gap-4 text-sm" style={{ color: 'var(--grid-text-dim)' }}>
             <span>📁 {p.repo_path}</span>
-            {p.stats.total > 0 && <span>✅ {p.stats.approved}/{p.stats.total} tasks</span>}
+            {p.stats.total > 0 && <span>✅ {p.stats.approved + (p.stats.in_progress || 0) + (p.stats.review || 0)}/{p.stats.total} tasks</span>}
           </div>
           <p className="text-xs mt-1" style={{ color: 'var(--grid-text-dim)', opacity: 0.7 }}>
             Updated {new Date(p.updated_at).toLocaleString()}

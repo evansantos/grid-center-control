@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { formatDuration, formatTimestamp, getTimeContext, formatTimeRange } from '@/lib/time-utils';
 
 interface TimelineEntry {
   type: 'user' | 'assistant' | 'tool_call' | 'tool_result' | 'thinking';
@@ -27,12 +28,6 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; text: string }> 
   tool_result: { bg: 'bg-amber-600/30', border: 'border-amber-500', text: 'text-amber-400' },
   thinking: { bg: 'bg-purple-600/30', border: 'border-purple-500', text: 'text-purple-400' },
 };
-
-function formatMs(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
-}
 
 export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
   const [data, setData] = useState<TimelineData | null>(null);
@@ -78,19 +73,32 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
 
   const { entries, summary } = data;
   const totalMs = summary.totalMs || 1;
+  
+  // Calculate session time range
+  const sessionStart = entries.length > 0 ? entries[0].startMs : 0;
+  const sessionEnd = entries.length > 0 ? entries[entries.length - 1].startMs + entries[entries.length - 1].durationMs : 0;
+  const sessionTimeRange = sessionStart && sessionEnd ? formatTimeRange(sessionStart, sessionEnd) : '';
 
   return (
     <div className="space-y-6">
+      {/* Session Info */}
+      {sessionTimeRange && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+          <div className="text-sm text-zinc-400 mb-1">Session Time</div>
+          <div className="text-zinc-200 font-mono text-sm">{sessionTimeRange}</div>
+        </div>
+      )}
+
       {/* Summary */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Total Time', value: formatMs(summary.totalMs), color: 'text-zinc-200' },
+          { label: 'Total Duration', value: formatDuration(summary.totalMs), color: 'text-zinc-200' },
           { label: 'Thinking', value: `${summary.thinkingPct}%`, color: 'text-purple-400' },
           { label: 'Tools', value: `${summary.toolPct}%`, color: 'text-orange-400' },
           { label: 'Response', value: `${summary.responsePct}%`, color: 'text-green-400' },
         ].map((s, i) => (
           <div key={i} className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 text-center">
-            <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+            <div className={`text-2xl font-bold ${s.color}`} title={s.value}>{s.value}</div>
             <div className="text-xs text-zinc-500 mt-1">{s.label}</div>
           </div>
         ))}
@@ -113,6 +121,7 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
             const colors = TYPE_COLORS[entry.type] || TYPE_COLORS.assistant;
             const widthPct = Math.max(2, (entry.durationMs / totalMs) * 100 * zoom);
             const isHovered = hoveredIdx === idx;
+            const timeContext = getTimeContext(entry.startMs, entry.durationMs);
 
             return (
               <div
@@ -121,8 +130,13 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
-                <div className={`w-20 text-right text-xs ${colors.text} font-mono shrink-0`}>
-                  {formatMs(entry.durationMs)}
+                <div className={`w-24 text-right text-xs shrink-0`}>
+                  <div className={`${colors.text} font-mono`}>
+                    {formatDuration(entry.durationMs, { compact: true })}
+                  </div>
+                  <div className="text-zinc-600 text-[10px]">
+                    {timeContext.context}
+                  </div>
                 </div>
                 <div className="flex-1 relative">
                   <div
@@ -131,10 +145,20 @@ export function SessionTimeline({ sessionKey }: { sessionKey: string }) {
                   >
                     <span className="text-xs text-zinc-200 truncate">{entry.label}</span>
                   </div>
-                  {isHovered && entry.detail && (
+                  {isHovered && (
                     <div className="absolute z-50 top-8 left-0 bg-zinc-800 border border-zinc-700 rounded-lg p-3 max-w-md shadow-xl">
-                      <div className={`text-xs font-bold ${colors.text} mb-1`}>{entry.type.replace('_', ' ')} — {formatMs(entry.durationMs)}</div>
-                      <p className="text-xs text-zinc-400 whitespace-pre-wrap">{entry.detail}</p>
+                      <div className={`text-xs font-bold ${colors.text} mb-2`}>
+                        {entry.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </div>
+                      <div className="text-xs text-zinc-300 mb-2">
+                        <div><span className="text-zinc-500">Started:</span> {timeContext.start}</div>
+                        <div><span className="text-zinc-500">Duration:</span> {timeContext.duration} ({timeContext.context.toLowerCase()})</div>
+                      </div>
+                      {entry.detail && (
+                        <div className="border-t border-zinc-700 pt-2 mt-2">
+                          <p className="text-xs text-zinc-400 whitespace-pre-wrap">{entry.detail}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -54,12 +54,13 @@ export function createEvent(projectId: string, eventType: string, details?: stri
     .run(projectId, eventType, details ?? null, now);
 }
 
-export function taskStats(projectId: string): { total: number; approved: number; in_progress: number; failed: number } {
+export function taskStats(projectId: string): { total: number; approved: number; in_progress: number; review: number; failed: number } {
   const tasks = listTasks(projectId);
   return {
     total: tasks.length,
     approved: tasks.filter((t) => ['approved', 'done'].includes(t.status)).length,
     in_progress: tasks.filter((t) => ['in_progress', 'in-progress'].includes(t.status)).length,
+    review: tasks.filter((t) => t.status === 'review').length,
     failed: tasks.filter((t) => t.status === 'failed').length,
   };
 }

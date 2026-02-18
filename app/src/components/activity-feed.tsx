@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { timeAgo } from '@/lib/utils';
+import { timeAgo, formatDuration } from '@/lib/time-utils';
 
 interface ActivityItem {
   agent: string;
@@ -17,16 +17,8 @@ interface ActivityItem {
   durationMs?: number;
 }
 
-function formatDuration(ms: number): string {
-  const secs = Math.floor(ms / 1000);
-  if (secs < 60) return `${secs}s`;
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m`;
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-}
-
 function formatEventDescription(item: ActivityItem): string {
-  const dur = item.durationMs ? formatDuration(item.durationMs) : '';
+  const dur = item.durationMs ? formatDuration(item.durationMs, { compact: true }) : '';
   const msgs = `${item.messageCount} msgs`;
   const durPart = dur ? `, ${dur}` : '';
 

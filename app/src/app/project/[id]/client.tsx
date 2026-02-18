@@ -14,15 +14,28 @@ interface Props {
 }
 
 const AGENT_EMOJIS: Record<string, string> = {
-  arch: '🏛️', grid: '🔴', dev: '💻', bug: '🐛', vault: '🔐',
+  arch: '🏛️', grid: '⚡', dev: '💻', bug: '🐛', vault: '🔐',
   atlas: '🗺️', scribe: '📝', pixel: '🎨', sentinel: '🛡️', riff: '🎵',
-  sage: '🧙', main: '👤', po: '📋',
+  sage: '🧙', spec: '📋', main: '🔴', mcp: '🔴', po: '📋',
 };
 
 const AGENT_NAMES: Record<string, string> = {
   arch: 'Arch', grid: 'Grid', dev: 'Dev', bug: 'Bug', vault: 'Vault',
   atlas: 'Atlas', scribe: 'Scribe', pixel: 'Pixel', sentinel: 'Sentinel', riff: 'Riff',
-  sage: 'Sage', main: 'Main', po: 'PO',
+  sage: 'Sage', spec: 'Spec', main: 'MCP', mcp: 'MCP', po: 'PO',
+};
+
+const AGENT_COLORS: Record<string, string> = {
+  arch: '#a78bfa', grid: '#f87171', dev: '#34d399', bug: '#fbbf24', vault: '#60a5fa',
+  atlas: '#2dd4bf', scribe: '#fb923c', pixel: '#f472b6', sentinel: '#818cf8', riff: '#e879f9',
+  sage: '#a3e635', spec: '#facc15', main: '#f87171', mcp: '#f87171', po: '#facc15',
+};
+
+const PRIORITY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  P0: { label: 'P0', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+  P1: { label: 'P1', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
+  P2: { label: 'P2', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+  P3: { label: 'P3', color: '#9ca3af', bg: 'rgba(156,163,175,0.12)' },
 };
 
 const PHASE_STEPS = ['brainstorm', 'design', 'plan', 'execute', 'review', 'done'] as const;
@@ -53,6 +66,30 @@ const COLUMN_ICONS: Record<string, string> = {
 function parseAgentFromTitle(title: string): string | null {
   const match = title.match(/\[agent:(\w+)\]/);
   return match ? match[1] : null;
+}
+
+function parseMetaFromDescription(desc: string | null): { agent: string | null; priority: string | null; cleanDesc: string | null } {
+  if (!desc) return { agent: null, priority: null, cleanDesc: null };
+  let agent: string | null = null;
+  let priority: string | null = null;
+  
+  // Extract **Agent:** value
+  const agentMatch = desc.match(/\*\*Agent:\*\*\s*(\w+)/);
+  if (agentMatch) agent = agentMatch[1].toLowerCase();
+  
+  // Extract **Priority:** value
+  const prioMatch = desc.match(/\*\*Priority:\*\*\s*(P\d)/);
+  if (prioMatch) priority = prioMatch[1];
+  
+  // Clean description: remove metadata lines, keep actual content
+  const lines = desc.split('\n')
+    .filter(l => !l.match(/^\*\*Agent:\*\*/) && !l.match(/^\*\*Priority:\*\*/) && !l.match(/^\*\*Files:\*\*/))
+    .map(l => l.replace(/^\*\*Agent:\*\*.*?\|?\s*/, '').replace(/\*\*Priority:\*\*.*?\|?\s*/, '').replace(/\*\*Files:\*\*.*$/, ''))
+    .map(l => l.replace(/^[-*]\s*/, '').trim())
+    .filter(l => l.length > 0);
+  
+  const cleanDesc = lines.length > 0 ? lines.join(' · ') : null;
+  return { agent, priority, cleanDesc };
 }
 
 function timeAgo(dateStr: string | null): string | null {
@@ -146,18 +183,24 @@ function PhaseIndicator({ phase }: { phase: string }) {
 
 /* ─── Task Card ───────────────────────────────────────────── */
 function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
-  const agent = parseAgentFromTitle(task.title);
+  const agentFromTitle = parseAgentFromTitle(task.title);
+  const meta = parseMetaFromDescription(task.description);
+  const agent = agentFromTitle || meta.agent;
   const agentEmoji = agent ? AGENT_EMOJIS[agent] : null;
   const agentName = agent ? AGENT_NAMES[agent] : null;
+  const agentColor = agent ? AGENT_COLORS[agent] : undefined;
+  const priority = meta.priority;
+  const prioConfig = priority ? PRIORITY_CONFIG[priority] : null;
   const elapsed = timeAgo(task.started_at);
   const cleanTitle = task.title.replace(/\[agent:\w+\]\s*/, '');
-  const shortDesc = task.description
-    ? task.description.length > 120
-      ? task.description.slice(0, 120) + '…'
-      : task.description
+  const cleanDesc = meta.cleanDesc
+    ? meta.cleanDesc.length > 100
+      ? meta.cleanDesc.slice(0, 100) + '…'
+      : meta.cleanDesc
     : null;
 
   const hasReviews = task.spec_review || task.quality_review;
+  const isActive = task.status === 'in_progress';
 
   return (
     <a
@@ -165,70 +208,100 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
       draggable={false}
       onClick={e => e.stopPropagation()}
       className="
-        block rounded-lg p-3 transition-all duration-150
+        block rounded-lg transition-all duration-200 overflow-hidden
         bg-[var(--grid-surface)] border border-[var(--grid-border)]
         hover:border-[var(--grid-border-bright)] hover:bg-[var(--grid-surface-hover)]
-        group cursor-pointer
+        hover:shadow-lg hover:shadow-black/20 hover:-translate-y-0.5
+        group cursor-pointer relative
       "
     >
-      {/* Top row: number + agent + time */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[11px] font-mono text-[var(--grid-text-muted)]">
-          #{task.task_number}
-        </span>
-        {agentEmoji && agentName && (
-          <span className="flex items-center gap-1 text-[10px] text-[var(--grid-text-muted)] bg-[var(--grid-surface-hover)] px-1.5 py-0.5 rounded">
-            <span className="text-xs">{agentEmoji}</span>
-            {agentName}
-          </span>
-        )}
-        {elapsed && (
-          <span className="ml-auto text-[10px] text-[var(--grid-text-muted)] tabular-nums">
-            {elapsed}
-          </span>
-        )}
-      </div>
-
-      {/* Title */}
-      <p className="text-[13px] font-medium text-[var(--grid-text)] leading-snug mb-0 group-hover:text-white transition-colors">
-        {cleanTitle}
-      </p>
-
-      {/* Description */}
-      {shortDesc && (
-        <p className="text-[11px] text-[var(--grid-text-dim)] leading-relaxed mt-1.5 line-clamp-2">
-          {shortDesc}
-        </p>
+      {/* Left accent bar */}
+      {agentColor && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-lg"
+          style={{ backgroundColor: agentColor }}
+        />
       )}
 
-      {/* Badges */}
-      {(task.status === 'failed' || hasReviews) && (
+      <div className="p-3 pl-3.5">
+        {/* Top row: number + priority + time */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[11px] font-mono text-[var(--grid-text-muted)] opacity-60">
+            #{task.task_number}
+          </span>
+          {prioConfig && (
+            <span
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm tracking-wide"
+              style={{ color: prioConfig.color, backgroundColor: prioConfig.bg }}
+            >
+              {prioConfig.label}
+            </span>
+          )}
+          {isActive && (
+            <span className="flex items-center gap-1 text-[9px] font-medium text-[var(--grid-accent)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--grid-accent)] animate-pulse" />
+              Running
+            </span>
+          )}
+          {elapsed && (
+            <span className="ml-auto text-[10px] text-[var(--grid-text-muted)] tabular-nums opacity-60">
+              {elapsed}
+            </span>
+          )}
+        </div>
+
+        {/* Title */}
+        <p className="text-[13px] font-medium text-[var(--grid-text)] leading-snug mb-0 group-hover:text-white transition-colors">
+          {cleanTitle}
+        </p>
+
+        {/* Clean description */}
+        {cleanDesc && (
+          <p className="text-[11px] text-[var(--grid-text-muted)] leading-relaxed mt-1.5 line-clamp-2">
+            {cleanDesc}
+          </p>
+        )}
+
+        {/* Footer: agent badge + review badges */}
         <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+          {agentEmoji && agentName && (
+            <span
+              className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-sm"
+              style={{
+                color: agentColor || 'var(--grid-text-muted)',
+                backgroundColor: agentColor ? `${agentColor}15` : 'var(--grid-surface-hover)',
+              }}
+            >
+              <span className="text-[10px]">{agentEmoji}</span>
+              {agentName}
+            </span>
+          )}
+          
           {task.status === 'failed' && (
-            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-[var(--grid-error)]/10 text-[var(--grid-error)] ring-1 ring-[var(--grid-error)]/20">
+            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-sm bg-[var(--grid-error)]/10 text-[var(--grid-error)]">
               FAILED
             </span>
           )}
           {task.spec_review && (
-            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ring-1 ${
+            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-sm ${
               task.spec_review.startsWith('PASS')
-                ? 'bg-[var(--grid-success)]/10 text-[var(--grid-success)] ring-[var(--grid-success)]/20'
-                : 'bg-[var(--grid-error)]/10 text-[var(--grid-error)] ring-[var(--grid-error)]/20'
+                ? 'bg-[var(--grid-success)]/10 text-[var(--grid-success)]'
+                : 'bg-[var(--grid-error)]/10 text-[var(--grid-error)]'
             }`}>
               spec {task.spec_review.startsWith('PASS') ? '✓' : '✗'}
             </span>
           )}
           {task.quality_review && (
-            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ring-1 ${
+            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-sm ${
               task.quality_review.startsWith('PASS')
-                ? 'bg-[var(--grid-success)]/10 text-[var(--grid-success)] ring-[var(--grid-success)]/20'
-                : 'bg-[var(--grid-error)]/10 text-[var(--grid-error)] ring-[var(--grid-error)]/20'
+                ? 'bg-[var(--grid-success)]/10 text-[var(--grid-success)]'
+                : 'bg-[var(--grid-error)]/10 text-[var(--grid-error)]'
             }`}>
               quality {task.quality_review.startsWith('PASS') ? '✓' : '✗'}
             </span>
           )}
         </div>
-      )}
+      </div>
     </a>
   );
 }
@@ -294,7 +367,9 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
   const plans = artifacts.filter((a) => a.type === 'plan');
   const tasksByStatus = groupTasksByStatus(tasks);
   const doneCount = tasks.filter((t) => ['approved', 'done'].includes(t.status)).length;
-  const progressPct = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
+  const activeCount = tasks.filter((t) => ['in_progress', 'review'].includes(t.status)).length;
+  const progressCount = doneCount + activeCount;
+  const progressPct = tasks.length > 0 ? Math.round((progressCount / tasks.length) * 100) : 0;
 
   return (
     <div className="flex flex-col gap-10">
@@ -345,17 +420,28 @@ export function ProjectClient({ projectId, initialArtifacts, initialTasks, initi
               Tasks
             </h2>
             <div className="flex-1 flex items-center gap-3">
-              <div className="flex-1 h-[3px] bg-[var(--grid-border)] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500 ease-out"
-                  style={{
-                    width: `${progressPct}%`,
-                    backgroundColor: progressPct === 100 ? 'var(--grid-success)' : 'var(--grid-accent)',
-                  }}
-                />
+              <div className="flex-1 h-[3px] bg-[var(--grid-border)] rounded-full overflow-hidden flex">
+                {doneCount > 0 && (
+                  <div
+                    className="h-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${Math.round((doneCount / tasks.length) * 100)}%`,
+                      backgroundColor: progressCount === tasks.length ? 'var(--grid-success)' : 'var(--grid-success)',
+                    }}
+                  />
+                )}
+                {activeCount > 0 && (
+                  <div
+                    className="h-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${Math.round((activeCount / tasks.length) * 100)}%`,
+                      backgroundColor: 'var(--grid-accent)',
+                    }}
+                  />
+                )}
               </div>
               <span className="text-[10px] text-[var(--grid-text-muted)] tabular-nums whitespace-nowrap">
-                {doneCount}/{tasks.length}
+                {progressCount}/{tasks.length}
               </span>
             </div>
           </div>

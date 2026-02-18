@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readFile, readdir, access } from 'fs/promises';
+import { readFile, readdir, access, stat } from 'fs/promises';
 import { constants } from 'fs';
 import path from 'path';
 import { AGENTS_DIR } from '@/lib/constants';
@@ -11,49 +11,123 @@ export interface HeatmapDay {
 
 export interface SessionStats {
   totalSessions: number;
+  activeSessions: number;
+  deletedSessions: number;
   busiestDay: { date: string; count: number };
   avgPerDay: number;
   currentStreak: number;
   peakHours: number[];
+  agentBreakdown: { agentId: string; count: number }[];
+  modelBreakdown: { model: string; count: number }[];
+  totalTokensIn: number;
+  totalTokensOut: number;
+  avgSessionDurationSec: number;
 }
 
 let cache: { data: { heatmap: HeatmapDay[]; stats: SessionStats }; ts: number } | null = null;
 
-async function exists(p: string) { try { await access(p, constants.R_OK); return true; } catch { /* existence check */ return false; } }
+async function exists(p: string) {
+  try { await access(p, constants.R_OK); return true; } catch { return false; }
+}
 
 async function computeSessionAnalytics() {
   const dayCounts = new Map<string, number>();
   const hourCounts = new Array(24).fill(0);
+  const agentCounts = new Map<string, number>();
+  const modelCounts = new Map<string, number>();
   let totalSessions = 0;
+  let activeSessions = 0;
+  let deletedSessions = 0;
+  let totalTokensIn = 0;
+  let totalTokensOut = 0;
+  let totalDurationMs = 0;
+  let sessionsWithDuration = 0;
 
   try {
     if (!(await exists(AGENTS_DIR))) return emptyResult();
     const agents = await readdir(AGENTS_DIR);
-    
+
     for (const agent of agents) {
       const sessionsDir = path.join(AGENTS_DIR, agent, 'sessions');
       if (!(await exists(sessionsDir))) continue;
-      const files = (await readdir(sessionsDir)).filter(f => f.endsWith('.jsonl'));
+      const files = await readdir(sessionsDir);
+
+      let agentCount = 0;
 
       for (const file of files) {
-        try {
-          const content = await readFile(path.join(sessionsDir, file), 'utf-8');
-          const firstLine = content.split('\n')[0];
-          if (!firstLine) continue;
-          const parsed = JSON.parse(firstLine);
-          const ts = parsed.timestamp || parsed.ts;
-          if (!ts) continue;
+        if (!file.includes('.jsonl')) continue;
+        const isDeleted = file.includes('.deleted.');
+        const filePath = path.join(sessionsDir, file);
 
-          const date = new Date(ts);
-          const day = ts.slice(0, 10);
-          dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
-          hourCounts[date.getHours()]++;
+        try {
+          const content = await readFile(filePath, 'utf-8');
+          const lines = content.trim().split('\n').filter(Boolean);
+          if (lines.length === 0) continue;
+
           totalSessions++;
-        } catch (err) { console.error(err); }
+          agentCount++;
+          if (isDeleted) deletedSessions++;
+          else activeSessions++;
+
+          // Parse first line for session start timestamp
+          let firstTs = '';
+          let lastTs = '';
+
+          // Read first few and last few lines for timestamps and usage
+          const checkLines = lines.length <= 10
+            ? lines
+            : [...lines.slice(0, 5), ...lines.slice(-5)];
+
+          for (const line of checkLines) {
+            try {
+              const parsed = JSON.parse(line);
+              const ts = parsed.timestamp || parsed.ts;
+              if (!ts) continue;
+              if (!firstTs) firstTs = ts;
+              lastTs = ts;
+
+              // Track model from model_change or model-snapshot
+              if (parsed.type === 'model_change' && parsed.modelId) {
+                const model = parsed.modelId;
+                modelCounts.set(model, (modelCounts.get(model) || 0) + 1);
+              }
+              if (parsed.type === 'custom' && parsed.customType === 'model-snapshot') {
+                const model = parsed.data?.modelId;
+                if (model) modelCounts.set(model, (modelCounts.get(model) || 0) + 1);
+              }
+
+              // Collect usage from assistant messages
+              if (parsed.usage) {
+                totalTokensIn += (parsed.usage.input || 0) + (parsed.usage.cacheRead || 0);
+                totalTokensOut += parsed.usage.output || 0;
+              }
+            } catch { /* skip */ }
+          }
+
+          if (firstTs) {
+            const date = new Date(firstTs);
+            const day = firstTs.slice(0, 10);
+            dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
+            hourCounts[date.getUTCHours()]++;
+          }
+
+          if (firstTs && lastTs && firstTs !== lastTs) {
+            const dur = new Date(lastTs).getTime() - new Date(firstTs).getTime();
+            if (dur > 0 && dur < 24 * 3600_000) {
+              totalDurationMs += dur;
+              sessionsWithDuration++;
+            }
+          }
+        } catch { /* skip unreadable files */ }
+      }
+
+      if (agentCount > 0) {
+        agentCounts.set(agent, agentCount);
       }
     }
-  } catch (err) { console.error(err); }
+  } catch { /* top-level error */ }
 
+  // Build 90-day heatmap
   const heatmap: HeatmapDay[] = [];
   for (let i = 89; i >= 0; i--) {
     const d = new Date();
@@ -77,19 +151,34 @@ async function computeSessionAnalytics() {
   }
 
   const peakHours = hourCounts
-    .map((c, h) => ({ h, c }))
-    .sort((a, b) => b.c - a.c)
+    .map((c: number, h: number) => ({ h, c }))
+    .sort((a: { h: number; c: number }, b: { h: number; c: number }) => b.c - a.c)
     .slice(0, 5)
-    .map(x => x.h);
+    .map((x: { h: number; c: number }) => x.h);
+
+  const agentBreakdown = [...agentCounts.entries()]
+    .map(([agentId, count]) => ({ agentId, count }))
+    .sort((a, b) => b.count - a.count);
+
+  const modelBreakdown = [...modelCounts.entries()]
+    .map(([model, count]) => ({ model, count }))
+    .sort((a, b) => b.count - a.count);
 
   return {
     heatmap,
     stats: {
       totalSessions,
+      activeSessions,
+      deletedSessions,
       busiestDay,
       avgPerDay: Math.round((totalSessions / Math.max(1, dayCounts.size)) * 10) / 10,
       currentStreak: streak,
       peakHours,
+      agentBreakdown,
+      modelBreakdown,
+      totalTokensIn,
+      totalTokensOut,
+      avgSessionDurationSec: sessionsWithDuration > 0 ? Math.round(totalDurationMs / sessionsWithDuration / 1000) : 0,
     },
   };
 }
@@ -97,7 +186,12 @@ async function computeSessionAnalytics() {
 function emptyResult() {
   return {
     heatmap: [] as HeatmapDay[],
-    stats: { totalSessions: 0, busiestDay: { date: '', count: 0 }, avgPerDay: 0, currentStreak: 0, peakHours: [] },
+    stats: {
+      totalSessions: 0, activeSessions: 0, deletedSessions: 0,
+      busiestDay: { date: '', count: 0 }, avgPerDay: 0, currentStreak: 0,
+      peakHours: [], agentBreakdown: [], modelBreakdown: [], totalTokensIn: 0, totalTokensOut: 0,
+      avgSessionDurationSec: 0,
+    },
   };
 }
 

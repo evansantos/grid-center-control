@@ -303,140 +303,266 @@ export function ErrorDashboard() {
       {/* Header */}
       <div style={{
         textAlign: 'center',
-        marginBottom: 24,
-        padding: 16,
+        marginBottom: 32,
+        padding: 20,
+        backgroundColor: 'var(--grid-surface)',
+        borderRadius: 12,
+        border: '1px solid var(--grid-border)',
       }}>
-        <div style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>
-          ⚠️ Error & Alert Dashboard
+        <div style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 12 }}>
+          ⚠️ System Error Dashboard
         </div>
-        <div style={{ fontSize: 12, color: 'var(--grid-text-secondary)' }}>
-          Monitoring system errors and alerts across all agents
+        <div style={{ fontSize: 14, color: 'var(--grid-text-secondary)', marginBottom: 16, lineHeight: 1.5 }}>
+          Real-time monitoring and analysis of errors across the Grid Dashboard ecosystem
+        </div>
+        
+        {/* Purpose explanation */}
+        <div style={{
+          backgroundColor: 'var(--grid-bg)',
+          borderRadius: 8,
+          padding: 16,
+          border: '1px solid var(--grid-border)',
+          textAlign: 'left',
+          marginBottom: 16,
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 'bold', color: 'var(--grid-text)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            What this dashboard shows
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--grid-text-secondary)', lineHeight: 1.4 }}>
+            This dashboard aggregates error data from agent session logs, tool failures, and system exceptions. 
+            It helps identify patterns, track system health, and diagnose issues across all OpenClaw agents and components.
+          </div>
+        </div>
+
+        {/* Help text */}
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', fontSize: 11, color: 'var(--grid-text-secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>🔄</span>
+            <span>Auto-refreshes every 15 seconds</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>📊</span>
+            <span>Click any error for detailed view</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>🔍</span>
+            <span>Use filters to narrow results</span>
+          </div>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: 16,
-        marginBottom: 24,
+        marginBottom: 32,
       }}>
         <div style={{
-          padding: 16,
+          padding: 20,
           backgroundColor: 'var(--grid-surface)',
-          borderRadius: 8,
+          borderRadius: 12,
           border: '1px solid var(--grid-border)',
           textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--grid-error)', marginBottom: 4 }}>
+          <div style={{ fontSize: 32, fontWeight: 'bold', color: 'var(--grid-error)', marginBottom: 8 }}>
             {data.summary.total}
           </div>
-          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Total Errors</div>
+          <div style={{ fontSize: 12, color: 'var(--grid-text)', fontWeight: 'bold', marginBottom: 4 }}>
+            Total Errors Found
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)', lineHeight: 1.3 }}>
+            Errors detected in the selected time range across all agents and systems
+          </div>
+          <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 20, opacity: 0.3 }}>⚠️</div>
         </div>
         
         <div style={{
-          padding: 16,
+          padding: 20,
           backgroundColor: 'var(--grid-surface)',
-          borderRadius: 8,
+          borderRadius: 12,
           border: '1px solid var(--grid-border)',
           textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--grid-orange)', marginBottom: 4 }}>
+          <div style={{ fontSize: 32, fontWeight: 'bold', color: 'var(--grid-orange)', marginBottom: 8 }}>
             {Object.keys(data.summary.byAgent).length}
           </div>
-          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Affected Agents</div>
+          <div style={{ fontSize: 12, color: 'var(--grid-text)', fontWeight: 'bold', marginBottom: 4 }}>
+            Affected Agents
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)', lineHeight: 1.3 }}>
+            Number of different AI agents that encountered errors
+          </div>
+          <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 20, opacity: 0.3 }}>🤖</div>
         </div>
         
         <div style={{
-          padding: 16,
+          padding: 20,
           backgroundColor: 'var(--grid-surface)',
-          borderRadius: 8,
+          borderRadius: 12,
           border: '1px solid var(--grid-border)',
           textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--grid-yellow)', marginBottom: 4 }}>
+          <div style={{ fontSize: 32, fontWeight: 'bold', color: 'var(--grid-yellow)', marginBottom: 8 }}>
             {Object.keys(data.summary.byType).length}
           </div>
-          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)' }}>Error Types</div>
+          <div style={{ fontSize: 12, color: 'var(--grid-text)', fontWeight: 'bold', marginBottom: 4 }}>
+            Error Categories
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)', lineHeight: 1.3 }}>
+            Different types of errors: tools, messages, exceptions, etc.
+          </div>
+          <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 20, opacity: 0.3 }}>📊</div>
         </div>
       </div>
 
       {/* Filters */}
       <div style={{
-        display: 'flex',
-        gap: 16,
         marginBottom: 24,
-        padding: 16,
+        padding: 20,
         backgroundColor: 'var(--grid-surface)',
         borderRadius: 8,
         border: '1px solid var(--grid-border)',
-        flexWrap: 'wrap',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
-          <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase' }}>Agent</label>
-          <select
-            value={selectedAgent}
-            onChange={(e) => setSelectedAgent(e.target.value)}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: 16,
+          borderBottom: '1px solid var(--grid-border)',
+          paddingBottom: 12,
+        }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 'bold', color: 'var(--grid-text)', marginBottom: 4 }}>
+              🔍 Filter & Search
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--grid-text-secondary)' }}>
+              Narrow down results by agent, error type, or time period
+            </div>
+          </div>
+          <button
+            onClick={fetchData}
             style={{
-              padding: '6px 8px',
+              padding: '6px 12px',
               backgroundColor: 'var(--grid-bg)',
               border: '1px solid var(--grid-border)',
               borderRadius: 4,
-              color: 'var(--grid-text)',
-              fontSize: 12,
+              color: 'var(--grid-text-secondary)',
+              fontSize: 10,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
             }}
           >
-            <option value="">All Agents</option>
-            {Object.keys(data.summary.byAgent).map((agent) => (
-              <option key={agent} value={agent}>
-                {AGENT_DISPLAY[agent]?.name || agent} ({data.summary.byAgent[agent]})
-              </option>
-            ))}
-          </select>
+            <span>🔄</span>
+            <span>Refresh</span>
+          </button>
         </div>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
-          <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase' }}>Error Type</label>
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            style={{
-              padding: '6px 8px',
-              backgroundColor: 'var(--grid-bg)',
-              border: '1px solid var(--grid-border)',
-              borderRadius: 4,
-              color: 'var(--grid-text)',
-              fontSize: 12,
-            }}
-          >
-            <option value="">All Types</option>
-            {Object.keys(data.summary.byType).map((type) => (
-              <option key={type} value={type}>
-                {ERROR_TYPE_DISPLAY[type]?.label || type} ({data.summary.byType[type]})
-              </option>
-            ))}
-          </select>
-        </div>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
-          <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase' }}>Time Range</label>
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            style={{
-              padding: '6px 8px',
-              backgroundColor: 'var(--grid-bg)',
-              border: '1px solid var(--grid-border)',
-              borderRadius: 4,
-              color: 'var(--grid-text)',
-              fontSize: 12,
-            }}
-          >
-            <option value="1">Last Hour</option>
-            <option value="6">Last 6 Hours</option>
-            <option value="24">Last 24 Hours</option>
-            <option value="168">Last Week</option>
-          </select>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 140 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                Agent Filter
+              </label>
+              <span style={{ fontSize: 9, color: 'var(--grid-text-secondary)', opacity: 0.7 }} title="Filter errors by specific AI agent">ℹ️</span>
+            </div>
+            <select
+              value={selectedAgent}
+              onChange={(e) => setSelectedAgent(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                backgroundColor: 'var(--grid-bg)',
+                border: '1px solid var(--grid-border)',
+                borderRadius: 4,
+                color: 'var(--grid-text)',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+              title="Select a specific agent to view only its errors"
+            >
+              <option value="">All Agents ({data.summary.total})</option>
+              {Object.keys(data.summary.byAgent).map((agent) => (
+                <option key={agent} value={agent}>
+                  {AGENT_DISPLAY[agent]?.name || agent.toUpperCase()} ({data.summary.byAgent[agent]} errors)
+                </option>
+              ))}
+            </select>
+            <div style={{ fontSize: 9, color: 'var(--grid-text-secondary)', opacity: 0.8 }}>
+              Choose specific agent or leave empty to see all
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 140 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                Error Type
+              </label>
+              <span style={{ fontSize: 9, color: 'var(--grid-text-secondary)', opacity: 0.7 }} title="Filter by category of error">ℹ️</span>
+            </div>
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                backgroundColor: 'var(--grid-bg)',
+                border: '1px solid var(--grid-border)',
+                borderRadius: 4,
+                color: 'var(--grid-text)',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+              title="Filter by error category: tool errors, message errors, exceptions, etc."
+            >
+              <option value="">All Types ({data.summary.total})</option>
+              {Object.keys(data.summary.byType).map((type) => (
+                <option key={type} value={type}>
+                  {ERROR_TYPE_DISPLAY[type]?.label || type} ({data.summary.byType[type]} errors)
+                </option>
+              ))}
+            </select>
+            <div style={{ fontSize: 9, color: 'var(--grid-text-secondary)', opacity: 0.8 }}>
+              Tool errors, exceptions, message errors, etc.
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 140 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <label style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                Time Period
+              </label>
+              <span style={{ fontSize: 9, color: 'var(--grid-text-secondary)', opacity: 0.7 }} title="Limit results to recent time period">ℹ️</span>
+            </div>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              style={{
+                padding: '8px 10px',
+                backgroundColor: 'var(--grid-bg)',
+                border: '1px solid var(--grid-border)',
+                borderRadius: 4,
+                color: 'var(--grid-text)',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+              title="Choose how far back to look for errors"
+            >
+              <option value="1">Last Hour</option>
+              <option value="6">Last 6 Hours</option>
+              <option value="24">Last 24 Hours</option>
+              <option value="168">Last Week</option>
+            </select>
+            <div style={{ fontSize: 9, color: 'var(--grid-text-secondary)', opacity: 0.8 }}>
+              More recent = faster loading
+            </div>
+          </div>
         </div>
       </div>
 
@@ -447,20 +573,64 @@ export function ErrorDashboard() {
             textAlign: 'center',
             padding: 48,
             backgroundColor: 'var(--grid-surface)',
-            borderRadius: 8,
+            borderRadius: 12,
             border: '1px solid var(--grid-border)',
             color: 'var(--grid-text-secondary)',
           }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-            <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>No Errors Found</div>
-            <div style={{ fontSize: 12 }}>
-              All systems are running smoothly in the selected time range.
+            <div style={{ fontSize: 64, marginBottom: 24 }}>✅</div>
+            <div style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 12, color: 'var(--grid-text)' }}>
+              All Clear!
+            </div>
+            <div style={{ fontSize: 14, marginBottom: 16, color: 'var(--grid-text-secondary)' }}>
+              No errors found in the selected time range and filters.
+            </div>
+            
+            <div style={{
+              backgroundColor: 'var(--grid-bg)',
+              borderRadius: 8,
+              padding: 16,
+              marginTop: 24,
+              textAlign: 'left',
+              maxWidth: 400,
+              margin: '24px auto 0',
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 'bold', color: 'var(--grid-text)', marginBottom: 8 }}>
+                ℹ️ What this means:
+              </div>
+              <ul style={{ fontSize: 11, color: 'var(--grid-text-secondary)', lineHeight: 1.4, margin: 0, paddingLeft: 16 }}>
+                <li>All agents are functioning normally</li>
+                <li>No tool failures or exceptions detected</li>
+                <li>System communication is stable</li>
+                <li>Try adjusting filters or time range to see historical data</li>
+              </ul>
+            </div>
+            
+            <div style={{ marginTop: 24, fontSize: 11, color: 'var(--grid-text-secondary)' }}>
+              This dashboard monitors {Object.keys(AGENT_DISPLAY).length}+ agents and refreshes every 15 seconds
             </div>
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 12, color: 'var(--grid-text)' }}>
-              Recent Errors ({data.errors.length})
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 16,
+              padding: '16px 0',
+              borderBottom: '1px solid var(--grid-border)',
+            }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 'bold', color: 'var(--grid-text)', marginBottom: 4 }}>
+                  📋 Error Log ({data.errors.length} entries)
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--grid-text-secondary)' }}>
+                  Click on any error below for detailed information and stack traces
+                </div>
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--grid-text-secondary)', textAlign: 'right' }}>
+                <div>Showing {Math.min(100, data.errors.length)} of {data.summary.total} total</div>
+                <div style={{ opacity: 0.7 }}>Most recent errors first</div>
+              </div>
             </div>
             {data.errors.map((errorItem, index) => (
               <ErrorRow 
