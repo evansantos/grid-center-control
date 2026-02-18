@@ -7,7 +7,6 @@ import { FleetStatusWidget } from '@/components/widgets/fleet-status-widget';
 import { TaskDistributionWidget } from '@/components/widgets/task-distribution-widget';
 import { RecommendationsWidget } from '@/components/widgets/recommendations-widget';
 
-export const dynamic = 'force-dynamic';
 
 export default function Home() {
   const projects = listProjects();

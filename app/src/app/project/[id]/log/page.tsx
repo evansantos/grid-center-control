@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { getProject, listEvents } from '@/lib/queries';
 import Link from 'next/link';
 
-export const dynamic = 'force-dynamic';
 
 const EVENT_ICONS: Record<string, string> = {
   phase_change: '🔄',

@@ -4,7 +4,6 @@ import { PhaseBadge } from '@/components/phase-badge';
 import { TaskContent } from './client';
 import Link from 'next/link';
 
-export const dynamic = 'force-dynamic';
 
 export default async function TaskPage({ params }: { params: Promise<{ id: string; num: string }> }) {
   const { id, num } = await params;
