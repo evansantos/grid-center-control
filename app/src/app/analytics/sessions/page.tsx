@@ -123,7 +123,7 @@ export default function SessionAnalyticsPage() {
             <span className="text-xs text-grid-text-muted">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </span>
-            <Button variant="secondary" size="sm" onClick={handleRefresh} disabled={loading}>
+            <Button variant="default" size="sm" onClick={handleRefresh} disabled={loading}>
               {loading ? 'Loading...' : 'Refresh'}
             </Button>
           </div>
@@ -258,7 +258,7 @@ export default function SessionAnalyticsPage() {
                 <div key={model.model} className="flex items-center justify-between">
                   <span className="font-mono text-sm text-grid-text truncate max-w-[180px]">{model.model}</span>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" size="sm">{model.count}</Badge>
+                    <Badge variant="default" size="sm">{model.count}</Badge>
                   </div>
                 </div>
               ))}
