@@ -1,36 +1,211 @@
 {
-  "common": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "loading": "Loading...",
-    "error": "Something went wrong",
-    "noData": "No data available",
-    "search": "Search...",
-    "back": "Back",
-    "next": "Next",
-    "confirm": "Confirm"
+  "brand": {
+    "name": "GRID"
   },
   "nav": {
     "dashboard": "Dashboard",
+    "office": "Office", 
     "agents": "Agents",
-    "office": "Office",
-    "analytics": "Analytics",
-    "logs": "Logs",
-    "tokens": "Tokens",
-    "errors": "Errors",
-    "health": "Health",
-    "settings": "Settings"
+    "search": "Search",
+    "analytics": {
+      "label": "Analytics",
+      "performance": "Performance",
+      "sessions": "Sessions", 
+      "timeline": "Timeline"
+    },
+    "tools": {
+      "label": "Tools",
+      "spawn": "Spawn",
+      "logs": "Logs",
+      "tokens": "Tokens", 
+      "errors": "Errors",
+      "health": "Health",
+      "files": "Files"
+    },
+    "settings": {
+      "label": "Settings",
+      "escalation": "Escalation"
+    },
+    "groups": {
+      "main": "Main"
+    }
   },
-  "status": {
-    "active": "Active",
-    "idle": "Idle",
-    "busy": "Busy",
-    "offline": "Offline",
+  "dashboard": {
+    "title": "Mission Control",
+    "subtitle": "MCP 🔴 Operations Dashboard",
+    "layout": "Layout",
+    "presets": {
+      "default": "Default",
+      "compact": "Compact", 
+      "wide": "Wide"
+    },
+    "widgets": {
+      "projects": "Projects",
+      "quickStats": "Quick Stats",
+      "recommendations": "Recommendations",
+      "recentActivity": "Recent Activity",
+      "taskDistribution": "Task Distribution"
+    },
+    "stats": {
+      "projects": "Projects",
+      "agentsOnline": "Agents Online",
+      "tasksToday": "Tasks Today"
+    },
+    "mission": "MCP 🔴 Mission Control"
+  },
+  "agents": {
+    "title": "Agents",
+    "description": "Manage your development agents and their configurations",
+    "scanning": "Scanning agents…",
+    "failedToLoad": "Failed to load agents:",
+    "noAgentsFound": "No agents found in ~/.openclaw/agents/",
+    "configure": "Configure",
+    "status": {
+      "active": "Active",
+      "idle": "Idle"
+    },
+    "session": "session",
+    "sessions": "sessions"
+  },
+  "health": {
+    "title": "System Health",
+    "description": "Real-time monitoring of OpenClaw gateway, agent responsiveness, and system resources.",
+    "loading": "Loading health status...",
+    "failed": "Health Check Failed",
+    "retry": "Retry", 
+    "noData": "No health data available",
+    "checks": "Health Checks",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "systemStatus": "System Status",
+    "lastChecked": "Last checked:",
+    "pageRefreshed": "Page refreshed:",
+    "metrics": {
+      "gateway": "OpenClaw gateway daemon status - manages agent communication and routing",
+      "agentResponsiveness": "How quickly agents respond to tasks (measures session start latency)", 
+      "systemResources": "CPU, memory, disk usage of the host machine",
+      "apiResponse": "Response times of the dashboard API endpoints"
+    }
+  },
+  "logs": {
+    "title": "🔍 Log Search",
+    "description": "Search across all agent session logs",
+    "searchPlaceholder": "Search across all agent logs...",
+    "filters": {
+      "agent": "Agent:",
+      "all": "All",
+      "time": "Time:",
+      "ranges": {
+        "1h": "1h",
+        "6h": "6h", 
+        "24h": "24h",
+        "7d": "7d",
+        "all": "All"
+      }
+    },
+    "results": " results in ",
+    "timeUnit": "ms",
+    "emptyState": {
+      "icon": "🔍",
+      "message": "Search across all agent logs"
+    }
+  },
+  "errors": {
+    "title": "Error Monitoring",
+    "breadcrumbs": {
+      "dashboard": "🏠 Dashboard",
+      "errorMonitoring": "Error Monitoring"
+    },
+    "dashboard": {
+      "title": "⚠️ System Error Dashboard",
+      "description": "Real-time monitoring and analysis of errors across the Grid Dashboard ecosystem",
+      "loading": "Loading error data...",
+      "errorMessage": "Error:",
+      "noData": "No data",
+      "close": "Close",
+      "refresh": "Refresh",
+      "purpose": {
+        "title": "What this dashboard shows",
+        "description": "This dashboard aggregates error data from agent session logs, tool failures, and system exceptions. It helps identify patterns, track system health, and diagnose issues across all OpenClaw agents and components."
+      },
+      "helpText": {
+        "autoRefresh": "Auto-refreshes every 15 seconds",
+        "clickDetails": "Click any error for detailed view", 
+        "useFilters": "Use filters to narrow results"
+      },
+      "summary": {
+        "totalErrors": "Total Errors Found",
+        "totalErrorsDesc": "Errors detected in the selected time range across all agents and systems",
+        "affectedAgents": "Affected Agents",
+        "affectedAgentsDesc": "Number of different AI agents that encountered errors",
+        "errorCategories": "Error Categories",
+        "errorCategoriesDesc": "Different types of errors: tools, messages, exceptions, etc."
+      },
+      "filters": {
+        "title": "🔍 Filter & Search",
+        "description": "Narrow down results by agent, error type, or time period",
+        "agentFilter": "Agent Filter",
+        "agentHelp": "Choose specific agent or leave empty to see all",
+        "allAgents": "All Agents",
+        "errorType": "Error Type", 
+        "errorTypeHelp": "Tool errors, exceptions, message errors, etc.",
+        "allTypes": "All Types",
+        "timePeriod": "Time Period",
+        "timePeriodHelp": "More recent = faster loading",
+        "timeOptions": {
+          "lastHour": "Last Hour",
+          "last6Hours": "Last 6 Hours", 
+          "last24Hours": "Last 24 Hours",
+          "lastWeek": "Last Week"
+        },
+        "errors": " errors"
+      },
+      "noErrors": {
+        "title": "All Clear!",
+        "message": "No errors found in the selected time range and filters.",
+        "meaning": "ℹ️ What this means:",
+        "points": [
+          "All agents are functioning normally",
+          "No tool failures or exceptions detected", 
+          "System communication is stable",
+          "Try adjusting filters or time range to see historical data"
+        ],
+        "monitoring": "This dashboard monitors",
+        "agentsAndRefresh": "+ agents and refreshes every 15 seconds"
+      },
+      "errorLog": {
+        "title": "📋 Error Log",
+        "entries": "entries",
+        "clickForDetails": "Click on any error below for detailed information and stack traces",
+        "showing": "Showing",
+        "of": "of", 
+        "total": "total",
+        "mostRecent": "Most recent errors first"
+      },
+      "errorDetails": {
+        "title": "Error Details",
+        "session": "Session:",
+        "ago": "ago",
+        "justNow": "just now"
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "comingSoon": "Settings page — more options coming soon."
+  },
+  "common": {
+    "loading": "Loading...",
     "error": "Error",
-    "pending": "Pending",
-    "inProgress": "In Progress",
-    "review": "Review",
-    "done": "Done"
+    "success": "Success", 
+    "warning": "Warning",
+    "info": "Info",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back"
   }
 }

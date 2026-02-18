@@ -1,11 +1,20 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NotificationCenter } from '@/components/notification-center';
 import { useIsMobile } from '@/lib/useMediaQuery';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface DropdownItem {
   label: string;
@@ -52,91 +61,51 @@ const settingsGroup: NavGroup = {
   ],
 };
 
-function Dropdown({ group }: { group: NavGroup }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+function NavDropdown({ group }: { group: NavGroup }) {
   const pathname = usePathname();
   const isActive = group.items.some((item) => pathname.startsWith(item.href));
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 text-xs tracking-wide px-2 py-1 rounded transition-colors"
-        style={{
-          color: isActive ? 'var(--grid-accent)' : 'var(--grid-text-dim)',
-          background: open ? 'var(--grid-surface-hover)' : 'transparent',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--grid-text)')}
-        onMouseLeave={(e) => {
-          if (!isActive) e.currentTarget.style.color = 'var(--grid-text-dim)';
-        }}
-      >
-        {group.label}
-        <span className="text-[10px] opacity-50" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
-      </button>
-      {open && (
-        <div
-          className="absolute top-full left-0 mt-1 min-w-[160px] py-1 rounded-lg shadow-xl z-50"
-          style={{
-            background: 'var(--grid-surface)',
-            border: '1px solid var(--grid-border-bright)',
-            backdropFilter: 'blur(12px)',
-          }}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className={cn(
+            "text-[length:var(--font-size-xs)] tracking-wide gap-1",
+            isActive && "text-grid-accent"
+          )}
         >
-          {group.items.map((item) => (
-            <Link
-              key={item.href}
+          {group.label}
+          <span className="text-[10px] opacity-50">▾</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[160px]">
+        {group.items.map((item) => (
+          <DropdownMenuItem key={item.href} asChild>
+            <Link 
               href={item.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs transition-colors"
-              style={{
-                color: pathname === item.href ? 'var(--grid-accent)' : 'var(--grid-text-dim)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--grid-surface-hover)';
-                e.currentTarget.style.color = 'var(--grid-text)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = pathname === item.href ? 'var(--grid-accent)' : 'var(--grid-text-dim)';
-              }}
+              className={cn(
+                "flex items-center gap-2 cursor-pointer",
+                pathname === item.href ? "text-grid-accent" : "text-grid-text-dim"
+              )}
             >
               {item.icon && <span className="opacity-50 w-4 text-center">{item.icon}</span>}
               {item.label}
             </Link>
-          ))}
-        </div>
-      )}
-    </div>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 function SearchTrigger() {
   return (
-    <button
-      className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-md transition-colors"
-      style={{
-        color: 'var(--grid-text-muted)',
-        border: '1px solid var(--grid-border)',
-        background: 'var(--grid-surface)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--grid-border-bright)';
-        e.currentTarget.style.color = 'var(--grid-text-dim)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--grid-border)';
-        e.currentTarget.style.color = 'var(--grid-text-muted)';
-      }}
+    <Button 
+      variant="secondary" 
+      size="sm" 
+      className="text-grid-text-muted hover:text-grid-text-dim gap-2"
       onClick={() => {
         // Trigger Cmd+K search
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
@@ -144,13 +113,10 @@ function SearchTrigger() {
     >
       <span>⌕</span>
       <span>Search</span>
-      <kbd
-        className="ml-2 px-1 py-0.5 rounded text-[10px]"
-        style={{ background: 'var(--grid-border)', color: 'var(--grid-text-muted)' }}
-      >
+      <kbd className="ml-2 px-1 py-0.5 rounded text-[10px] bg-grid-border text-grid-text-muted">
         ⌘K
       </kbd>
-    </button>
+    </Button>
   );
 }
 
@@ -169,74 +135,47 @@ export function NavBar() {
   return (
     <>
       {/* Accent glow bar at very top */}
-      <div
-        className="h-[2px] w-full"
-        style={{
-          background: `linear-gradient(90deg, transparent, var(--grid-accent), var(--grid-accent-glow), var(--grid-accent), transparent)`,
-        }}
-      />
-      <nav
-        className="relative border-b px-4 py-2 flex items-center gap-1 backdrop-blur-sm"
-        style={{
-          borderColor: 'var(--grid-border)',
-          background: 'color-mix(in srgb, var(--grid-surface) 90%, transparent)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-        }}
-      >
+      <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-grid-accent to-transparent" />
+      
+      <nav className="sticky top-0 z-[100] border-b border-grid-border bg-grid-surface/90 backdrop-blur-sm px-4 py-2 flex items-center gap-1">
         {/* Bottom glow */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-px"
-          style={{
-            background: `linear-gradient(90deg, transparent, var(--grid-accent-glow), var(--grid-accent-dim), var(--grid-accent-glow), transparent)`,
-          }}
-        />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-grid-accent/50 to-transparent" />
 
         {/* Logo */}
-        <Link href="/" className="font-bold text-sm tracking-widest mr-4 flex items-center gap-2" style={{ color: 'var(--grid-accent)' }}>
-          <span style={{
-            display: 'inline-block',
-            width: 10,
-            height: 10,
-            borderRadius: '50%',
-            background: 'var(--grid-accent)',
-            boxShadow: '0 0 8px var(--grid-accent)',
-            animation: 'pulse 2s ease-in-out infinite',
-          }} />
+        <Link 
+          href="/" 
+          className="font-bold text-sm tracking-widest mr-4 flex items-center gap-2 text-grid-accent"
+        >
+          <span className="w-2.5 h-2.5 rounded-full bg-grid-accent shadow-[0_0_8px_var(--grid-accent)] animate-pulse" />
           <span>GRID</span>
         </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:contents">
           {/* Separator */}
-          <div className="w-px h-4 mx-1" style={{ background: 'var(--grid-border-bright)' }} />
+          <Separator orientation="vertical" className="h-4 mx-1 bg-grid-border-bright" />
 
           {/* Main links */}
           {mainLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-xs tracking-wide px-2 py-1 rounded transition-colors"
-              style={{
-                color: pathname === link.href ? 'var(--grid-accent)' : 'var(--grid-text-dim)',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--grid-text)')}
-              onMouseLeave={(e) => {
-                if (pathname !== link.href) e.currentTarget.style.color = 'var(--grid-text-dim)';
-              }}
+              className={cn(
+                "text-[length:var(--font-size-xs)] tracking-wide px-2 py-1 rounded transition-colors hover:text-grid-text",
+                pathname === link.href ? "text-grid-accent" : "text-grid-text-dim"
+              )}
             >
               {link.label}
             </Link>
           ))}
 
           {/* Separator */}
-          <div className="w-px h-4 mx-1" style={{ background: 'var(--grid-border)' }} />
+          <Separator orientation="vertical" className="h-4 mx-1" />
 
           {/* Dropdown groups */}
-          <Dropdown group={analyticsGroup} />
-          <Dropdown group={toolsGroup} />
-          <Dropdown group={settingsGroup} />
+          <NavDropdown group={analyticsGroup} />
+          <NavDropdown group={toolsGroup} />
+          <NavDropdown group={settingsGroup} />
 
           {/* Spacer */}
           <div className="flex-1" />
@@ -252,9 +191,8 @@ export function NavBar() {
         {/* Mobile: spacer + hamburger */}
         <div className="flex-1 md:hidden" />
         <button
-          className="md:hidden p-2 text-xl"
+          className="md:hidden p-2 text-xl text-grid-text"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={{ color: 'var(--grid-text)' }}
         >
           {mobileMenuOpen ? '✕' : '☰'}
         </button>
@@ -262,20 +200,11 @@ export function NavBar() {
 
       {/* Mobile Menu Dropdown */}
       {isMobile && mobileMenuOpen && (
-        <div
-          className="border-b md:hidden"
-          style={{
-            borderColor: 'var(--grid-border)',
-            background: 'var(--grid-surface)',
-            position: 'sticky',
-            top: 42,
-            zIndex: 99,
-          }}
-        >
+        <div className="sticky top-[42px] z-[99] border-b border-grid-border bg-grid-surface md:hidden">
           <div className="px-4 py-2 space-y-1">
             {allGroups.map((group) => (
               <div key={group.label}>
-                <div className="text-xs uppercase tracking-wider py-1 mt-2" style={{ color: 'var(--grid-text-muted)', opacity: 0.6 }}>
+                <div className="text-[length:var(--font-size-xs)] uppercase tracking-wider py-1 mt-2 text-grid-text-muted opacity-60">
                   {group.label}
                 </div>
                 {group.items.map((link) => (
@@ -283,8 +212,10 @@ export function NavBar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 py-2 text-sm hover:opacity-80"
-                    style={{ color: pathname === link.href ? 'var(--grid-accent)' : 'var(--grid-text-dim)' }}
+                    className={cn(
+                      "flex items-center gap-2 py-2 text-sm hover:opacity-80",
+                      pathname === link.href ? "text-grid-accent" : "text-grid-text-dim"
+                    )}
                   >
                     {link.icon && <span className="opacity-50 w-4 text-center">{link.icon}</span>}
                     {link.label}
@@ -292,7 +223,7 @@ export function NavBar() {
                 ))}
               </div>
             ))}
-            <div className="flex items-center gap-2 py-2 border-t" style={{ borderColor: 'var(--grid-border)' }}>
+            <div className="flex items-center gap-2 py-2 border-t border-grid-border">
               <ThemeToggle />
               <NotificationCenter />
             </div>

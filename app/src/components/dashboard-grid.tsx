@@ -2,6 +2,9 @@
 
 import { useState, useEffect, type ReactNode } from 'react';
 import { useIsMobile } from '@/lib/useMediaQuery';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface WidgetPosition { x: number; y: number; w: number; h: number }
 interface WidgetConfig { id: string; title: string; position: WidgetPosition }
@@ -66,33 +69,26 @@ export function DashboardGrid({ children }: { children: Record<string, ReactNode
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-wide" style={{ color: 'var(--grid-text)' }}>
+          <h1 className="text-2xl font-bold tracking-wide text-grid-text">
             Mission Control
           </h1>
-          <p className="text-xs mt-1" style={{ color: 'var(--grid-text-muted)' }}>
+          <p className="text-[length:var(--font-size-xs)] mt-1 text-grid-text-muted">
             MCP 🔴 Operations Dashboard
           </p>
         </div>
         {/* Segmented layout selector — hide on mobile */}
         <div className={`items-center gap-1 ${isMobile ? 'hidden' : 'flex'}`}>
-          <span className="text-xs mr-2" style={{ color: 'var(--grid-text-muted)' }}>Layout</span>
-          <div
-            className="flex rounded-lg overflow-hidden"
-            style={{ border: '1px solid var(--grid-border)' }}
-          >
+          <span className="text-[length:var(--font-size-xs)] mr-2 text-grid-text-muted">Layout</span>
+          <div className="flex gap-1">
             {(Object.keys(PRESETS) as PresetName[]).map((name) => (
-              <button
+              <Button
                 key={name}
                 onClick={() => handlePresetChange(name)}
-                className="px-3 py-1.5 text-xs font-medium transition-colors"
-                style={{
-                  background: preset === name ? 'var(--grid-accent)' : 'var(--grid-surface)',
-                  color: preset === name ? '#fff' : 'var(--grid-text-dim)',
-                  borderRight: '1px solid var(--grid-border)',
-                }}
+                variant={preset === name ? 'primary' : 'ghost'}
+                size="sm"
               >
                 {name}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -108,28 +104,24 @@ export function DashboardGrid({ children }: { children: Record<string, ReactNode
         }}
       >
         {layout.map((widget) => (
-          <div
+          <Card
             key={widget.id}
+            className="overflow-hidden"
             style={{
               gridColumn: `${widget.position.x} / span ${widget.position.w}`,
               gridRow: `${widget.position.y} / span ${widget.position.h}`,
-              border: '1px solid var(--grid-border)',
-              background: 'var(--grid-surface)',
-              borderRadius: '0.5rem',
-              overflow: 'hidden',
             }}
           >
-            <div
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold"
-              style={{ borderBottom: '1px solid var(--grid-border)', color: 'var(--grid-text-dim)' }}
-            >
-              <span className="cursor-grab select-none opacity-40">⋮⋮</span>
-              <span>{widget.title}</span>
-            </div>
-            <div className="p-4">
+            <CardHeader className="py-2 border-b border-grid-border">
+              <div className="flex items-center gap-2 text-[length:var(--font-size-sm)] font-semibold text-grid-text-muted">
+                <span className="cursor-grab select-none opacity-40">⋮⋮</span>
+                <span>{widget.title}</span>
+              </div>
+            </CardHeader>
+            <CardContent>
               {children[widget.id] ?? null}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

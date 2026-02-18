@@ -1,4 +1,5 @@
 import { ErrorDashboard } from '@/components/error-dashboard';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Error Dashboard - Grid System Monitor',
@@ -7,36 +8,18 @@ export const metadata = {
 
 export default function ErrorsPage() {
   return (
-    <div style={{ 
-      backgroundColor: 'var(--grid-bg)', 
-      minHeight: '100vh',
-      fontFamily: 'monospace' 
-    }}>
+    <div className="bg-grid-bg min-h-screen font-mono">
       {/* Page header with breadcrumb */}
-      <div style={{
-        borderBottom: '1px solid var(--grid-border)',
-        backgroundColor: 'var(--grid-surface)',
-        padding: '16px 20px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a 
+      <div className="sticky top-0 z-10 border-b border-grid-border bg-grid-surface px-5 py-4">
+        <div className="max-w-6xl mx-auto flex items-center gap-3">
+          <Link 
             href="/" 
-            style={{ 
-              color: 'var(--grid-text-secondary)', 
-              textDecoration: 'none', 
-              fontSize: 12,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
+            className="text-grid-text-muted hover:text-grid-text text-xs flex items-center gap-1 transition-colors"
           >
             🏠 Dashboard
-          </a>
-          <span style={{ color: 'var(--grid-text-secondary)', fontSize: 12 }}>→</span>
-          <span style={{ color: 'var(--grid-text)', fontSize: 12, fontWeight: 'bold' }}>
+          </Link>
+          <span className="text-grid-text-muted text-xs">→</span>
+          <span className="text-grid-text text-xs font-bold">
             Error Monitoring
           </span>
         </div>
