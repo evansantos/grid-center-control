@@ -4,35 +4,25 @@ import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Table } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-interface PerformanceMetrics {
-  overview: {
-    activeAgents: number;
-    totalTasks: number;
-    avgResponseTime: number;
-    successRate: number;
-  };
-  agents: {
-    id: string;
-    name: string;
-    tasks_completed: number;
-    avg_response_time: number;
-    success_rate: number;
-    status: 'active' | 'idle' | 'offline';
-    last_active: string;
-  }[];
-  trends: {
-    performance: 'up' | 'down' | 'neutral';
-    tasks: 'up' | 'down' | 'neutral';
-    responseTime: 'up' | 'down' | 'neutral';
-  };
+interface AgentPerformance {
+  agentId: string;
+  emoji: string;
+  sessionsCount: number;
+  totalTokensIn: number;
+  totalTokensOut: number;
+  avgDurationSec: number;
+  errorCount: number;
+  errorRate: number;
+  lastActive: string;
+  trend: number[];
+  health: 'healthy' | 'degraded' | 'unhealthy';
 }
 
 export default function PerformancePage() {
-  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
+  const [agents, setAgents] = useState<AgentPerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
@@ -40,7 +30,7 @@ export default function PerformancePage() {
     try {
       const response = await fetch('/api/analytics/performance');
       const data = await response.json();
-      setMetrics(data);
+      setAgents(Array.isArray(data) ? data : []);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Failed to fetch performance data:', error);
@@ -51,7 +41,7 @@ export default function PerformancePage() {
 
   useEffect(() => {
     fetchPerformanceData();
-    const interval = setInterval(fetchPerformanceData, 30000); // Refresh every 30s
+    const interval = setInterval(fetchPerformanceData, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -60,7 +50,22 @@ export default function PerformancePage() {
     fetchPerformanceData();
   };
 
-  if (loading && !metrics) {
+  // Calculate overview metrics from agents array
+  const activeAgents = agents.filter(a => {
+    const lastActive = new Date(a.lastActive);
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    return lastActive > hourAgo;
+  }).length;
+  
+  const totalSessions = agents.reduce((sum, a) => sum + a.sessionsCount, 0);
+  const avgDuration = agents.length > 0 
+    ? Math.round(agents.reduce((sum, a) => sum + a.avgDurationSec, 0) / agents.length) 
+    : 0;
+  const avgSuccessRate = agents.length > 0
+    ? Math.round((1 - agents.reduce((sum, a) => sum + a.errorRate, 0) / agents.length) * 100)
+    : 0;
+
+  if (loading && agents.length === 0) {
     return (
       <div className="p-6 max-w-6xl mx-auto">
         <PageHeader
@@ -105,32 +110,28 @@ export default function PerformancePage() {
         <StatCard
           icon="🟢"
           label="Active Agents"
-          value={metrics?.overview.activeAgents ?? 0}
+          value={activeAgents}
           variant="success"
-          change={metrics?.trends.performance === 'up' ? '+12%' : metrics?.trends.performance === 'down' ? '-5%' : '0%'}
-          changeType={metrics?.trends.performance || 'neutral'}
+          change={`${agents.length} total`}
+          changeType="neutral"
         />
         <StatCard
           icon="📋"
-          label="Total Tasks"
-          value={metrics?.overview.totalTasks ?? 0}
+          label="Total Sessions"
+          value={totalSessions}
           variant="info"
-          change={metrics?.trends.tasks === 'up' ? '+25' : metrics?.trends.tasks === 'down' ? '-8' : '0'}
-          changeType={metrics?.trends.tasks || 'neutral'}
         />
         <StatCard
           icon="⚡"
-          label="Avg Response (ms)"
-          value={metrics?.overview.avgResponseTime ?? 0}
-          variant={metrics?.overview.avgResponseTime && metrics.overview.avgResponseTime > 1000 ? 'warning' : 'default'}
-          change={metrics?.trends.responseTime === 'down' ? '-15%' : metrics?.trends.responseTime === 'up' ? '+8%' : '0%'}
-          changeType={metrics?.trends.responseTime === 'down' ? 'increase' : metrics?.trends.responseTime === 'up' ? 'decrease' : 'neutral'}
+          label="Avg Duration (s)"
+          value={avgDuration}
+          variant={avgDuration > 300 ? 'warning' : 'default'}
         />
         <StatCard
           icon="✅"
           label="Success Rate"
-          value={`${metrics?.overview.successRate ?? 0}%`}
-          variant={metrics?.overview.successRate && metrics.overview.successRate >= 95 ? 'success' : 'warning'}
+          value={`${avgSuccessRate}%`}
+          variant={avgSuccessRate >= 95 ? 'success' : avgSuccessRate >= 80 ? 'warning' : 'error'}
         />
       </div>
 
@@ -140,54 +141,64 @@ export default function PerformancePage() {
           <h2 className="text-lg font-semibold text-grid-text">Agent Performance Details</h2>
         </CardHeader>
         <CardContent>
-          {metrics?.agents && metrics.agents.length > 0 ? (
+          {agents.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-grid-border">
                     <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Agent</th>
-                    <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Status</th>
-                    <th className="text-right py-3 px-2 text-sm font-medium text-grid-text-muted">Tasks</th>
-                    <th className="text-right py-3 px-2 text-sm font-medium text-grid-text-muted">Avg Response</th>
-                    <th className="text-right py-3 px-2 text-sm font-medium text-grid-text-muted">Success Rate</th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Health</th>
+                    <th className="text-right py-3 px-2 text-sm font-medium text-grid-text-muted">Sessions</th>
+                    <th className="text-right py-3 px-2 text-sm font-medium text-grid-text-muted">Avg Duration</th>
+                    <th className="text-right py-3 px-2 text-sm font-medium text-grid-text-muted">Errors</th>
                     <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Last Active</th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Trend (7d)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {metrics.agents.map((agent) => (
-                    <tr key={agent.id} className="border-b border-grid-border/50 hover:bg-grid-surface/50">
+                  {agents.map((agent) => (
+                    <tr key={agent.agentId} className="border-b border-grid-border/50 hover:bg-grid-surface/50">
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-semibold text-grid-text">{agent.name}</span>
+                          <span className="text-lg">{agent.emoji}</span>
+                          <span className="font-mono font-semibold text-grid-text uppercase">{agent.agentId}</span>
                         </div>
                       </td>
                       <td className="py-3 px-2">
                         <Badge
                           variant={
-                            agent.status === 'active' ? 'success' :
-                            agent.status === 'idle' ? 'warning' : 'error'
+                            agent.health === 'healthy' ? 'success' :
+                            agent.health === 'degraded' ? 'warning' : 'error'
                           }
                           size="sm"
                         >
-                          {agent.status}
+                          {agent.health}
                         </Badge>
                       </td>
                       <td className="py-3 px-2 text-right font-mono text-grid-text">
-                        {agent.tasks_completed}
+                        {agent.sessionsCount}
                       </td>
                       <td className="py-3 px-2 text-right font-mono text-grid-text">
-                        {agent.avg_response_time}ms
+                        {agent.avgDurationSec}s
                       </td>
                       <td className="py-3 px-2 text-right font-mono">
-                        <span className={
-                          agent.success_rate >= 95 ? 'text-green-400' :
-                          agent.success_rate >= 80 ? 'text-yellow-400' : 'text-red-400'
-                        }>
-                          {agent.success_rate}%
+                        <span className={agent.errorCount === 0 ? 'text-green-400' : 'text-red-400'}>
+                          {agent.errorCount}
                         </span>
                       </td>
                       <td className="py-3 px-2 text-sm text-grid-text-muted">
-                        {new Date(agent.last_active).toLocaleString()}
+                        {new Date(agent.lastActive).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-2">
+                        <div className="flex items-end gap-0.5 h-4">
+                          {agent.trend.map((val, i) => (
+                            <div
+                              key={i}
+                              className="w-1.5 bg-grid-accent rounded-sm"
+                              style={{ height: `${Math.max(2, (val / Math.max(...agent.trend, 1)) * 16)}px` }}
+                            />
+                          ))}
+                        </div>
                       </td>
                     </tr>
                   ))}
