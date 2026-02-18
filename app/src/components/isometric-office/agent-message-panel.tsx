@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { AgentCfg, SessionMessage, RoleFilter } from './types';
+import { StatusDot } from '@/components/ui/status-dot';
 
 /* ── Agent Message Panel ── */
 export function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose: () => void }) {
@@ -52,24 +53,41 @@ export function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose
     return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
 
+  // Handle escape key to close panel
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   return (
-    <div className="agent-msg-panel" style={{
-      position: 'fixed',
-      top: 0,
-      right: 0,
-      width: 360,
-      height: '100vh',
-      background: 'linear-gradient(180deg, rgba(8, 8, 16, 0.97) 0%, rgba(12, 12, 24, 0.98) 100%)',
-      borderLeft: `2px solid ${agent.color}50`,
-      boxShadow: `inset 1px 0 20px ${agent.color}10, -4px 0 24px rgba(0,0,0,0.5)`,
-      backdropFilter: 'blur(16px)',
-      zIndex: 200,
-      display: 'flex',
-      flexDirection: 'column',
-      animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-      fontFamily: "'JetBrains Mono', monospace",
-      overflow: 'hidden',
-    }}>
+    <div 
+      className="agent-msg-panel" 
+      style={{
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        width: 360,
+        height: '100vh',
+        background: 'linear-gradient(180deg, var(--grid-bg) 0%, var(--grid-surface) 100%)',
+        borderLeft: `2px solid ${agent.color}50`,
+        boxShadow: `inset 1px 0 20px ${agent.color}10, -4px 0 24px rgba(0,0,0,0.5)`,
+        backdropFilter: 'blur(16px)',
+        zIndex: 200,
+        display: 'flex',
+        flexDirection: 'column',
+        animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        fontFamily: "'JetBrains Mono', monospace",
+        overflow: 'hidden',
+      }}
+      role="dialog"
+      aria-labelledby="agent-panel-title"
+      aria-describedby="agent-panel-description"
+    >
       {/* Scanline overlay */}
       <div style={{
         position: 'absolute',
@@ -102,220 +120,310 @@ export function AgentMessagePanel({ agent, onClose }: { agent: AgentCfg; onClose
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background: `${agent.color}18`,
-            border: `1.5px solid ${agent.color}40`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 18,
-            boxShadow: `0 0 12px ${agent.color}20`,
+            width: 32,
+            height: 32,
+            background: `linear-gradient(135deg, ${agent.color}, ${agent.colorDark || agent.color})`,
+            borderRadius: '50%',
+            fontSize: 16,
+            border: `1.5px solid ${agent.color}60`,
+            boxShadow: `0 0 12px ${agent.color}30`,
           }}>
             {agent.emoji}
           </div>
           <div>
-            <div style={{
-              color: agent.color,
-              fontWeight: 700,
-              fontSize: 13,
-              textShadow: `0 0 8px ${agent.color}40`,
-              letterSpacing: '0.02em',
-            }}>{agent.name}</div>
-            <div style={{
-              color: 'var(--grid-text-secondary)',
-              fontSize: 10,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-            }}>
-              <span style={{
-                display: 'inline-block',
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: agent.color,
-                boxShadow: `0 0 6px ${agent.color}80`,
-                animation: 'isoGlowPulse 2s infinite',
-              }} />
-              {agent.role}
-            </div>
+            <h2 
+              id="agent-panel-title"
+              style={{
+                margin: 0,
+                fontSize: 14,
+                fontWeight: 700,
+                color: 'var(--grid-text)',
+                letterSpacing: 0.5,
+              }}
+            >
+              {agent.name}
+            </h2>
+            <p 
+              id="agent-panel-description"
+              style={{
+                margin: 0,
+                fontSize: 10,
+                color: 'var(--grid-text-dim)',
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+              }}
+            >
+              {agent.zone} • {sessionCount} sessions
+            </p>
           </div>
         </div>
         <button
           onClick={onClose}
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: `1px solid ${agent.color}25`,
-            borderRadius: 6,
-            color: 'var(--grid-text-label)',
+            background: 'none',
+            border: 'none',
+            color: 'var(--grid-text-muted)',
             cursor: 'pointer',
-            padding: '4px 8px',
-            fontSize: 11,
-            fontFamily: 'monospace',
-            transition: 'all 0.15s ease',
+            fontSize: 18,
+            padding: 4,
+            borderRadius: 4,
+            transition: 'color 0.2s ease',
+            outline: 'none',
           }}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = `${agent.color}20`;
-            e.currentTarget.style.borderColor = `${agent.color}50`;
-            e.currentTarget.style.color = agent.color;
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-            e.currentTarget.style.borderColor = `${agent.color}25`;
-            e.currentTarget.style.color = 'var(--grid-text-label)';
-          }}
-        >✕</button>
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--grid-text)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--grid-text-muted)'}
+          onFocus={e => e.currentTarget.style.outline = '2px solid var(--grid-accent)'}
+          onBlur={e => e.currentTarget.style.outline = 'none'}
+          aria-label="Close agent panel"
+        >
+          ×
+        </button>
       </div>
 
-      {/* Filter tabs */}
+      {/* Filters */}
       <div style={{
         display: 'flex',
-        gap: 0,
-        borderBottom: '1px solid var(--grid-border)',
+        gap: 4,
+        padding: '10px 16px',
+        borderBottom: '1px solid var(--grid-border-subtle)',
         flexShrink: 0,
         position: 'relative',
         zIndex: 2,
-        padding: '0 12px',
-      }}>
-        {(['all', 'user', 'assistant', 'system'] as RoleFilter[]).map(f => {
-          const count = f === 'all' ? messages.length : messages.filter(m => m.role === f).length;
-          const active = filter === f;
-          const colors: Record<string, string> = { all: 'var(--grid-text-label)', user: 'var(--grid-info)', assistant: agent.color, system: 'var(--grid-yellow)' };
-          return (
-            <button key={f} onClick={() => setFilter(f)} style={{
-              flex: 1,
-              padding: '7px 4px',
-              background: 'none',
-              border: 'none',
-              borderBottom: active ? `2px solid ${colors[f]}` : '2px solid transparent',
-              color: active ? colors[f] : 'var(--grid-text-muted)',
-              fontSize: 9,
-              fontFamily: 'monospace',
+      }}
+      role="tablist"
+      aria-label="Message filters"
+      >
+        {(['all', 'user', 'assistant', 'system'] as const).map(f => (
+          <button
+            key={f}
+            role="tab"
+            aria-selected={filter === f}
+            aria-controls="message-list"
+            onClick={() => setFilter(f)}
+            style={{
+              background: filter === f ? `${agent.color}25` : 'var(--grid-surface-hover)',
+              color: filter === f ? agent.color : 'var(--grid-text-dim)',
+              border: filter === f ? `1px solid ${agent.color}40` : '1px solid var(--grid-border)',
+              borderRadius: 12,
+              padding: '4px 10px',
+              fontSize: 10,
+              fontWeight: 600,
               cursor: 'pointer',
+              transition: 'all 0.2s ease',
               textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              transition: 'all 0.15s',
-            }}>
-              {f} ({count})
-            </button>
-          );
-        })}
+              letterSpacing: 0.5,
+              outline: 'none',
+            }}
+            onFocus={e => e.currentTarget.style.outline = '2px solid var(--grid-accent)'}
+            onBlur={e => e.currentTarget.style.outline = 'none'}
+          >
+            {f}
+            {f !== 'all' && (
+              <span style={{
+                marginLeft: 4,
+                background: filter === f ? agent.color : 'var(--grid-text-muted)',
+                color: filter === f ? 'var(--grid-bg)' : 'var(--grid-surface)',
+                borderRadius: 6,
+                padding: '0 4px',
+                fontSize: 9,
+                fontWeight: 700,
+              }}>
+                {messages.filter(m => m.role === f).length}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Messages */}
-      <div ref={panelRef} className="agent-msg-scroll" style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '12px 14px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        position: 'relative',
-        zIndex: 2,
-        scrollBehavior: 'smooth',
-      }}>
-        {loading && (
+      <div 
+        ref={panelRef}
+        id="message-list"
+        role="tabpanel"
+        aria-labelledby="agent-panel-title"
+        className="agent-msg-scroll"
+        style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '0 16px',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        {loading ? (
           <div style={{
-            color: agent.color,
-            fontSize: 11,
-            textAlign: 'center',
-            marginTop: 40,
-            opacity: 0.7,
-            animation: 'isoGlowPulse 1.5s infinite',
-          }}>
-            ▸ Loading session…
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            color: 'var(--grid-text-dim)',
+            fontSize: 12,
+          }}
+          role="status"
+          aria-live="polite"
+          >
+            Loading messages...
           </div>
-        )}
-        {!loading && filtered.length === 0 && (
+        ) : filtered.length === 0 ? (
           <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
             color: 'var(--grid-text-muted)',
             fontSize: 11,
             textAlign: 'center',
-            marginTop: 40,
-            border: '1px dashed var(--grid-border)',
-            padding: '16px 12px',
-            borderRadius: 8,
-          }}>
-            ◇ {filter === 'all' ? 'No recent messages' : `No ${filter} messages`}
+          }}
+          role="status"
+          aria-live="polite"
+          >
+            <div style={{ fontSize: 24, marginBottom: 8, opacity: 0.5 }}>💭</div>
+            No messages found
+            <br />
+            <span style={{ fontSize: 10, opacity: 0.7 }}>
+              Try a different filter
+            </span>
+          </div>
+        ) : (
+          <div style={{ paddingBottom: 16 }}>
+            {filtered.map((msg, i) => {
+              const isExpanded = expanded.has(i);
+              const preview = msg.content.slice(0, 120);
+              const needsExpansion = msg.content.length > 120;
+
+              return (
+                <div
+                  key={i}
+                  style={{
+                    marginTop: i === 0 ? 12 : 8,
+                    background: msg.role === 'user' 
+                      ? 'var(--grid-surface-hover)' 
+                      : msg.role === 'assistant' 
+                      ? `${agent.color}08` 
+                      : 'var(--grid-border)10',
+                    border: `1px solid ${
+                      msg.role === 'user' 
+                        ? 'var(--grid-border)' 
+                        : msg.role === 'assistant' 
+                        ? `${agent.color}20` 
+                        : 'var(--grid-border-subtle)'
+                    }`,
+                    borderRadius: 8,
+                    padding: 10,
+                    animation: 'fadeInMsg 0.3s ease-out',
+                    position: 'relative',
+                  }}
+                  role="article"
+                  aria-labelledby={`message-${i}-header`}
+                >
+                  {/* Message header */}
+                  <div 
+                    id={`message-${i}-header`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: 6,
+                      fontSize: 9,
+                      opacity: 0.8,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <StatusDot 
+                        status={msg.role === 'user' ? 'busy' : msg.role === 'assistant' ? 'active' : 'idle'}
+                        size="sm"
+                        aria-label={`${msg.role} message`}
+                      />
+                      <span style={{
+                        color: msg.role === 'assistant' ? agent.color : 'var(--grid-text-label)',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 1,
+                      }}>
+                        {msg.role}
+                      </span>
+                    </div>
+                    <span style={{ 
+                      color: 'var(--grid-text-faint)', 
+                      fontFamily: 'monospace',
+                      fontSize: 8,
+                    }}>
+                      {formatTime(msg.timestamp)}
+                    </span>
+                  </div>
+
+                  {/* Message content */}
+                  <div style={{
+                    fontSize: 11,
+                    lineHeight: 1.5,
+                    color: 'var(--grid-text)',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}>
+                    {isExpanded ? msg.content : preview}
+                    {needsExpansion && !isExpanded && '...'}
+                  </div>
+
+                  {/* Expand/collapse button */}
+                  {needsExpansion && (
+                    <button
+                      onClick={() => toggleExpand(i)}
+                      style={{
+                        position: 'absolute',
+                        bottom: 6,
+                        right: 8,
+                        background: 'var(--grid-surface)',
+                        border: '1px solid var(--grid-border)',
+                        borderRadius: 12,
+                        padding: '2px 8px',
+                        fontSize: 8,
+                        color: 'var(--grid-text-dim)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
+                        outline: 'none',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = 'var(--grid-surface-hover)';
+                        e.currentTarget.style.color = 'var(--grid-text)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = 'var(--grid-surface)';
+                        e.currentTarget.style.color = 'var(--grid-text-dim)';
+                      }}
+                      onFocus={e => e.currentTarget.style.outline = '2px solid var(--grid-accent)'}
+                      onBlur={e => e.currentTarget.style.outline = 'none'}
+                      aria-label={isExpanded ? 'Collapse message' : 'Expand message'}
+                    >
+                      {isExpanded ? 'Less' : 'More'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
-        {filtered.map((msg, i) => {
-          const roleColors: Record<string, string> = { user: 'var(--grid-info)', assistant: agent.color, system: 'var(--grid-yellow)' };
-          const roleLabels: Record<string, string> = { user: 'USER', assistant: 'AGENT', system: 'SYS' };
-          const rc = roleColors[msg.role] ?? 'var(--grid-text-secondary)';
-          const isLong = msg.content.length > 300;
-          const isExpanded = expanded.has(i);
-          const displayText = isLong && !isExpanded ? msg.content.slice(0, 300) + '…' : msg.content;
-          const align = msg.role === 'user' ? 'flex-end' : 'flex-start';
-
-          return (
-            <div key={i} style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: align,
-              animation: `fadeInMsg 0.2s ease-out ${Math.min(i * 0.02, 0.5)}s both`,
-            }}>
-              <span style={{
-                fontSize: 8,
-                fontWeight: 700,
-                color: rc,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                marginBottom: 2,
-                paddingInline: 4,
-                opacity: 0.8,
-              }}>{roleLabels[msg.role] ?? msg.role} {msg.timestamp ? `· ${formatTime(msg.timestamp)}` : ''}</span>
-              <div
-                onClick={isLong ? () => toggleExpand(i) : undefined}
-                style={{
-                  maxWidth: '88%',
-                  padding: '8px 11px',
-                  borderRadius: msg.role === 'user' ? '10px 10px 2px 10px' : '10px 10px 10px 2px',
-                  background: msg.role === 'system'
-                    ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.08), rgba(234, 179, 8, 0.03))'
-                    : msg.role === 'assistant'
-                      ? `linear-gradient(135deg, ${agent.color}12, ${agent.color}08)`
-                      : 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(30, 41, 59, 0.5))',
-                  border: `1px solid ${rc}25`,
-                  boxShadow: `0 1px 6px ${rc}10`,
-                  fontSize: 11,
-                  lineHeight: 1.55,
-                  color: 'var(--grid-text)',
-                  wordBreak: 'break-word',
-                  whiteSpace: 'pre-wrap',
-                  cursor: isLong ? 'pointer' : 'default',
-                }}>
-                {displayText}
-                {isLong && (
-                  <span style={{ color: rc, fontSize: 9, marginLeft: 4 }}>
-                    {isExpanded ? '[collapse]' : '[expand]'}
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
       </div>
 
       {/* Footer */}
       <div style={{
-        padding: '10px 16px',
-        borderTop: `1px solid ${agent.color}15`,
-        background: `linear-gradient(90deg, ${agent.color}05, transparent)`,
-        flexShrink: 0,
-        fontSize: 10,
-        color: 'var(--grid-text-muted)',
+        padding: '8px 16px',
+        borderTop: '1px solid var(--grid-border-subtle)',
+        background: 'var(--grid-surface-hover)20',
+        fontSize: 9,
+        color: 'var(--grid-text-faint)',
         textAlign: 'center',
+        flexShrink: 0,
         position: 'relative',
         zIndex: 2,
-        letterSpacing: '0.05em',
       }}>
-        {messages.length > 0
-          ? `■ ${messages.length} messages ─ last 24h`
-          : '◇ No session data'}
-        {sessionCount > 1 && ` ■ ${sessionCount} sessions`}
+        {filtered.length} messages • ESC to close
       </div>
     </div>
   );

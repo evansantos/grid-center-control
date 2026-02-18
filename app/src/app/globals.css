@@ -43,18 +43,18 @@
   --grid-bg: #f5f5f7;
   --grid-surface: #ffffff;
   --grid-surface-hover: #f0f0f2;
-  --grid-border: #e0e0e0;
-  --grid-border-bright: #ccc;
-  --grid-accent: #ff4444;
-  --grid-accent-dim: rgba(255, 68, 68, 0.08);
-  --grid-accent-glow: rgba(255, 68, 68, 0.15);
+  --grid-border: #c0c0c0;
+  --grid-border-bright: #a0a0a0;
+  --grid-accent: #cc0000;
+  --grid-accent-dim: rgba(204, 0, 0, 0.08);
+  --grid-accent-glow: rgba(204, 0, 0, 0.15);
   --grid-text: #1a1a1a;
-  --grid-text-dim: #666;
-  --grid-text-muted: #999;
-  --grid-success: #16a34a;
-  --grid-warning: #d97706;
-  --grid-error: #dc2626;
-  --grid-info: #2563eb;
+  --grid-text-dim: #333333;
+  --grid-text-muted: #555555;
+  --grid-success: #166534;
+  --grid-warning: #b45309;
+  --grid-error: #b91c1c;
+  --grid-info: #1d4ed8;
   --grid-radius: 0.5rem;
   --grid-radius-lg: 0.75rem;
   /* Map / SVG specific */
@@ -63,11 +63,11 @@
   --grid-map-desk: #ffffff;
   --grid-map-desk-selected: #fef2f2;
   --grid-border-subtle: #d4d4d8;
-  --grid-text-faint: #a1a1aa;
-  --grid-text-label: #52525b;
-  --grid-text-secondary: #71717a;
-  --grid-yellow: #ca8a04;
-  --grid-danger: #dc2626;
+  --grid-text-faint: #777777;
+  --grid-text-label: #444444;
+  --grid-text-secondary: #555555;
+  --grid-yellow: #a16207;
+  --grid-danger: #b91c1c;
   --grid-purple: #7c3aed;
   --grid-cyan: #0891b2;
   --grid-orange: #ea580c;
@@ -259,6 +259,42 @@ nav a.nav-active::after {
   height: 2px;
   background: var(--grid-accent);
   border-radius: 1px;
+}
+
+/* Accessibility overrides for contrast */
+[data-theme="light"] .text-white {
+  color: white !important;
+}
+
+[data-theme="light"] .bg-yellow-900\/50 {
+  background: #854d0e !important;
+}
+
+[data-theme="light"] .text-yellow-300 {
+  color: #fbbf24 !important;
+}
+
+[data-theme="light"] .bg-green-900\/50 {
+  background: #14532d !important;
+}
+
+[data-theme="light"] .text-green-300 {
+  color: #86efac !important;
+}
+
+/* Ensure sufficient contrast for keyboard shortcuts */
+[data-theme="light"] kbd {
+  background: var(--grid-border) !important;
+  color: var(--grid-text) !important;
+}
+
+/* Fix text on colored backgrounds */
+[data-theme="light"] .text-grid-success {
+  color: var(--grid-success) !important;
+}
+
+[data-theme="light"] .text-grid-warning {
+  color: var(--grid-warning) !important;
 }
 
 /* Scrollbar styling */

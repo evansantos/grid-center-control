@@ -1,36 +1,211 @@
 {
-  "common": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "loading": "Loading...",
-    "error": "Something went wrong",
-    "noData": "No data available",
-    "search": "Search...",
-    "back": "Back",
-    "next": "Next",
-    "confirm": "Confirm"
+  "brand": {
+    "name": "GRID"
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "agents": "Agents",
-    "office": "Office",
-    "analytics": "Analytics",
-    "logs": "Logs",
-    "tokens": "Tokens",
-    "errors": "Errors",
-    "health": "Health",
-    "settings": "Settings"
+    "dashboard": "Painel",
+    "office": "Escritório", 
+    "agents": "Agentes",
+    "search": "Buscar",
+    "analytics": {
+      "label": "Analytics",
+      "performance": "Desempenho",
+      "sessions": "Sessões", 
+      "timeline": "Linha do Tempo"
+    },
+    "tools": {
+      "label": "Ferramentas",
+      "spawn": "Criar",
+      "logs": "Logs",
+      "tokens": "Tokens", 
+      "errors": "Erros",
+      "health": "Saúde",
+      "files": "Arquivos"
+    },
+    "settings": {
+      "label": "Configurações",
+      "escalation": "Escalação"
+    },
+    "groups": {
+      "main": "Principal"
+    }
   },
-  "status": {
-    "active": "Active",
-    "idle": "Idle",
-    "busy": "Busy",
-    "offline": "Offline",
-    "error": "Error",
-    "pending": "Pending",
-    "inProgress": "In Progress",
-    "review": "Review",
-    "done": "Done"
+  "dashboard": {
+    "title": "Centro de Controle",
+    "subtitle": "Painel de Operações MCP 🔴",
+    "layout": "Layout",
+    "presets": {
+      "default": "Padrão",
+      "compact": "Compacto", 
+      "wide": "Amplo"
+    },
+    "widgets": {
+      "projects": "Projetos",
+      "quickStats": "Estatísticas Rápidas",
+      "recommendations": "Recomendações",
+      "recentActivity": "Atividade Recente",
+      "taskDistribution": "Distribuição de Tarefas"
+    },
+    "stats": {
+      "projects": "Projetos",
+      "agentsOnline": "Agentes Online",
+      "tasksToday": "Tarefas Hoje"
+    },
+    "mission": "Centro de Controle MCP 🔴"
+  },
+  "agents": {
+    "title": "Agentes",
+    "description": "Gerencie seus agentes de desenvolvimento e suas configurações",
+    "scanning": "Procurando agentes…",
+    "failedToLoad": "Falha ao carregar agentes:",
+    "noAgentsFound": "Nenhum agente encontrado em ~/.openclaw/agents/",
+    "configure": "Configurar",
+    "status": {
+      "active": "Ativo",
+      "idle": "Inativo"
+    },
+    "session": "sessão",
+    "sessions": "sessões"
+  },
+  "health": {
+    "title": "Saúde do Sistema",
+    "description": "Monitoramento em tempo real do gateway OpenClaw, responsividade dos agentes e recursos do sistema.",
+    "loading": "Carregando status de saúde...",
+    "failed": "Verificação de Saúde Falhou",
+    "retry": "Tentar Novamente", 
+    "noData": "Nenhum dado de saúde disponível",
+    "checks": "Verificações de Saúde",
+    "refresh": "Atualizar",
+    "refreshing": "Atualizando...",
+    "systemStatus": "Status do Sistema",
+    "lastChecked": "Última verificação:",
+    "pageRefreshed": "Página atualizada:",
+    "metrics": {
+      "gateway": "Status do daemon gateway OpenClaw - gerencia comunicação e roteamento de agentes",
+      "agentResponsiveness": "Rapidez com que os agentes respondem às tarefas (mede latência de início de sessão)", 
+      "systemResources": "Uso de CPU, memória, disco da máquina hospedeira",
+      "apiResponse": "Tempos de resposta dos endpoints da API do painel"
+    }
+  },
+  "logs": {
+    "title": "🔍 Busca de Logs",
+    "description": "Busque em todos os logs de sessões de agentes",
+    "searchPlaceholder": "Buscar em todos os logs de agentes...",
+    "filters": {
+      "agent": "Agente:",
+      "all": "Todos",
+      "time": "Tempo:",
+      "ranges": {
+        "1h": "1h",
+        "6h": "6h", 
+        "24h": "24h",
+        "7d": "7d",
+        "all": "Todos"
+      }
+    },
+    "results": " resultados em ",
+    "timeUnit": "ms",
+    "emptyState": {
+      "icon": "🔍",
+      "message": "Busque em todos os logs de agentes"
+    }
+  },
+  "errors": {
+    "title": "Monitoramento de Erros",
+    "breadcrumbs": {
+      "dashboard": "🏠 Painel",
+      "errorMonitoring": "Monitoramento de Erros"
+    },
+    "dashboard": {
+      "title": "⚠️ Painel de Erros do Sistema",
+      "description": "Monitoramento e análise em tempo real de erros em todo o ecossistema Grid Dashboard",
+      "loading": "Carregando dados de erro...",
+      "errorMessage": "Erro:",
+      "noData": "Sem dados",
+      "close": "Fechar",
+      "refresh": "Atualizar",
+      "purpose": {
+        "title": "O que este painel mostra",
+        "description": "Este painel agrega dados de erro de logs de sessões de agentes, falhas de ferramentas e exceções do sistema. Ajuda a identificar padrões, rastrear saúde do sistema e diagnosticar problemas em todos os agentes e componentes OpenClaw."
+      },
+      "helpText": {
+        "autoRefresh": "Atualiza automaticamente a cada 15 segundos",
+        "clickDetails": "Clique em qualquer erro para visualização detalhada", 
+        "useFilters": "Use filtros para refinar resultados"
+      },
+      "summary": {
+        "totalErrors": "Total de Erros Encontrados",
+        "totalErrorsDesc": "Erros detectados no período selecionado em todos os agentes e sistemas",
+        "affectedAgents": "Agentes Afetados",
+        "affectedAgentsDesc": "Número de diferentes agentes de IA que encontraram erros",
+        "errorCategories": "Categorias de Erro",
+        "errorCategoriesDesc": "Diferentes tipos de erros: ferramentas, mensagens, exceções, etc."
+      },
+      "filters": {
+        "title": "🔍 Filtrar e Buscar",
+        "description": "Refine resultados por agente, tipo de erro ou período de tempo",
+        "agentFilter": "Filtro de Agente",
+        "agentHelp": "Escolha um agente específico ou deixe vazio para ver todos",
+        "allAgents": "Todos os Agentes",
+        "errorType": "Tipo de Erro", 
+        "errorTypeHelp": "Erros de ferramenta, exceções, erros de mensagem, etc.",
+        "allTypes": "Todos os Tipos",
+        "timePeriod": "Período de Tempo",
+        "timePeriodHelp": "Mais recente = carregamento mais rápido",
+        "timeOptions": {
+          "lastHour": "Última Hora",
+          "last6Hours": "Últimas 6 Horas", 
+          "last24Hours": "Últimas 24 Horas",
+          "lastWeek": "Última Semana"
+        },
+        "errors": " erros"
+      },
+      "noErrors": {
+        "title": "Tudo Certo!",
+        "message": "Nenhum erro encontrado no período e filtros selecionados.",
+        "meaning": "ℹ️ O que isso significa:",
+        "points": [
+          "Todos os agentes estão funcionando normalmente",
+          "Nenhuma falha de ferramenta ou exceção detectada", 
+          "Comunicação do sistema está estável",
+          "Tente ajustar filtros ou período de tempo para ver dados históricos"
+        ],
+        "monitoring": "Este painel monitora",
+        "agentsAndRefresh": "+ agentes e atualiza a cada 15 segundos"
+      },
+      "errorLog": {
+        "title": "📋 Log de Erros",
+        "entries": "entradas",
+        "clickForDetails": "Clique em qualquer erro abaixo para informações detalhadas e stack traces",
+        "showing": "Mostrando",
+        "of": "de", 
+        "total": "total",
+        "mostRecent": "Erros mais recentes primeiro"
+      },
+      "errorDetails": {
+        "title": "Detalhes do Erro",
+        "session": "Sessão:",
+        "ago": "atrás",
+        "justNow": "agora mesmo"
+      }
+    }
+  },
+  "settings": {
+    "title": "Configurações",
+    "comingSoon": "Página de configurações — mais opções em breve."
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso", 
+    "warning": "Aviso",
+    "info": "Info",
+    "close": "Fechar",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "view": "Ver",
+    "back": "Voltar"
   }
 }

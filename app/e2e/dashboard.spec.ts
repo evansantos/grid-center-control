@@ -1,9 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { checkA11y, checkHeadingHierarchy } from './axe-helper';
 
 test.describe('Dashboard Page', () => {
   test('should load successfully with Mission Control heading', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Mission Control')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Mission Control' })).toBeVisible();
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Dashboard - basic load');
+    await checkHeadingHierarchy(page);
   });
 
   test('should render layout preset buttons and be clickable', async ({ page }) => {
@@ -17,6 +22,9 @@ test.describe('Dashboard Page', () => {
     const firstButton = layoutButtons.first();
     await expect(firstButton).toBeEnabled();
     await firstButton.click();
+    
+    // Run accessibility checks after interaction
+    await checkA11y(page, 'Dashboard - layout buttons');
   });
 
   test('should render widget cards with titles', async ({ page }) => {
@@ -29,6 +37,9 @@ test.describe('Dashboard Page', () => {
     // Check that at least one widget has a title/heading
     const widgetTitles = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /.+/ });
     await expect(widgetTitles.first()).toBeVisible();
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Dashboard - widget cards');
   });
 
   test('should show quick stats section with stats', async ({ page }) => {
@@ -43,5 +54,8 @@ test.describe('Dashboard Page', () => {
     await expect(
       statsElements.first().or(numberElements)
     ).toBeVisible({ timeout: 10000 });
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Dashboard - quick stats');
   });
 });

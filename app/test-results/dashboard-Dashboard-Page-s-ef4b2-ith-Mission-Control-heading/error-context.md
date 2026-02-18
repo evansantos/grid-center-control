@@ -1,0 +1,361 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - navigation [ref=e13]:
+    - link "GRID" [ref=e15] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e17]: GRID
+    - generic [ref=e18]:
+      - link "Dashboard" [ref=e19] [cursor=pointer]:
+        - /url: /
+      - link "Office" [ref=e20] [cursor=pointer]:
+        - /url: /office
+      - link "Agents" [ref=e21] [cursor=pointer]:
+        - /url: /agents
+      - button "Analytics ▾" [ref=e22]:
+        - text: Analytics
+        - generic [ref=e23]: ▾
+      - button "Tools ▾" [ref=e24]:
+        - text: Tools
+        - generic [ref=e25]: ▾
+      - button "Settings ▾" [ref=e26]:
+        - text: Settings
+        - generic [ref=e27]: ▾
+      - button "⌕ Search ⌘K" [ref=e28]:
+        - generic [ref=e29]: ⌕
+        - generic [ref=e30]: Search
+        - generic [ref=e31]: ⌘K
+      - generic [ref=e32]:
+        - button "Toggle theme" [ref=e33]:
+          - img [ref=e34]
+        - button "Notifications" [ref=e37]:
+          - img [ref=e38]
+  - main [ref=e41]:
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - heading "Mission Control" [level=1] [ref=e45]
+          - paragraph [ref=e46]: MCP 🔴 Operations Dashboard
+        - generic [ref=e47]:
+          - generic [ref=e48]: Layout
+          - generic [ref=e49]:
+            - button "Default" [ref=e50]
+            - button "Compact" [ref=e51]
+            - button "Wide" [ref=e52]
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: ⋮⋮
+            - generic [ref=e58]: Projects
+          - generic [ref=e60]:
+            - 'link "Design System Wave 3: Complex Pages + Polish execute 📁 ~/workspace/mcp-projects/.worktrees/design-system-wave3 ✅ 3/11 tasks Updated 2/18/2026, 9:56:47 PM" [ref=e61] [cursor=pointer]':
+              - /url: /project/e81a748a-66f2-4e20-8fcd-47e718968a67
+              - generic [ref=e62]:
+                - 'heading "Design System Wave 3: Complex Pages + Polish" [level=3] [ref=e63]'
+                - generic [ref=e64]: execute
+              - generic [ref=e65]:
+                - generic [ref=e66]: 📁 ~/workspace/mcp-projects/.worktrees/design-system-wave3
+                - generic [ref=e67]: ✅ 3/11 tasks
+              - paragraph [ref=e68]: Updated 2/18/2026, 9:56:47 PM
+            - 'link "Design System Wave 2: Page Migrations done 📁 ~/workspace/mcp-projects/grid/app ✅ 12/12 tasks Updated 2/18/2026, 6:25:57 PM" [ref=e69] [cursor=pointer]':
+              - /url: /project/c34f2b0a-2be9-48b0-ac7b-ecf24e426cb9
+              - generic [ref=e70]:
+                - 'heading "Design System Wave 2: Page Migrations" [level=3] [ref=e71]'
+                - generic [ref=e72]: done
+              - generic [ref=e73]:
+                - generic [ref=e74]: 📁 ~/workspace/mcp-projects/grid/app
+                - generic [ref=e75]: ✅ 12/12 tasks
+              - paragraph [ref=e76]: Updated 2/18/2026, 6:25:57 PM
+            - 'link "Wave 1 Fixes: Design Token Compliance done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 4/4 tasks Updated 2/18/2026, 5:19:49 PM" [ref=e77] [cursor=pointer]':
+              - /url: /project/dd267310-9ca9-45d7-a9ed-ba0ff414374c
+              - generic [ref=e78]:
+                - 'heading "Wave 1 Fixes: Design Token Compliance" [level=3] [ref=e79]'
+                - generic [ref=e80]: done
+              - generic [ref=e81]:
+                - generic [ref=e82]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e83]: ✅ 4/4 tasks
+              - paragraph [ref=e84]: Updated 2/18/2026, 5:19:49 PM
+            - 'link "Design System Wave 1: Core Primitives done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 14/14 tasks Updated 2/18/2026, 5:13:57 PM" [ref=e85] [cursor=pointer]':
+              - /url: /project/fe3fdae9-3247-4551-b037-cf422b91c0f8
+              - generic [ref=e86]:
+                - 'heading "Design System Wave 1: Core Primitives" [level=3] [ref=e87]'
+                - generic [ref=e88]: done
+              - generic [ref=e89]:
+                - generic [ref=e90]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e91]: ✅ 14/14 tasks
+              - paragraph [ref=e92]: Updated 2/18/2026, 5:13:57 PM
+            - 'link "Design System Wave 0: Foundation done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 8/8 tasks Updated 2/18/2026, 4:30:42 PM" [ref=e93] [cursor=pointer]':
+              - /url: /project/e71fb150-9a7a-4282-b7db-91684dccadc1
+              - generic [ref=e94]:
+                - 'heading "Design System Wave 0: Foundation" [level=3] [ref=e95]'
+                - generic [ref=e96]: done
+              - generic [ref=e97]:
+                - generic [ref=e98]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e99]: ✅ 8/8 tasks
+              - paragraph [ref=e100]: Updated 2/18/2026, 4:30:42 PM
+            - link "Dashboard Bug Sprint done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 7/7 tasks Updated 2/18/2026, 3:58:41 PM" [ref=e101] [cursor=pointer]:
+              - /url: /project/fc59cf2e-26cd-4bad-b88b-8be51573e7ee
+              - generic [ref=e102]:
+                - heading "Dashboard Bug Sprint" [level=3] [ref=e103]
+                - generic [ref=e104]: done
+              - generic [ref=e105]:
+                - generic [ref=e106]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e107]: ✅ 7/7 tasks
+              - paragraph [ref=e108]: Updated 2/18/2026, 3:58:41 PM
+            - link "riff-theory-wave-15 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/riff-theory ✅ 12/12 tasks Updated 2/18/2026, 3:06:38 PM" [ref=e109] [cursor=pointer]:
+              - /url: /project/2bd31a48-1327-418d-803b-f7622080f7d6
+              - generic [ref=e110]:
+                - heading "riff-theory-wave-15" [level=3] [ref=e111]
+                - generic [ref=e112]: done
+              - generic [ref=e113]:
+                - generic [ref=e114]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/riff-theory
+                - generic [ref=e115]: ✅ 12/12 tasks
+              - paragraph [ref=e116]: Updated 2/18/2026, 3:06:38 PM
+            - link "riff-theory-wave-14 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/riff-theory ✅ 10/10 tasks Updated 2/18/2026, 12:08:37 AM" [ref=e117] [cursor=pointer]:
+              - /url: /project/c7f123d7-9381-48d4-b348-1a2388f64bdd
+              - generic [ref=e118]:
+                - heading "riff-theory-wave-14" [level=3] [ref=e119]
+                - generic [ref=e120]: done
+              - generic [ref=e121]:
+                - generic [ref=e122]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/riff-theory
+                - generic [ref=e123]: ✅ 10/10 tasks
+              - paragraph [ref=e124]: Updated 2/18/2026, 12:08:37 AM
+            - link "wave-13 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 6/6 tasks Updated 2/17/2026, 9:51:26 PM" [ref=e125] [cursor=pointer]:
+              - /url: /project/51d8643a-b9b4-4676-be94-58b662536ab2
+              - generic [ref=e126]:
+                - heading "wave-13" [level=3] [ref=e127]
+                - generic [ref=e128]: done
+              - generic [ref=e129]:
+                - generic [ref=e130]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e131]: ✅ 6/6 tasks
+              - paragraph [ref=e132]: Updated 2/17/2026, 9:51:26 PM
+            - link "wave-12 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 7/7 tasks Updated 2/17/2026, 9:27:08 PM" [ref=e133] [cursor=pointer]:
+              - /url: /project/678e110f-512c-43fc-8d33-4d0797b5b803
+              - generic [ref=e134]:
+                - heading "wave-12" [level=3] [ref=e135]
+                - generic [ref=e136]: done
+              - generic [ref=e137]:
+                - generic [ref=e138]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e139]: ✅ 7/7 tasks
+              - paragraph [ref=e140]: Updated 2/17/2026, 9:27:08 PM
+            - link "wave-11-phase-4 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 10/10 tasks Updated 2/17/2026, 9:14:39 PM" [ref=e141] [cursor=pointer]:
+              - /url: /project/6cfb5c29-4f6f-407b-a819-1581e1f51e60
+              - generic [ref=e142]:
+                - heading "wave-11-phase-4" [level=3] [ref=e143]
+                - generic [ref=e144]: done
+              - generic [ref=e145]:
+                - generic [ref=e146]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e147]: ✅ 10/10 tasks
+              - paragraph [ref=e148]: Updated 2/17/2026, 9:14:39 PM
+            - link "wave-11-phase-3 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 10/10 tasks Updated 2/17/2026, 9:03:09 PM" [ref=e149] [cursor=pointer]:
+              - /url: /project/4d059bfb-0ad9-43cd-aeab-579e4f2d91a1
+              - generic [ref=e150]:
+                - heading "wave-11-phase-3" [level=3] [ref=e151]
+                - generic [ref=e152]: done
+              - generic [ref=e153]:
+                - generic [ref=e154]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e155]: ✅ 10/10 tasks
+              - paragraph [ref=e156]: Updated 2/17/2026, 9:03:09 PM
+            - link "wave-11-phase-2 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 8/8 tasks Updated 2/17/2026, 8:40:47 PM" [ref=e157] [cursor=pointer]:
+              - /url: /project/2d1c2405-7325-4402-8b08-a28a0ea236d6
+              - generic [ref=e158]:
+                - heading "wave-11-phase-2" [level=3] [ref=e159]
+                - generic [ref=e160]: done
+              - generic [ref=e161]:
+                - generic [ref=e162]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e163]: ✅ 8/8 tasks
+              - paragraph [ref=e164]: Updated 2/17/2026, 8:40:47 PM
+            - link "Grid Dashboard Wave 5 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 7/7 tasks Updated 2/17/2026, 4:58:17 PM" [ref=e165] [cursor=pointer]:
+              - /url: /project/79701e2e-07d7-4716-a312-5249fd8e7cb6
+              - generic [ref=e166]:
+                - heading "Grid Dashboard Wave 5" [level=3] [ref=e167]
+                - generic [ref=e168]: done
+              - generic [ref=e169]:
+                - generic [ref=e170]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e171]: ✅ 7/7 tasks
+              - paragraph [ref=e172]: Updated 2/17/2026, 4:58:17 PM
+            - link "Grid Dashboard Wave 4 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 7/7 tasks Updated 2/17/2026, 4:29:15 PM" [ref=e173] [cursor=pointer]:
+              - /url: /project/693c3631-e240-4618-a207-99b602166057
+              - generic [ref=e174]:
+                - heading "Grid Dashboard Wave 4" [level=3] [ref=e175]
+                - generic [ref=e176]: done
+              - generic [ref=e177]:
+                - generic [ref=e178]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e179]: ✅ 7/7 tasks
+              - paragraph [ref=e180]: Updated 2/17/2026, 4:29:15 PM
+            - link "Grid Dashboard Wave 2 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 9/9 tasks Updated 2/17/2026, 3:56:56 PM" [ref=e181] [cursor=pointer]:
+              - /url: /project/ee76f23b-2b35-4c26-8e3f-00fb6d80ffb4
+              - generic [ref=e182]:
+                - heading "Grid Dashboard Wave 2" [level=3] [ref=e183]
+                - generic [ref=e184]: done
+              - generic [ref=e185]:
+                - generic [ref=e186]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e187]: ✅ 9/9 tasks
+              - paragraph [ref=e188]: Updated 2/17/2026, 3:56:56 PM
+            - link "Grid Dashboard Wave 1 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 9/9 tasks Updated 2/17/2026, 3:24:13 PM" [ref=e189] [cursor=pointer]:
+              - /url: /project/cb1512d3-6a4b-4eff-aab6-a035420838f8
+              - generic [ref=e190]:
+                - heading "Grid Dashboard Wave 1" [level=3] [ref=e191]
+                - generic [ref=e192]: done
+              - generic [ref=e193]:
+                - generic [ref=e194]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e195]: ✅ 9/9 tasks
+              - paragraph [ref=e196]: Updated 2/17/2026, 3:24:13 PM
+            - link "Riff Theory done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/riff-theory ✅ 11/11 tasks Updated 2/17/2026, 12:32:06 PM" [ref=e197] [cursor=pointer]:
+              - /url: /project/3d9b41a8-1465-4bc4-a961-c99c0d91ae89
+              - generic [ref=e198]:
+                - heading "Riff Theory" [level=3] [ref=e199]
+                - generic [ref=e200]: done
+              - generic [ref=e201]:
+                - generic [ref=e202]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/riff-theory
+                - generic [ref=e203]: ✅ 11/11 tasks
+              - paragraph [ref=e204]: Updated 2/17/2026, 12:32:06 PM
+            - link "wave-11-phase-1 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 7/7 tasks Updated 2/17/2026, 8:03:19 PM" [ref=e205] [cursor=pointer]:
+              - /url: /project/d5d6b059-c892-4546-af59-833279a94446
+              - generic [ref=e206]:
+                - heading "wave-11-phase-1" [level=3] [ref=e207]
+                - generic [ref=e208]: done
+              - generic [ref=e209]:
+                - generic [ref=e210]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e211]: ✅ 7/7 tasks
+              - paragraph [ref=e212]: Updated 2/17/2026, 8:03:19 PM
+            - link "Grid Dashboard Wave 5 (CANCELLED) done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid Updated 2/17/2026, 4:01:17 PM" [ref=e213] [cursor=pointer]:
+              - /url: /project/cc4f32f0-45e4-4a3b-b12f-6eda30539809
+              - generic [ref=e214]:
+                - heading "Grid Dashboard Wave 5 (CANCELLED)" [level=3] [ref=e215]
+                - generic [ref=e216]: done
+              - generic [ref=e218]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+              - paragraph [ref=e219]: Updated 2/17/2026, 4:01:17 PM
+            - link "Grid Dashboard Wave 3 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid Updated 2/17/2026, 3:20:04 PM" [ref=e220] [cursor=pointer]:
+              - /url: /project/94ecfe03-8c5c-4aae-83a9-4a4385d409e0
+              - generic [ref=e221]:
+                - heading "Grid Dashboard Wave 3" [level=3] [ref=e222]
+                - generic [ref=e223]: done
+              - generic [ref=e225]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+              - paragraph [ref=e226]: Updated 2/17/2026, 3:20:04 PM
+            - link "Grid Dashboard Wave 3 done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid Updated 2/17/2026, 3:12:29 PM" [ref=e227] [cursor=pointer]:
+              - /url: /project/dcdc5949-2de1-4c11-aa6c-8dbe3e964c70
+              - generic [ref=e228]:
+                - heading "Grid Dashboard Wave 3" [level=3] [ref=e229]
+                - generic [ref=e230]: done
+              - generic [ref=e232]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+              - paragraph [ref=e233]: Updated 2/17/2026, 3:12:29 PM
+            - link "Dashboard Ops Sprint done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 3/3 tasks Updated 2/17/2026, 2:31:06 PM" [ref=e234] [cursor=pointer]:
+              - /url: /project/e318546a-535c-4f0d-ab3c-eaca3516dd13
+              - generic [ref=e235]:
+                - heading "Dashboard Ops Sprint" [level=3] [ref=e236]
+                - generic [ref=e237]: done
+              - generic [ref=e238]:
+                - generic [ref=e239]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e240]: ✅ 3/3 tasks
+              - paragraph [ref=e241]: Updated 2/17/2026, 2:31:06 PM
+            - link "Sprint Board Real done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 8/8 tasks Updated 2/17/2026, 2:31:06 PM" [ref=e242] [cursor=pointer]:
+              - /url: /project/629eb7c6-b727-43e2-8e6d-d8590d3d4d83
+              - generic [ref=e243]:
+                - heading "Sprint Board Real" [level=3] [ref=e244]
+                - generic [ref=e245]: done
+              - generic [ref=e246]:
+                - generic [ref=e247]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e248]: ✅ 8/8 tasks
+              - paragraph [ref=e249]: Updated 2/17/2026, 2:31:06 PM
+            - link "Grid Evolution done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 10/10 tasks Updated 2/16/2026, 10:57:51 AM" [ref=e250] [cursor=pointer]:
+              - /url: /project/4fd86233-ced5-4e21-a27c-c040c4738e23
+              - generic [ref=e251]:
+                - heading "Grid Evolution" [level=3] [ref=e252]
+                - generic [ref=e253]: done
+              - generic [ref=e254]:
+                - generic [ref=e255]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e256]: ✅ 10/10 tasks
+              - paragraph [ref=e257]: Updated 2/16/2026, 10:57:51 AM
+            - link "Weather App done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/weather-app ✅ 10/10 tasks Updated 2/16/2026, 10:38:11 AM" [ref=e258] [cursor=pointer]:
+              - /url: /project/17e9b671-0263-40e7-ab55-daee37837fda
+              - generic [ref=e259]:
+                - heading "Weather App" [level=3] [ref=e260]
+                - generic [ref=e261]: done
+              - generic [ref=e262]:
+                - generic [ref=e263]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/weather-app
+                - generic [ref=e264]: ✅ 10/10 tasks
+              - paragraph [ref=e265]: Updated 2/16/2026, 10:38:11 AM
+            - link "Grid done 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid ✅ 4/4 tasks Updated 2/16/2026, 9:58:18 AM" [ref=e266] [cursor=pointer]:
+              - /url: /project/e147dace-66c3-4aa6-9882-69ca15e40fef
+              - generic [ref=e267]:
+                - heading "Grid" [level=3] [ref=e268]
+                - generic [ref=e269]: done
+              - generic [ref=e270]:
+                - generic [ref=e271]: 📁 /Users/evandrocavalcantesantos/workspace/mcp-projects/grid
+                - generic [ref=e272]: ✅ 4/4 tasks
+              - paragraph [ref=e273]: Updated 2/16/2026, 9:58:18 AM
+        - generic [ref=e274]:
+          - generic [ref=e276]:
+            - generic [ref=e277]: ⋮⋮
+            - generic [ref=e278]: Quick Stats
+          - generic [ref=e280]:
+            - generic [ref=e282]:
+              - generic [ref=e283]: 📁
+              - generic [ref=e284]:
+                - generic [ref=e285]: "27"
+                - generic [ref=e286]: Projects
+            - generic [ref=e288]:
+              - generic [ref=e289]: 🤖
+              - generic [ref=e290]:
+                - generic [ref=e291]: "14"
+                - generic [ref=e292]: Agents Online
+            - generic [ref=e294]:
+              - generic [ref=e295]: ✅
+              - generic [ref=e296]:
+                - generic [ref=e297]: "0"
+                - generic [ref=e298]: Tasks Today
+            - paragraph [ref=e301]: MCP 🔴 Mission Control
+        - generic [ref=e302]:
+          - generic [ref=e304]:
+            - generic [ref=e305]: ⋮⋮
+            - generic [ref=e306]: Recommendations
+          - generic [ref=e308]: All clear — fleet running smooth ✅
+        - generic [ref=e309]:
+          - generic [ref=e311]:
+            - generic [ref=e312]: ⋮⋮
+            - generic [ref=e313]: Recent Activity
+          - generic [ref=e315]:
+            - generic [ref=e316]: 📡
+            - paragraph [ref=e317]: Awaiting transmissions...
+            - paragraph [ref=e318]: Activity will appear here
+        - generic [ref=e319]:
+          - generic [ref=e321]:
+            - generic [ref=e322]: ⋮⋮
+            - generic [ref=e323]: Task Distribution
+          - generic [ref=e325]:
+            - generic [ref=e326]:
+              - generic [ref=e327]:
+                - generic [ref=e329]: Pending
+                - generic [ref=e330]: "8"
+              - generic [ref=e331]:
+                - generic [ref=e333]: Active
+                - generic [ref=e334]: "3"
+              - generic [ref=e335]:
+                - generic [ref=e337]: Review
+                - generic [ref=e338]: "0"
+              - generic [ref=e339]:
+                - generic [ref=e341]: Done
+                - generic [ref=e342]: "18"
+            - table [ref=e344]:
+              - rowgroup [ref=e345]:
+                - row "Agent Pending Active Review Done Total" [ref=e346]:
+                  - columnheader "Agent" [ref=e347]
+                  - columnheader "Pending" [ref=e348]
+                  - columnheader "Active" [ref=e349]
+                  - columnheader "Review" [ref=e350]
+                  - columnheader "Done" [ref=e351]
+                  - columnheader "Total" [ref=e352]
+              - rowgroup [ref=e353]:
+                - row "⚠Unassigned 8 3 0 18 204" [ref=e354]:
+                  - cell "⚠Unassigned" [ref=e355]
+                  - cell "8" [ref=e356]
+                  - cell "3" [ref=e357]
+                  - cell "0" [ref=e358]
+                  - cell "18" [ref=e359]
+                  - cell "204" [ref=e360]
+```

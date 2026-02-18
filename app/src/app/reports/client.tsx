@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import BarChart from '@/components/charts/bar-chart';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
 
 interface ReportData {
   period: {
@@ -100,233 +108,324 @@ ${reportData.timeline.map(day => `- **${day.date}:** ${day.events} events`).join
     window.print();
   };
 
+  const exportToCSV = () => {
+    if (!reportData) return;
+
+    const csvContent = [
+      'Date,Events',
+      ...reportData.timeline.map(item => `${item.date},${item.events}`)
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `activity-report-${reportData.period.range}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportToJSON = () => {
+    if (!reportData) return;
+
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `activity-report-${reportData.period.range}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   if (loading) {
-    return <div className="text-[--grid-text-dim]">Generating report...</div>;
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </CardContent>
+        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+      </div>
+    );
   }
 
   if (!reportData) {
-    return <div className="text-[--grid-text-dim]">Failed to load report data</div>;
+    return (
+      <Card>
+        <CardContent className="py-8 text-center">
+          <p className="text-grid-text-muted">Failed to load report data</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <div className="space-y-8">
       {/* Controls */}
-      <div className="bg-[--grid-surface] border border-[--grid-border] rounded-lg p-6">
-        <h2 className="text-xl font-bold text-[--grid-text] mb-4">Report Configuration</h2>
-        
-        <div className="flex flex-wrap gap-4 items-end">
-          <div>
-            <label className="block text-sm font-semibold text-[--grid-text-dim] mb-2">
-              Date Range
-            </label>
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="px-3 py-2 border border-[--grid-border] rounded bg-[--grid-bg] text-[--grid-text] font-mono"
-            >
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="custom">Custom Range</option>
-            </select>
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Report Configuration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Date Range
+              </label>
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {dateRange === 'custom' && (
-            <>
-              <div>
-                <label className="block text-sm font-semibold text-[--grid-text-dim] mb-2">
-                  From
-                </label>
-                <input
-                  type="date"
-                  value={customFrom}
-                  onChange={(e) => setCustomFrom(e.target.value)}
-                  className="px-3 py-2 border border-[--grid-border] rounded bg-[--grid-bg] text-[--grid-text] font-mono"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-[--grid-text-dim] mb-2">
-                  To
-                </label>
-                <input
-                  type="date"
-                  value={customTo}
-                  onChange={(e) => setCustomTo(e.target.value)}
-                  className="px-3 py-2 border border-[--grid-border] rounded bg-[--grid-bg] text-[--grid-text] font-mono"
-                />
-              </div>
-            </>
-          )}
+            {dateRange === 'custom' && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    From
+                  </label>
+                  <Input
+                    type="date"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    To
+                  </label>
+                  <Input
+                    type="date"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+              </>
+            )}
 
-          <div className="flex gap-2">
-            <button
-              onClick={generateMarkdownReport}
-              className="px-4 py-2 bg-[--grid-accent] text-white rounded hover:opacity-80 font-mono"
-            >
-              📋 Copy as Markdown
-            </button>
-            <button
-              onClick={handlePrint}
-              className="px-4 py-2 border border-[--grid-border] text-[--grid-text] rounded hover:bg-[--grid-surface] font-mono"
-            >
-              🖨️ Print
-            </button>
+            <div className="flex gap-2">
+              <Button onClick={generateMarkdownReport} variant="outline" size="sm">
+                📋 Copy Markdown
+              </Button>
+              <Button onClick={exportToCSV} variant="outline" size="sm">
+                📊 Export CSV
+              </Button>
+              <Button onClick={exportToJSON} variant="outline" size="sm">
+                📄 Export JSON
+              </Button>
+              <Button onClick={handlePrint} variant="outline" size="sm">
+                🖨️ Print
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Executive Summary */}
-      <div className="bg-[--grid-surface] border border-[--grid-border] rounded-lg p-6">
-        <h2 className="text-xl font-bold text-[--grid-text] mb-4">Executive Summary</h2>
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold">Executive Summary</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-[--grid-accent] font-mono">
-              {reportData.summary.totalEvents}
-            </div>
-            <div className="text-[--grid-text-dim]">Total Events</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-[--grid-accent] font-mono">
-              {reportData.summary.tasksCompleted}
-            </div>
-            <div className="text-[--grid-text-dim]">Tasks Completed</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-[--grid-accent] font-mono">
-              {reportData.summary.activeProjects}
-            </div>
-            <div className="text-[--grid-text-dim]">Active Projects</div>
-          </div>
+          <StatCard
+            label="Total Events"
+            value={reportData.summary.totalEvents}
+            icon="📊"
+            changeType="neutral"
+          />
+          <StatCard
+            label="Tasks Completed"
+            value={reportData.summary.tasksCompleted}
+            icon="✅"
+            changeType="neutral"
+          />
+          <StatCard
+            label="Active Projects"
+            value={reportData.summary.activeProjects}
+            icon="🚀"
+            changeType="neutral"
+          />
         </div>
-        <div className="mt-4 text-sm text-[--grid-text-dim] text-center">
+        <div className="text-sm text-grid-text-muted text-center">
           Report period: {reportData.period.startDate} to {reportData.period.endDate}
         </div>
       </div>
 
       {/* Activity Timeline */}
-      <div className="bg-[--grid-surface] border border-[--grid-border] rounded-lg p-6">
-        <h2 className="text-xl font-bold text-[--grid-text] mb-4">Activity Timeline</h2>
-        <div className="flex justify-center">
-          <BarChart
-            data={reportData.timeline.map(item => ({
-              label: new Date(item.date).toLocaleDateString('en', { weekday: 'short', day: 'numeric' }),
-              value: item.events
-            }))}
-            width={600}
-            height={250}
-            color="var(--grid-accent)"
-          />
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity Timeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center">
+            <BarChart
+              data={reportData.timeline.map(item => ({
+                label: new Date(item.date).toLocaleDateString('en', { weekday: 'short', day: 'numeric' }),
+                value: item.events
+              }))}
+              width={600}
+              height={250}
+              color="var(--grid-accent)"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Task Completion & Agent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Task Completion */}
-        <div className="bg-[--grid-surface] border border-[--grid-border] rounded-lg p-6">
-          <h2 className="text-xl font-bold text-[--grid-text] mb-4">Task Completion</h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                Completed
-              </span>
-              <span className="font-mono font-bold">{reportData.tasks.completed}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                Pending
-              </span>
-              <span className="font-mono font-bold">{reportData.tasks.pending}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-red-500 rounded-full"></span>
-                Failed
-              </span>
-              <span className="font-mono font-bold">{reportData.tasks.failed}</span>
-            </div>
-          </div>
-          
-          {/* Simple progress bar */}
-          <div className="mt-4">
-            <div className="h-3 bg-[--grid-bg] rounded-full overflow-hidden">
-              {(() => {
-                const total = reportData.tasks.completed + reportData.tasks.pending + reportData.tasks.failed;
-                const completedPercent = (reportData.tasks.completed / total) * 100;
-                const pendingPercent = (reportData.tasks.pending / total) * 100;
-                
-                return (
-                  <>
-                    <div 
-                      className="h-full bg-green-500 float-left"
-                      style={{ width: `${completedPercent}%` }}
-                    />
-                    <div 
-                      className="h-full bg-yellow-500 float-left"
-                      style={{ width: `${pendingPercent}%` }}
-                    />
-                    <div 
-                      className="h-full bg-red-500 float-left"
-                      style={{ width: `${100 - completedPercent - pendingPercent}%` }}
-                    />
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
-
-        {/* Agent Activity */}
-        <div className="bg-[--grid-surface] border border-[--grid-border] rounded-lg p-6">
-          <h2 className="text-xl font-bold text-[--grid-text] mb-4">Agent Activity</h2>
-          <div className="space-y-3">
-            {reportData.agents.map((agent, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="font-mono font-bold">{agent.agent}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 bg-[--grid-bg] rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-[--grid-accent] rounded-full"
-                      style={{ 
-                        width: `${(agent.events / Math.max(...reportData.agents.map(a => a.events))) * 100}%` 
-                      }}
-                    />
-                  </div>
-                  <span className="font-mono text-sm w-8 text-right">{agent.events}</span>
+        <Card>
+          <CardHeader>
+            <CardTitle>Task Completion</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                  Completed
+                </span>
+                <Badge variant="secondary" className="font-mono">
+                  {reportData.tasks.completed}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                  Pending
+                </span>
+                <Badge variant="secondary" className="font-mono">
+                  {reportData.tasks.pending}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                  Failed
+                </span>
+                <Badge variant="secondary" className="font-mono">
+                  {reportData.tasks.failed}
+                </Badge>
+              </div>
+              
+              {/* Progress bar */}
+              <div className="mt-4">
+                <div className="h-3 bg-grid-bg rounded-full overflow-hidden flex">
+                  {(() => {
+                    const total = reportData.tasks.completed + reportData.tasks.pending + reportData.tasks.failed;
+                    const completedPercent = total > 0 ? (reportData.tasks.completed / total) * 100 : 0;
+                    const pendingPercent = total > 0 ? (reportData.tasks.pending / total) * 100 : 0;
+                    const failedPercent = total > 0 ? (reportData.tasks.failed / total) * 100 : 0;
+                    
+                    return (
+                      <>
+                        <div 
+                          className="h-full bg-green-500"
+                          style={{ width: `${completedPercent}%` }}
+                        />
+                        <div 
+                          className="h-full bg-yellow-500"
+                          style={{ width: `${pendingPercent}%` }}
+                        />
+                        <div 
+                          className="h-full bg-red-500"
+                          style={{ width: `${failedPercent}%` }}
+                        />
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Agent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Agent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {reportData.agents.map((agent, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="font-mono font-medium">{agent.agent}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-20 h-2 bg-grid-surface rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-grid-accent rounded-full transition-all"
+                        style={{ 
+                          width: `${(agent.events / Math.max(...reportData.agents.map(a => a.events))) * 100}%` 
+                        }}
+                      />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-xs min-w-[2rem] text-center">
+                      {agent.events}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Project Status */}
-      <div className="bg-[--grid-surface] border border-[--grid-border] rounded-lg p-6">
-        <h2 className="text-xl font-bold text-[--grid-text] mb-4">Project Status</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reportData.projects.map((project, index) => (
-            <div key={index} className="border border-[--grid-border] rounded p-4">
-              <h3 className="font-semibold text-[--grid-text] mb-2">{project.name}</h3>
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[--grid-text-dim]">Phase:</span>
-                  <span className="font-mono capitalize">{project.phase}</span>
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reportData.projects.map((project, index) => (
+              <Card key={index} className="p-4">
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-grid-text">{project.name}</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-grid-text-muted">Phase:</span>
+                      <Badge variant="outline" className="capitalize text-xs">
+                        {project.phase}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-grid-text-muted">Status:</span>
+                      <Badge 
+                        variant={project.status === 'active' ? 'default' : 'secondary'}
+                        className={`capitalize text-xs ${
+                          project.status === 'active' ? 'bg-green-500/10 text-green-500' :
+                          project.status === 'completed' ? 'bg-blue-500/10 text-blue-500' : ''
+                        }`}
+                      >
+                        {project.status}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[--grid-text-dim]">Status:</span>
-                  <span className={`font-mono capitalize ${
-                    project.status === 'active' ? 'text-green-500' :
-                    project.status === 'completed' ? 'text-blue-500' : 'text-gray-500'
-                  }`}>
-                    {project.status}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Print Styles */}
       <style jsx global>{`

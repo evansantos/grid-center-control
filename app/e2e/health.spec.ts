@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { checkA11y } from './axe-helper';
 
 test.describe('System Health Page', () => {
   test('should load successfully with System Health heading', async ({ page }) => {

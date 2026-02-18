@@ -571,31 +571,6 @@ export const OFFICE_KEYFRAMES = `
     animation: data-stream 6s linear infinite;
   }
 
-  /* ──── Responsive & Accessibility ──── */
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .ambient-particle,
-    .dust-particle,
-    .steam-particle {
-      display: none;
-    }
-    
-    .avatar-walking {
-      animation-duration: 0.8s;
-    }
-    
-    .avatar-typing {
-      animation-duration: 3s;
-    }
-  }
-
   /* ──── Legacy Animations (Keep for Compatibility) ──── */
   @keyframes isoCharBounce {
     0% { transform: translateY(0); }
@@ -632,6 +607,84 @@ export const OFFICE_KEYFRAMES = `
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* ──── Accessibility & Responsive ──── */
+  /* Reduced motion support - disable ALL animations when preferred */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      animation-delay: -1ms !important;
+      animation-fill-mode: forwards !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+    }
+
+    /* Hide purely decorative animations */
+    .ambient-particle,
+    .dust-particle,
+    .steam-particle,
+    .plant-element,
+    .plant-leaf,
+    .coffee-bubble,
+    .neon-element,
+    .monitor-active::after,
+    .desk-lamp,
+    .zone-glow,
+    .creative-spark,
+    .data-stream-element {
+      animation: none !important;
+    }
+
+    /* Preserve essential state indicators but remove motion */
+    .avatar-walking,
+    .avatar-typing,
+    .pulse-indicator::after {
+      animation: none !important;
+    }
+
+    /* Keep immediate feedback animations but make them instant */
+    .button-pressed,
+    .notification-new,
+    .speech-bubble {
+      animation-duration: 0.01ms !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    /* Hide resource-intensive decorative animations on mobile */
+    .ambient-particle,
+    .dust-particle,
+    .steam-particle {
+      display: none;
+    }
+    
+    /* Slow down key animations to save battery */
+    .avatar-walking {
+      animation-duration: 0.8s;
+    }
+    
+    .avatar-typing {
+      animation-duration: 3s;
+    }
+
+    /* Reduce visual complexity */
+    .zone-glow,
+    .creative-spark,
+    .data-stream-element {
+      animation: none;
+    }
+  }
+
+  /* ──── High contrast mode support ──── */
+  @media (prefers-contrast: high) {
+    .ambient-particle,
+    .dust-particle {
+      display: none;
+    }
+  }
+
   /* ──── Scrollbar Styling ──── */
   .agent-msg-scroll::-webkit-scrollbar {
     width: 5px;
@@ -642,11 +695,11 @@ export const OFFICE_KEYFRAMES = `
   }
 
   .agent-msg-scroll::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.25);
+    background: var(--grid-text-muted);
     border-radius: 4px;
   }
 
   .agent-msg-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(100, 116, 139, 0.4);
+    background: var(--grid-text-dim);
   }
 `;

@@ -1,9 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { checkA11y, checkHeadingHierarchy } from './axe-helper';
 
 test.describe('Agents Page', () => {
   test('should load successfully with Agents heading', async ({ page }) => {
     await page.goto('/agents');
     await expect(page.getByText('Agents')).toBeVisible();
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Agents - basic load');
+    await checkHeadingHierarchy(page);
   });
 
   test('should render agent cards or loading/empty state', async ({ page }) => {
@@ -18,6 +23,9 @@ test.describe('Agents Page', () => {
     await expect(
       agentCards.first().or(emptyState.first()).or(loadingState.first())
     ).toBeVisible({ timeout: 10000 });
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Agents - cards/loading state');
   });
 
   test('should show status dots on agent cards when agents exist', async ({ page }) => {
@@ -38,6 +46,9 @@ test.describe('Agents Page', () => {
       // If no cards, that's also acceptable (empty state)
       console.log('No agent cards found - testing empty state scenario');
     }
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Agents - status indicators');
   });
 
   test('should have configure buttons that are links when agents exist', async ({ page }) => {
@@ -67,5 +78,8 @@ test.describe('Agents Page', () => {
     } else {
       console.log('No configure buttons found - testing empty state scenario');
     }
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Agents - configure buttons');
   });
 });

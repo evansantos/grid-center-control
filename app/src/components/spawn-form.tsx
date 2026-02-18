@@ -1,6 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AgentOption {
   id: string;
@@ -14,6 +20,13 @@ interface SpawnResult {
   model: string;
   status: string;
   timestamp: string;
+}
+
+interface FormErrors {
+  agentId?: string;
+  model?: string;
+  task?: string;
+  timeout?: string;
 }
 
 const MODELS = [
@@ -30,15 +43,19 @@ export function SpawnForm() {
   const [task, setTask] = useState('');
   const [timeout, setTimeout_] = useState(300);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<SpawnResult | null>(null);
   const [recentSpawns, setRecentSpawns] = useState<SpawnResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     fetch('/api/spawn').then(r => r.json()).then(d => {
       setAgents(d.agents || []);
       if (d.agents?.length) setAgentId(d.agents[0].id);
-    }).catch(() => {});
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
 
     try {
       const stored = localStorage.getItem('grid-recent-spawns');
@@ -46,12 +63,43 @@ export function SpawnForm() {
     } catch {}
   }, []);
 
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!agentId.trim()) {
+      newErrors.agentId = 'Please select an agent';
+    }
+
+    if (!model.trim()) {
+      newErrors.model = 'Please select a model';
+    }
+
+    if (!task.trim()) {
+      newErrors.task = 'Please provide a task description';
+    } else if (task.trim().length < 10) {
+      newErrors.task = 'Task description must be at least 10 characters';
+    }
+
+    if (timeout < 30) {
+      newErrors.timeout = 'Timeout must be at least 30 seconds';
+    } else if (timeout > 3600) {
+      newErrors.timeout = 'Timeout cannot exceed 3600 seconds';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!task.trim()) return;
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setSubmitting(true);
     setResult(null);
-    setError(null);
+    setErrors({});
 
     try {
       const res = await fetch('/api/spawn', {
@@ -59,7 +107,18 @@ export function SpawnForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agentId, model, task, timeoutSeconds: timeout }),
       });
+      
+      if (!res.ok) {
+        throw new Error('Network response was not ok');
+      }
+      
       const data = await res.json();
+      
+      if (data.error) {
+        setErrors({ task: data.error });
+        return;
+      }
+
       setResult(data);
 
       const updated = [data, ...recentSpawns].slice(0, 10);
@@ -67,7 +126,7 @@ export function SpawnForm() {
       localStorage.setItem('grid-recent-spawns', JSON.stringify(updated));
       setTask('');
     } catch {
-      setError('Failed to spawn agent. Please try again.');
+      setErrors({ task: 'Failed to spawn agent. Please try again.' });
     } finally {
       setSubmitting(false);
     }
@@ -75,102 +134,199 @@ export function SpawnForm() {
 
   const selectedAgent = agents.find(a => a.id === agentId);
 
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>🚀 Spawn Agent Session</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+          <div className="flex items-end gap-4">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-40" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-6 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs text-zinc-500 mb-1">Agent</label>
-            <select
-              value={agentId}
-              onChange={e => setAgentId(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500"
-            >
-              {agents.map(a => (
-                <option key={a.id} value={a.id}>{a.emoji} {a.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-zinc-500 mb-1">Model</label>
-            <select
-              value={model}
-              onChange={e => setModel(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500"
-            >
-              {MODELS.map(m => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>🚀 Spawn Agent Session</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="agent-select" className="text-sm font-medium">
+                  Agent
+                </label>
+                <Select 
+                  value={agentId} 
+                  onValueChange={setAgentId}
+                >
+                  <SelectTrigger 
+                    id="agent-select"
+                    error={errors.agentId}
+                    aria-describedby={errors.agentId ? "agent-error" : undefined}
+                  >
+                    <SelectValue placeholder="Select an agent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {agents.map(agent => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.emoji} {agent.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="model-select" className="text-sm font-medium">
+                  Model
+                </label>
+                <Select 
+                  value={model} 
+                  onValueChange={setModel}
+                >
+                  <SelectTrigger 
+                    id="model-select"
+                    error={errors.model}
+                    aria-describedby={errors.model ? "model-error" : undefined}
+                  >
+                    <SelectValue placeholder="Select a model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODELS.map(m => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-        <div>
-          <label className="block text-xs text-zinc-500 mb-1">Task Description</label>
-          <textarea
-            value={task}
-            onChange={e => setTask(e.target.value)}
-            required
-            rows={4}
-            placeholder="Describe the task for the agent..."
-            className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500 resize-none"
-          />
-        </div>
+            <div className="space-y-2">
+              <label htmlFor="task-input" className="text-sm font-medium">
+                Task Description
+              </label>
+              <Textarea
+                id="task-input"
+                value={task}
+                onChange={e => setTask(e.target.value)}
+                placeholder="Describe the task for the agent..."
+                rows={4}
+                error={errors.task}
+                aria-describedby={errors.task ? "task-error" : undefined}
+              />
+            </div>
 
-        <div className="flex items-end gap-4">
-          <div>
-            <label className="block text-xs text-zinc-500 mb-1">Timeout (seconds)</label>
-            <input
-              type="number"
-              value={timeout}
-              onChange={e => setTimeout_(Number(e.target.value))}
-              min={30}
-              max={3600}
-              className="w-32 bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={submitting || !task.trim()}
-            className="px-6 py-2 bg-red-600 hover:bg-red-500 disabled:bg-zinc-700 disabled:text-zinc-500 rounded text-sm font-medium transition-colors"
-          >
-            {submitting ? '⏳ Spawning...' : `🚀 Spawn ${selectedAgent?.name || 'Agent'}`}
-          </button>
-        </div>
-        {error && <p className="text-xs text-red-400 mt-2">{error}</p>}
-      </form>
+            <div className="flex items-end gap-4">
+              <div className="space-y-2">
+                <label htmlFor="timeout-input" className="text-sm font-medium">
+                  Timeout (seconds)
+                </label>
+                <Input
+                  id="timeout-input"
+                  type="number"
+                  value={timeout}
+                  onChange={e => setTimeout_(Number(e.target.value))}
+                  min={30}
+                  max={3600}
+                  className="w-32"
+                  error={errors.timeout}
+                  aria-describedby={errors.timeout ? "timeout-error" : undefined}
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="flex-1"
+              >
+                {submitting ? '⏳ Spawning...' : `🚀 Spawn ${selectedAgent?.name || 'Agent'}`}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       {result && (
-        <div className="bg-green-900/20 border border-green-800 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-green-400 mb-2">✅ Agent Spawned</h3>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <span className="text-zinc-500">Session</span>
-            <span className="text-zinc-300 font-mono">{result.sessionKey.slice(-20)}</span>
-            <span className="text-zinc-500">Agent</span>
-            <span className="text-zinc-300">{result.agentId}</span>
-            <span className="text-zinc-500">Model</span>
-            <span className="text-zinc-300">{result.model}</span>
-            <span className="text-zinc-500">Status</span>
-            <span className="text-zinc-300">{result.status}</span>
-          </div>
-        </div>
+        <Card className="border-grid-accent/30 bg-grid-accent/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-grid-accent">
+              ✅ Agent Spawned Successfully
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="space-y-1">
+                <span className="text-grid-text-muted">Session Key</span>
+                <span className="text-grid-text font-mono block">
+                  {result.sessionKey.slice(-20)}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-grid-text-muted">Agent</span>
+                <span className="text-grid-text block">{result.agentId}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-grid-text-muted">Model</span>
+                <span className="text-grid-text block">{result.model}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-grid-text-muted">Status</span>
+                <span className="text-grid-text block">{result.status}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {recentSpawns.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium text-zinc-400 mb-3">Recent Spawns</h3>
-          <div className="space-y-2">
-            {recentSpawns.map((s, i) => (
-              <div key={i} className="flex items-center justify-between bg-zinc-900/30 border border-zinc-800/50 rounded px-4 py-2 text-xs">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Recent Spawns</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recentSpawns.map((spawn, i) => (
+              <div 
+                key={i} 
+                className="flex items-center justify-between p-3 rounded-md bg-grid-surface border border-grid-border"
+              >
                 <div className="flex items-center gap-3">
-                  <span className="text-zinc-300 font-medium">{s.agentId}</span>
-                  <span className="text-zinc-600 font-mono">{s.sessionKey.slice(-12)}</span>
+                  <span className="text-xs font-medium text-grid-text">
+                    {spawn.agentId}
+                  </span>
+                  <span className="text-xs font-mono text-grid-text-muted">
+                    {spawn.sessionKey.slice(-12)}
+                  </span>
                 </div>
-                <span className="text-zinc-600">{new Date(s.timestamp).toLocaleTimeString()}</span>
+                <span className="text-xs text-grid-text-muted">
+                  {new Date(spawn.timestamp).toLocaleTimeString()}
+                </span>
               </div>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

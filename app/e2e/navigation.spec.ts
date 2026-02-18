@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { checkA11y, checkSkipNavigation } from './axe-helper';
 
 test.describe('Navigation', () => {
   test('should render NavBar with GRID logo', async ({ page }) => {
@@ -10,6 +11,10 @@ test.describe('Navigation', () => {
     );
     
     await expect(gridLogo).toBeVisible();
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Navigation - GRID logo');
+    await checkSkipNavigation(page);
   });
 
   test('should have main navigation links visible and clickable', async ({ page }) => {
@@ -33,6 +38,9 @@ test.describe('Navigation', () => {
     // Test navigation to agents page
     await agentsLink.click();
     await expect(page).toHaveURL(/.*\/agents/);
+    
+    // Run accessibility checks after navigation
+    await checkA11y(page, 'Navigation - agents page');
   });
 
   test('should open dropdown menus on click', async ({ page }) => {
@@ -67,6 +75,9 @@ test.describe('Navigation', () => {
       const dropdownMenu = page.locator('[role="menu"], [data-testid*="dropdown"], [class*="dropdown"], [class*="menu"]');
       await expect(dropdownMenu.first()).toBeVisible({ timeout: 5000 });
     }
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Navigation - dropdowns');
   });
 
   test('should have navigable dropdown items', async ({ page }) => {
@@ -92,6 +103,9 @@ test.describe('Navigation', () => {
     } else {
       console.log('No dropdown triggers found - may not be implemented yet');
     }
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Navigation - dropdown items');
   });
 
   test('should have visible search trigger button', async ({ page }) => {
@@ -105,5 +119,8 @@ test.describe('Navigation', () => {
     );
     
     await expect(searchTrigger.first()).toBeVisible({ timeout: 10000 });
+    
+    // Run accessibility checks
+    await checkA11y(page, 'Navigation - search trigger');
   });
 });

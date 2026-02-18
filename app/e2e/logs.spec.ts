@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { checkA11y } from './axe-helper';
 
 test.describe('Log Search Page', () => {
   test('should load successfully with Log Search heading', async ({ page }) => {
