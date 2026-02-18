@@ -6,46 +6,42 @@ import { StatCard } from '@/components/ui/stat-card';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 
-interface SessionData {
-  sessionKey: string;
-  agentId: string;
-  startTime: string;
-  endTime?: string;
-  messageCount: number;
-  duration: number;
-  status: 'active' | 'completed' | 'terminated';
-  channel: string;
+interface HeatmapEntry {
+  date: string;
+  count: number;
 }
 
-interface SessionAnalytics {
-  overview: {
-    totalSessions: number;
-    activeSessions: number;
-    avgDuration: number;
-    totalMessages: number;
-  };
-  sessions: SessionData[];
-  trends: {
-    sessions: 'up' | 'down' | 'neutral';
-    duration: 'up' | 'down' | 'neutral';
-    messages: 'up' | 'down' | 'neutral';
-  };
+interface SessionStats {
+  totalSessions: number;
+  activeSessions: number;
+  deletedSessions: number;
+  busiestDay: { date: string; count: number };
+  avgPerDay: number;
+  currentStreak: number;
+  peakHours: number[];
+  agentBreakdown: { agentId: string; count: number }[];
+  modelBreakdown: { model: string; count: number }[];
+  totalTokensIn: number;
+  totalTokensOut: number;
+  avgSessionDurationSec: number;
+}
+
+interface SessionApiResponse {
+  heatmap: HeatmapEntry[];
+  stats: SessionStats;
 }
 
 export default function SessionAnalyticsPage() {
-  const [analytics, setAnalytics] = useState<SessionAnalytics | null>(null);
+  const [data, setData] = useState<SessionApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'terminated'>('all');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchSessionData = async () => {
     try {
       const response = await fetch('/api/analytics/sessions');
-      const data = await response.json();
-      setAnalytics(data);
+      const result = await response.json();
+      setData(result);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Failed to fetch session data:', error);
@@ -56,7 +52,7 @@ export default function SessionAnalyticsPage() {
 
   useEffect(() => {
     fetchSessionData();
-    const interval = setInterval(fetchSessionData, 15000); // Refresh every 15s for live sessions
+    const interval = setInterval(fetchSessionData, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -65,25 +61,23 @@ export default function SessionAnalyticsPage() {
     fetchSessionData();
   };
 
-  // Filter sessions based on search and status
-  const filteredSessions = analytics?.sessions.filter(session => {
-    const matchesSearch = searchTerm === '' || 
-      session.agentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.sessionKey.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.channel.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  }) || [];
-
   const formatDuration = (seconds: number): string => {
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
     return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
   };
 
-  if (loading && !analytics) {
+  const formatNumber = (n: number): string => {
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+    return n.toString();
+  };
+
+  // Get recent heatmap data (last 30 days)
+  const recentHeatmap = data?.heatmap?.slice(-30) || [];
+  const maxCount = Math.max(...recentHeatmap.map(d => d.count), 1);
+
+  if (loading && !data) {
     return (
       <div className="p-6 max-w-6xl mx-auto">
         <PageHeader
@@ -105,11 +99,13 @@ export default function SessionAnalyticsPage() {
     );
   }
 
+  const stats = data?.stats;
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <PageHeader
         title="Session Analytics"
-        description="Monitor active sessions, analyze patterns, and track engagement metrics"
+        description="Monitor session patterns, agent activity, and engagement metrics"
         icon="📅"
         actions={
           <div className="flex items-center gap-2">
@@ -128,139 +124,135 @@ export default function SessionAnalyticsPage() {
         <StatCard
           icon="📊"
           label="Total Sessions"
-          value={analytics?.overview.totalSessions ?? 0}
+          value={stats?.totalSessions ?? 0}
           variant="info"
-          change={analytics?.trends.sessions === 'up' ? '+15' : analytics?.trends.sessions === 'down' ? '-3' : '0'}
-          changeType={analytics?.trends.sessions === 'up' ? 'increase' : analytics?.trends.sessions === 'down' ? 'decrease' : 'neutral'}
         />
         <StatCard
           icon="🟢"
           label="Active Sessions"
-          value={analytics?.overview.activeSessions ?? 0}
+          value={stats?.activeSessions ?? 0}
           variant="success"
         />
         <StatCard
           icon="⏱️"
           label="Avg Duration"
-          value={analytics?.overview.avgDuration ? formatDuration(analytics.overview.avgDuration) : '0s'}
+          value={formatDuration(stats?.avgSessionDurationSec ?? 0)}
           variant="default"
-          change={analytics?.trends.duration === 'up' ? '+12%' : analytics?.trends.duration === 'down' ? '-8%' : '0%'}
-          changeType={analytics?.trends.duration === 'up' ? 'increase' : analytics?.trends.duration === 'down' ? 'decrease' : 'neutral'}
         />
         <StatCard
-          icon="💬"
-          label="Total Messages"
-          value={analytics?.overview.totalMessages ?? 0}
-          variant="info"
-          change={analytics?.trends.messages === 'up' ? '+142' : analytics?.trends.messages === 'down' ? '-27' : '0'}
-          changeType={analytics?.trends.messages === 'up' ? 'increase' : analytics?.trends.messages === 'down' ? 'decrease' : 'neutral'}
+          icon="🔥"
+          label="Current Streak"
+          value={`${stats?.currentStreak ?? 0} days`}
+          variant="warning"
         />
       </div>
 
-      {/* Filters and Search */}
+      {/* Activity Heatmap */}
       <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Search by agent, session key, or channel..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex gap-2">
-              {(['all', 'active', 'completed', 'terminated'] as const).map((status) => (
-                <Button
-                  key={status}
-                  variant={statusFilter === status ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setStatusFilter(status)}
-                  className="capitalize"
-                >
-                  {status}
-                </Button>
-              ))}
-            </div>
+        <CardHeader>
+          <h2 className="text-lg font-semibold text-grid-text">Activity Heatmap (Last 30 Days)</h2>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-1">
+            {recentHeatmap.map((day) => {
+              const intensity = day.count / maxCount;
+              const bgClass = day.count === 0 
+                ? 'bg-grid-surface-hover' 
+                : intensity > 0.75 
+                  ? 'bg-green-500' 
+                  : intensity > 0.5 
+                    ? 'bg-green-400' 
+                    : intensity > 0.25 
+                      ? 'bg-green-300' 
+                      : 'bg-green-200';
+              return (
+                <div
+                  key={day.date}
+                  className={`w-4 h-4 rounded-sm ${bgClass}`}
+                  title={`${day.date}: ${day.count} sessions`}
+                />
+              );
+            })}
           </div>
+          {stats?.busiestDay && (
+            <p className="text-xs text-grid-text-muted mt-3">
+              Busiest day: {stats.busiestDay.date} ({stats.busiestDay.count} sessions)
+            </p>
+          )}
         </CardContent>
       </Card>
 
-      {/* Sessions Table */}
+      {/* Agent & Model Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Agent Breakdown */}
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold text-grid-text">Sessions by Agent</h2>
+          </CardHeader>
+          <CardContent>
+            {stats?.agentBreakdown && stats.agentBreakdown.length > 0 ? (
+              <div className="space-y-3">
+                {stats.agentBreakdown.slice(0, 10).map((agent) => (
+                  <div key={agent.agentId} className="flex items-center justify-between">
+                    <span className="font-mono text-sm text-grid-text">{agent.agentId}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-grid-surface-hover rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-grid-accent rounded-full"
+                          style={{ width: `${(agent.count / stats.totalSessions) * 100}%` }}
+                        />
+                      </div>
+                      <Badge variant="default" size="sm">{agent.count}</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-grid-text-muted text-center py-4">No agent data</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Model Breakdown */}
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold text-grid-text">Sessions by Model</h2>
+          </CardHeader>
+          <CardContent>
+            {stats?.modelBreakdown && stats.modelBreakdown.length > 0 ? (
+              <div className="space-y-3">
+                {stats.modelBreakdown.map((model) => (
+                  <div key={model.model} className="flex items-center justify-between">
+                    <span className="font-mono text-sm text-grid-text truncate max-w-[180px]">{model.model}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default" size="sm">{model.count}</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-grid-text-muted text-center py-4">No model data</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Peak Hours */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-grid-text">Sessions</h2>
-            <Badge variant="outline" size="sm">
-              {filteredSessions.length} of {analytics?.sessions.length ?? 0}
-            </Badge>
-          </div>
+          <h2 className="text-lg font-semibold text-grid-text">Peak Activity Hours</h2>
         </CardHeader>
         <CardContent>
-          {filteredSessions.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-grid-border">
-                    <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Session</th>
-                    <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Agent</th>
-                    <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Channel</th>
-                    <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Status</th>
-                    <th className="text-right py-3 px-2 text-sm font-medium text-grid-text-muted">Messages</th>
-                    <th className="text-right py-3 px-2 text-sm font-medium text-grid-text-muted">Duration</th>
-                    <th className="text-left py-3 px-2 text-sm font-medium text-grid-text-muted">Started</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSessions.map((session) => (
-                    <tr key={session.sessionKey} className="border-b border-grid-border/50 hover:bg-grid-surface/50">
-                      <td className="py-3 px-2">
-                        <code className="text-xs bg-grid-surface px-1 py-0.5 rounded text-grid-text">
-                          {session.sessionKey.substring(0, 12)}...
-                        </code>
-                      </td>
-                      <td className="py-3 px-2">
-                        <span className="font-mono font-semibold text-grid-text">
-                          {session.agentId}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2">
-                        <Badge variant="outline" size="sm">
-                          {session.channel}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-2">
-                        <Badge
-                          variant={
-                            session.status === 'active' ? 'success' :
-                            session.status === 'completed' ? 'info' : 'error'
-                          }
-                          size="sm"
-                        >
-                          {session.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-2 text-right font-mono text-grid-text">
-                        {session.messageCount}
-                      </td>
-                      <td className="py-3 px-2 text-right font-mono text-grid-text">
-                        {formatDuration(session.duration)}
-                      </td>
-                      <td className="py-3 px-2 text-sm text-grid-text-muted">
-                        {new Date(session.startTime).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {stats?.peakHours && stats.peakHours.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {stats.peakHours.map((hour) => (
+                <Badge key={hour} variant="info" size="sm">
+                  {hour.toString().padStart(2, '0')}:00
+                </Badge>
+              ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-grid-text-muted">
-              {searchTerm || statusFilter !== 'all' 
-                ? 'No sessions match your filters'
-                : 'No session data available'
-              }
-            </div>
+            <p className="text-grid-text-muted text-center py-4">No peak hour data</p>
           )}
         </CardContent>
       </Card>
