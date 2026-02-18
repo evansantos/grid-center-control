@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+export const dynamic = 'force-dynamic';
 import { getProject, listArtifacts, listTasks, listWorktrees } from '@/lib/queries';
 import { PhaseBadge } from '@/components/phase-badge';
 import { ProjectClient } from './client';

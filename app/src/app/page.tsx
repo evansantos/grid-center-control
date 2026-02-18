@@ -1,4 +1,7 @@
 import { listProjects, taskStats } from '@/lib/queries';
+
+// Force dynamic rendering - database not available at build time
+export const dynamic = 'force-dynamic';
 import { DashboardGrid } from '@/components/dashboard-grid';
 import { ProjectsWidget } from '@/components/widgets/projects-widget';
 import { QuickStatsWidget } from '@/components/widgets/quick-stats-widget';

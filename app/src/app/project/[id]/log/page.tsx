@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+export const dynamic = 'force-dynamic';
 import { getProject, listEvents } from '@/lib/queries';
 import Link from 'next/link';
 
